@@ -39,6 +39,7 @@ func (a *App) Run() {
 
 	router.Post("/orders", a.controllers.CreateOrder)
 	router.Get("/orders/:id", a.controllers.GetOrderByID)
+	router.Get("/orders", a.controllers.GetAllOrders)
 
 	log.Fatal(router.Listen(":3000"))
 }

@@ -40,3 +40,13 @@ func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(order)
 }
+
+func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
+	orders, err := c.OrderService.GetAllOrders()
+
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
+	}
+
+	return ctx.JSON(orders)
+}
