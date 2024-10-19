@@ -6,7 +6,7 @@ import (
 )
 
 type OrderServiceInt interface {
-	CreateOrder(order *models.Order) error
+	CreateOrder(order *models.NewOrder) error
 	GetOrderById(id string) (*models.Order, error)
 }
 
@@ -20,7 +20,7 @@ func NewOrderService(orderRepo repository.OrderRepository) OrderServiceInt {
 	}
 }
 
-func (orderServ *OrderService) CreateOrder(order *models.Order) error {
+func (orderServ *OrderService) CreateOrder(order *models.NewOrder) error {
 	return orderServ.orderRepository.CreateOrder(order)
 }
 

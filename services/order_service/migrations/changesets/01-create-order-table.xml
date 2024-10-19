@@ -29,7 +29,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="desciption" type="VARCHAR" remarks="">
+            <column name="description" type="VARCHAR" remarks="">
                 <constraints nullable="false"/>
             </column>
 

@@ -17,7 +17,7 @@ func NewOrderController(OrderService service.OrderServiceInt) *OrderController {
 }
 
 func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
-	var order models.Order
+	var order models.NewOrder
 
 	if err := ctx.BodyParser(&order); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
@@ -27,7 +27,7 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create order"})
 	}
 
-	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Order created successfully", "order": order})
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Order created successfully"})
 }
 
 func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {

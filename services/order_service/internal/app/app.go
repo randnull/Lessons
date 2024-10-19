@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -29,6 +30,12 @@ func NewApp() *App {
 
 func (a *App) Run() {
 	router := fiber.New()
+
+	router.Use(logger.New())
+
+	router.Use(logger.New(logger.Config{
+		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",
+	}))
 
 	router.Post("/orders", a.controllers.CreateOrder)
 	router.Get("/orders/:id", a.controllers.GetOrderByID)

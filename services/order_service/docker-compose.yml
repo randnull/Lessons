@@ -1,0 +1,47 @@
+version: '3'
+services:
+  postgresql:
+    image: postgres:latest
+    container_name: postgresql
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=CHANGE
+      - POSTGRES_PASSWORD=CHANGE
+      - POSTGRES_DB=orders_database
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgresql"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - order-network
+  migrations:
+    image: liquibase/liquibase:4.19.0
+    volumes:
+      - ./migrations:/app
+    command: --defaultsFile=/app/order.properties update
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - order-network
+  order-service:
+    container_name: "order-service"
+    build:
+      context: ./
+      dockerfile: ./internal/orders.dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+    networks:
+      - order-network
+
+networks:
+  order-network:
+    name: "order-network"
