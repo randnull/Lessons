@@ -5,7 +5,7 @@ import (
 )
 
 type OrderRepository interface {
-	CreateOrder(order *models.NewOrder) error
+	CreateOrder(order *models.NewOrder) (string, error)
 	GetByID(id string) (*models.Order, error)
 	GetAllOrders() ([]*models.Order, error)
 }

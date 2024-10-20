@@ -22,12 +22,15 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&order); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
-
-	if err := c.OrderService.CreateOrder(&order); err != nil {
+	orderID, err := c.OrderService.CreateOrder(&order)
+	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create order"})
 	}
 
-	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"message": "Order created successfully"})
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"message": "Order created successfully",
+		"orderID": orderID,
+	})
 }
 
 func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {

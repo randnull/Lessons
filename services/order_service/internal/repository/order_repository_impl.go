@@ -38,20 +38,22 @@ func NewRepository() *Repository {
 	}
 }
 
-func (orderStorage *Repository) CreateOrder(order *models.NewOrder) error {
+func (orderStorage *Repository) CreateOrder(order *models.NewOrder) (string, error) {
 	timestamp := time.Now()
 
 	fmt.Println(timestamp)
 
 	query := `INSERT INTO orders (student_id, tutor_id, subject, description, min_price, max_price, created_at, updated_at)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)  RETURNING id`
 
-	_, err := orderStorage.db.Exec(query, order.StudentID, order.TutorID, order.Subject, order.Description, order.MinPrice, order.MaxPrice, timestamp, timestamp)
+	var orderID string
+
+	err := orderStorage.db.QueryRow(query, order.StudentID, order.TutorID, order.Subject, order.Description, order.MinPrice, order.MaxPrice, timestamp, timestamp).Scan(&orderID)
 
 	if err != nil {
 		log.Fatal(err)
 	}
-	return err
+	return orderID, err
 }
 
 func (orderStorage *Repository) GetByID(id string) (*models.Order, error) {
