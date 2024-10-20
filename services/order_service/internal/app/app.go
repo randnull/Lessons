@@ -41,5 +41,5 @@ func (a *App) Run() {
 	router.Get("/orders/:id", a.controllers.GetOrderByID)
 	router.Get("/orders", a.controllers.GetAllOrders)
 
-	log.Fatal(router.Listen(":3000"))
+	log.Fatal(router.Listen(":8001"))
 }
