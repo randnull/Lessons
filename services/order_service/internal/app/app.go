@@ -1,6 +1,7 @@
 package app
 
 import (
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"log"
 
@@ -32,6 +33,12 @@ func (a *App) Run() {
 	router := fiber.New()
 
 	router.Use(logger.New())
+
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: "http://localhost:3000",
+		AllowMethods: "GET,POST,PUT,DELETE",
+		AllowHeaders: "Content-Type",
+	}))
 
 	router.Use(logger.New(logger.Config{
 		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",
