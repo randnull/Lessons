@@ -53,6 +53,7 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder) (string, err
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return orderID, err
 }
 
@@ -73,7 +74,7 @@ func (orderStorage *Repository) GetByID(id string) (*models.Order, error) {
 func (orderStorage *Repository) GetAllOrders() ([]*models.Order, error) {
 	var orders []*models.Order
 
-	query := `SELECT id, student_id, tutor_id, subject, description, min_price, max_price, created_at, updated_at FROM orders `
+	query := `SELECT id, student_id, tutor_id, subject, description, min_price, max_price, created_at, updated_at FROM orders`
 
 	rows, err := orderStorage.db.Query(query)
 	if err != nil {

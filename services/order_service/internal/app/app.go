@@ -1,11 +1,11 @@
 package app
 
 import (
+	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"log"
 
-	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/controllers"
 	"github.com/randnull/Lessons/internal/repository"
 	"github.com/randnull/Lessons/internal/service"
@@ -35,9 +35,9 @@ func (a *App) Run() {
 	router.Use(logger.New())
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000",
+		AllowOrigins: "*", // НЕБЕЗОПАСНО, ЗАМЕНИТЬ ТОЛЬКО НА ХОСТ ФРОНТА!
 		AllowMethods: "GET,POST,PUT,DELETE",
-		AllowHeaders: "Content-Type",
+		AllowHeaders: "*", 
 	}))
 
 	router.Use(logger.New(logger.Config{
