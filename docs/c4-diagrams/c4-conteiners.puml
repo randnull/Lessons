@@ -6,42 +6,31 @@
 !include DEVICONS/postgresql.puml
 !include <cloudinsight/kafka>
 
+title Архитектура платформы для репетиторов (только репетитор)
 
-title Архитектура платформы для репетиторов
-
-' Пользователи
+' Пользователь
 Person(Teacher, "Репетитор", "Пользователь, предлагающий услуги обучения")
-Person(Student, "Ученик", "Пользователь, ищущий репетитора")
 
 ' Интерфейс
-Container(MiniApp, "Telegram Mini App", "Web Interface", "Интерфейс приложения для взаимодействия репетиторов и учеников")
+Container(TeacherApp, "Приложение для репетиторов", "Telegram Mini App", "Интерфейс для управления профилем и заказами")
 
 ' Основные микросервисы
 Container(main_service, "Главный сервис", "Go", "Регистрация, аутентификация, управление пользователями", "go")
-Container(order_service, "Сервис заказов", "Go", "Создание, обновление, управление заказами", "go")
-Container(tutor_matching_service, "Сервис подбора репетиторов", "Go", "Поиск и подбор репетиторов по критериям", "go")
+Container(order_service, "Сервис заказов", "Go", "Управление заказами (принятие, отклонение)", "go")
 Container(notification_service, "Сервис уведомлений", "Python", "Уведомления о статусах заказов", "python")
-Container(review_service, "Сервис отзывов и рейтингов", "Python", "Обработка и хранение отзывов/рейтингов", "python")
 
 ' Базы данных
 ContainerDb(UserDB, "users_postgres", "Postgres", "Хранение данных пользователей", "postgresql")
 ContainerDb(OrderDB, "orders_postgres", "Postgres", "Хранение данных заказов", "postgresql")
-ContainerDb(ReviewDB, "reviews_postgres", "Postgres", "Отзывы и рейтинги", "postgresql")
 ContainerQueue(NotificationQueue, "notifications_topic", "kafka", "Очередь для уведомлений", "kafka")
 
 ' Связи
-Rel(Teacher, MiniApp, "Создание профиля, управление заказами")
-Rel(Student, MiniApp, "Поиск репетитора, создание заказа")
-
-Rel(MiniApp, main_service, "Регистрация и авторизация", "REST")
+Rel(Teacher, TeacherApp, "Управление профилем, управление заказами")
+Rel(TeacherApp, main_service, "Регистрация и авторизация", "REST")
+Rel(TeacherApp, order_service, "Управление заказами", "REST")
 Rel(main_service, UserDB, "Хранение данных пользователей")
-Rel(MiniApp, order_service, "Управление заказами", "REST")
 Rel(order_service, OrderDB, "Хранение данных заказов")
-Rel(order_service, tutor_matching_service, "Запрос подбора репетиторов", "gRPC")
-Rel(tutor_matching_service, main_service, "Запрос данных репетиторов", "gRPC")
-Rel(MiniApp, review_service, "Отправка отзывов и рейтингов", "REST")
-Rel(review_service, ReviewDB, "Хранение отзывов и рейтингов")
 Rel(order_service, notification_service, "Уведомление об изменениях статуса", "gRPC")
 Rel(notification_service, NotificationQueue, "Отправка уведомлений в очередь", "Kafka")
-Rel(notification_service, MiniApp, "Отправка уведомлений пользователям")
+Rel(notification_service, TeacherApp, "Отправка уведомлений репетиторам")
 @enduml
