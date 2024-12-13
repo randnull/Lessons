@@ -1,4 +1,3 @@
-// package models
 package models
 
 type InitModel struct {
