@@ -48,7 +48,7 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder) (string, err
 
 	var orderID string
 
-	err := orderStorage.db.QueryRow(query, order.StudentID, order.TutorID, order.Subject, order.Description, order.MinPrice, order.MaxPrice, timestamp, timestamp).Scan(&orderID)
+	err := orderStorage.db.QueryRow(query, "61455107-52cc-4fe4-9c95-3110e65d1a06", "61455107-52cc-4fe4-9c95-3110e65d1a06", order.Subject, order.Description, order.MinPrice, order.MaxPrice, timestamp, timestamp).Scan(&orderID)
 
 	if err != nil {
 		log.Fatal(err)

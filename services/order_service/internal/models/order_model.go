@@ -3,8 +3,6 @@ package models
 import "time"
 
 type NewOrder struct {
-	StudentID   string `json:"student_id"`
-	TutorID     string `json:"tutor_id"`
 	Subject     string `json:"subject"`
 	Description string `json:"description"`
 	MinPrice    int    `json:"min_price"`

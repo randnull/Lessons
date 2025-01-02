@@ -18,7 +18,7 @@ services:
     networks:
       - order-network
   migrations:
-    image: liquibase/liquibase:4.19.0
+    image: liquibase/liquibase:latest
     volumes:
       - ./migrations:/app
     command: --defaultsFile=/app/order.properties update
