@@ -11,7 +11,7 @@
     <property name="uuid_type" value="uuid" dbms="postgresql"/>
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
     
-    <changeSet author="k.goryunov" id="create-product-table">
+    <changeSet author="k.goryunov" id="create-order-table">
         <createTable tableName="orders" remarks="table with clients orders">
             <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
                 <constraints nullable="false" unique="true" />
@@ -21,15 +21,19 @@
                 <constraints nullable="false"/> 
             </column>
 
-            <column name="tutor_id" type="${uuid_type}" remarks="">
-                <constraints nullable="false"/>
-            </column>
+<!--            <column name="tutor_id" type="${uuid_type}" remarks="">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
 
-            <column name="subject" type="VARCHAR" remarks="">
+            <column name="title" type="VARCHAR" remarks="">
                 <constraints nullable="false"/>
             </column>
 
             <column name="description" type="VARCHAR" remarks="">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="tags" type="TEXT[]" remarks="">
                 <constraints nullable="false"/>
             </column>
 
@@ -41,11 +45,15 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="created_at" type="TIMESTAMP" remarks="">
+            <column name="status" type="VARCHAR" remarks="">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="updated_at" type="TIMESTAMP" remarks="">
+            <column name="created_at" type="TIMESTAMPTZ" remarks="">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="TIMESTAMPTZ" remarks="">
                 <constraints nullable="false"/>
             </column>
         </createTable>
