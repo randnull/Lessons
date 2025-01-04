@@ -2,8 +2,12 @@ package controllers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	initdata "github.com/telegram-mini-apps/init-data-golang"
+
+	//"github.com/golang-jwt/jwt/v5"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
+	"log"
 )
 
 type OrderController struct {
@@ -22,11 +26,19 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&order); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
-	orderID, err := c.OrderService.CreateOrder(&order)
+
+	log.Printf("Create Order %+v", order)
+
+	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+
+	if !ok { // убрать!
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Internal server error"})
+	}
+
+	orderID, err := c.OrderService.CreateOrder(&order, InitData) // userData
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create order"})
 	}
-
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "Order created successfully",
 		"orderID": orderID,
@@ -52,4 +64,12 @@ func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(orders)
+}
+
+func (c *OrderController) DeleteOrderByID(ctx *fiber.Ctx) error {
+	return ctx.Status(fiber.StatusNoContent).JSON(fiber.Map{})
+}
+
+func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
+	return ctx.Status(fiber.StatusNoContent).JSON(fiber.Map{})
 }

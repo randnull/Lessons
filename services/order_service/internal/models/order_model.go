@@ -15,7 +15,7 @@ type NewOrder struct {
 
 type Order struct {
 	ID        string `json:"id"`
-	StudentID string `json:"student_id"`
+	StudentID int    `json:"student_id"`
 	//TutorID     string    	`json:"tutor_id"`
 	Title       string         `json:"title"`
 	Description string         `json:"description"`

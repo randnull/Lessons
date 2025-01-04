@@ -17,7 +17,7 @@
                 <constraints nullable="false" unique="true" />
             </column>
 
-            <column name="student_id" type="${uuid_type}" remarks="">
+            <column name="student_id" type="INTEGER" remarks="">
                 <constraints nullable="false"/> 
             </column>
 

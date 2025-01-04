@@ -33,7 +33,7 @@ func TokenAuthMiddleware(cfg config.BotConfig) fiber.Handler {
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 				"error": true,
-				"msg":   "Bad init data provided. Error in Validate",
+				"msg":   "Bad init data provided. Error in Validate" + err.Error(),
 			})
 		}
 

@@ -10,6 +10,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/models"
+	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"log"
 	"time"
 )
@@ -23,17 +24,17 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	link := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",
 		"CHANGE", "CHANGE", "postgresql", "5432", "orders_database")
 
-	db, err := sqlx.Open("postgres", link)
+	db, _ := sqlx.Open("postgres", link)
+	//
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
-	if err != nil {
-		log.Fatal(err)
-	}
+	_ = db.PingContext(context.Background())
 
-	err = db.PingContext(context.Background())
-
-	if err != nil {
-		log.Fatal(err)
-	}
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	log.Print("Database is ready")
 
@@ -42,7 +43,7 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	}
 }
 
-func (orderStorage *Repository) CreateOrder(order *models.NewOrder) (string, error) {
+func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error) {
 	timestamp := time.Now()
 
 	fmt.Println(timestamp)
@@ -56,8 +57,10 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder) (string, err
 
 	tags := pq.Array(order.Tags)
 
+	log.Println(tags)
+
 	err := orderStorage.db.QueryRow(query,
-		"61455107-52cc-4fe4-9c95-3110e65d1a06",
+		InitData.User.ID,
 		order.Title,
 		order.Description,
 		tags,
@@ -140,4 +143,12 @@ func (orderStorage *Repository) GetAllOrders() ([]*models.Order, error) {
 	}
 
 	return orders, nil
+}
+
+func (orderStorage *Repository) UpdateOrder(order *models.Order) error {
+	return nil
+}
+
+func (orderStorage *Repository) DeleteOrder(id string) error {
+	return nil
 }
