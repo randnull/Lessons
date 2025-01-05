@@ -1,0 +1,52 @@
+@startuml er-diagram
+
+skinparam linetype ortho
+
+entity "orders" as orders_table {
+  *id : UUID <<PK>>
+  --
+  *telegram_student_id: INTEGER
+  *title: VARCHAR
+  description: VARCHAR
+  *tags: TEXT[]
+  *min_price: INTEGER
+  *max_price: INTEGER
+  *status: VARCHAR
+  *created_at: TIMESTAMPZ
+  *updated_at: TIMESTAMPZ
+}
+
+entity "tutors" as tutors_table {
+  *id : UUID <<PK>>
+  --
+  *tutor_telegram_id: INTEGER
+  university: VARCHAR
+  about_me: VARCHAR
+  review_id:  UUID <<FK>>
+  *count_orders: INTEGER
+  rating: INTEGER
+}
+
+entity "answer_engine" as answer_engine_table {
+  *id : UUID <<PK>>
+  --
+  *order_id: UUID <<FK>>
+  *tutors_id_pool: UUID[] <<FK>>
+  tutor_id: UUID <<FK>>
+  *status: VARCHAR
+}
+
+entity "review" as review_table {
+  *id : UUID <<PK>>
+  --
+  *tutor_id: INTEGER
+  review: VARCHAR
+  *rating: INTEGER
+}
+
+' Relationships
+orders_table::id --> answer_engine_table::order_id
+tutors_table::id --> answer_engine_table::tutor_id
+tutors_table::id --> answer_engine_table::tutors_id_pool
+tutors_table::id --> review_table::tutor_id
+@enduml
