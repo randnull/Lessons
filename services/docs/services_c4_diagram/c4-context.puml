@@ -1,0 +1,21 @@
+@startuml C4_context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Архитектура Lessons
+
+' Пользователи
+Person(Tutor, "Репетитор")
+Person(Student, "Ученик")
+
+'Интерфейс
+System(tutor_app, "Telegram Mini App (Lessons for tutors)")
+System(lessons_app, "Telegram Mini App (Lessons)")
+System(lessons_bot, "Telegram Bot")
+System(tutors_bot, "Telegram Bot for tutors")
+
+' Связи
+Rel(Tutor, tutor_app, "Смотрит заказы, откликается")
+Rel(tutors_bot, Tutor, "Отправляет уведомление о новом заказе")
+Rel(lessons_bot, Student, "Отправляет уведомление об отклике")
+Rel(Student, lessons_app, "Создает заказы, выбирает специалиста")
+@enduml
