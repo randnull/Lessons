@@ -21,7 +21,7 @@ type Repository struct {
 
 func NewRepository(cfg config.DBConfig) *Repository {
 
-	link := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",
+	link := fmt.Sprintf("postgres://%v:%v@%v:%v/%v",
 		"change", "9yuVZktnLKzqMrkywVgTlhDxVQsqWXbP", "dpg-cttubetumphs73eikdbg-a.oregon-postgres.render.com", "5432", "orders_database_bhw2")
 
 	db, err := sqlx.Open("postgres", link)
