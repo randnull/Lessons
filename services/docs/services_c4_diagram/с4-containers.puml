@@ -21,7 +21,7 @@ Container(LessonsApp, "Приложение для учеников", "Telegram 
 
 ' Основные микросервисы
 Container(order_service, "Сервис заказов", "Go", "Управление заказами (принятие, отклонение)", "go")
-Container(answer_engine_service, "Сервис обработки заказов и уведомлений, бот", "Go", ".", "go")
+Container(answer_engine_service, "Сервис обработки заказов и уведомлений, бот", "Python", ".", "python")
 Container(tutors_service, "Сервис хранения информации о репетиторе (биография, отзывы)", "Go", ".", "go")
 'Container(review_service, "Сервис хранения отзывов", "Go", ".", "go")
 'Container(telegram_bot, "Сервис хранения отзывов", "Go", ".", "go")
