@@ -20,9 +20,19 @@ type Repository struct {
 }
 
 func NewRepository(cfg config.DBConfig) *Repository {
+	DbUser := cfg.DBUser
+	DbPassword := cfg.DBPassword
+	DbHost := cfg.DBHost
+	DbPort := cfg.DBPort
+	DbDatabase := cfg.DBName
 
 	link := fmt.Sprintf("postgres://%v:%v@%v:%v/%v",
-		"change", "9yuVZktnLKzqMrkywVgTlhDxVQsqWXbP", "dpg-cttubetumphs73eikdbg-a.oregon-postgres.render.com", "5432", "orders_database_bhw2")
+		DbUser,
+		DbPassword,
+		DbHost,
+		DbPort,
+		DbDatabase,
+	)
 
 	db, err := sqlx.Open("postgres", link)
 
@@ -66,24 +76,35 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData ini
 		tags,
 		order.MinPrice,
 		order.MaxPrice,
-		"New",
+		"New", // этот кринж на enum TODO
 		timestamp,
 		timestamp,
 	).Scan(&orderID)
 
 	if err != nil {
 		log.Fatal(err)
-	} // Норм проверку
+	} // Норм проверку TODO
 
 	return orderID, nil
 }
 
-func (orderStorage *Repository) GetByID(id string) (*models.Order, error) {
+func (orderStorage *Repository) GetByID(id string, InitData initdata.InitData) (*models.Order, error) {
 	order := &models.Order{}
 
-	query := `SELECT id, student_id, title, description, tags, min_price, max_price, status, created_at, updated_at FROM orders WHERE id = $1`
+	query := `SELECT 
+    			id, 
+    			student_id, 
+    			title, 
+    			description, 
+    			tags, 
+    			min_price, 
+    			max_price, 
+    			status, 
+    			created_at, 
+    			updated_at 
+			FROM orders WHERE id = $1 AND student_id = $2`
 
-	err := orderStorage.db.QueryRow(query, id).Scan(
+	err := orderStorage.db.QueryRow(query, id, InitData.User.ID).Scan(
 		&order.ID,
 		&order.StudentID,
 		&order.Title,
@@ -99,20 +120,32 @@ func (orderStorage *Repository) GetByID(id string) (*models.Order, error) {
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			log.Println("Order not found!")
+			return nil, errors.New("Order not found")
 		} else {
-			log.Fatal(err)
+			return nil, err
 		}
 	}
 
 	return order, nil
 }
 
-func (orderStorage *Repository) GetAllOrders() ([]*models.Order, error) {
+func (orderStorage *Repository) GetAllOrders(InitData initdata.InitData) ([]*models.Order, error) {
 	var orders []*models.Order
 
-	query := `SELECT id, student_id, title, description, tags, min_price, max_price, status, created_at, updated_at FROM orders`
+	query := `SELECT 
+    			id, 
+    			student_id, 
+    			title, 
+    			description, 
+    			tags, 
+    			min_price, 
+    			max_price, 
+    			status, 
+    			created_at, 
+    			updated_at 
+			FROM orders WHERE student_id = $1`
 
-	rows, err := orderStorage.db.Query(query)
+	rows, err := orderStorage.db.Query(query, InitData.User.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -138,6 +171,10 @@ func (orderStorage *Repository) GetAllOrders() ([]*models.Order, error) {
 		orders = append(orders, &order)
 	}
 
+	for i, j := 0, len(orders)-1; i < j; i, j = i+1, j-1 {
+		orders[i], orders[j] = orders[j], orders[i]
+	}
+
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
@@ -145,10 +182,20 @@ func (orderStorage *Repository) GetAllOrders() ([]*models.Order, error) {
 	return orders, nil
 }
 
-func (orderStorage *Repository) UpdateOrder(order *models.Order) error {
+func (orderStorage *Repository) UpdateOrder(orderID string, order *models.NewOrder, InitData initdata.InitData) error {
 	return nil
 }
 
-func (orderStorage *Repository) DeleteOrder(id string) error {
+func (orderStorage *Repository) DeleteOrder(id string, InitData initdata.InitData) error {
+	query := `DELETE FROM orders WHERE id = $1 AND student_id = $2`
+
+	_, err := orderStorage.db.Exec(query, id, InitData.User.ID)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
+
+//func (orderStorage *Repository) VerifyUserOrder(studentID string) ([]*models.Order, error) {}

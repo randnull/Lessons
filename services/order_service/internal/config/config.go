@@ -12,11 +12,11 @@ type Config struct {
 }
 
 type DBConfig struct {
-	DBHost     string `env:"DB_HOST" env-default:"localhost"`
+	DBHost     string `env:"DB_HOST" env-default:"dpg-cttubetumphs73eikdbg-a.oregon-postgres.render.com"`
 	DBPort     string `env:"DB_PORT" env-default:"5432"`
-	DBUser     string `env:"DB_USER" env-default:"postgres"`
-	DBPassword string `env:"DB_PASSWORD" env-default:"postgres"`
-	DBName     string `env:"DB_NAME" env-default:"postgres"`
+	DBUser     string `env:"DB_USER" env-default:"change"`
+	DBPassword string `env:"DB_PASSWORD" env-default:"9yuVZktnLKzqMrkywVgTlhDxVQsqWXbP"`
+	DBName     string `env:"DB_NAME" env-default:"orders_database_bhw2"`
 }
 
 type ServerConfig struct {

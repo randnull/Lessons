@@ -7,8 +7,8 @@ import (
 
 type OrderRepository interface {
 	CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error)
-	GetByID(id string) (*models.Order, error)
-	GetAllOrders() ([]*models.Order, error)
-	UpdateOrder(order *models.Order) error
-	DeleteOrder(id string) error
+	GetByID(id string, InitData initdata.InitData) (*models.Order, error)
+	GetAllOrders(InitData initdata.InitData) ([]*models.Order, error)
+	UpdateOrder(orderID string, order *models.NewOrder, InitData initdata.InitData) error
+	DeleteOrder(id string, InitData initdata.InitData) error
 }

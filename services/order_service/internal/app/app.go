@@ -52,7 +52,9 @@ func (a *App) Run() {
 
 	orders.Post("/", a.controllers.CreateOrder)
 	orders.Get("/:id", a.controllers.GetOrderByID)
-	orders.Get("/", a.controllers.GetAllOrders)
+	orders.Get("/", a.controllers.GetAllUsersOrders)
+	orders.Delete("/:id", a.controllers.DeleteOrderByID)
+	// Put or patch
 
 	log.Fatal(router.Listen(":8001"))
 }

@@ -8,10 +8,10 @@ import (
 
 type OrderServiceInt interface {
 	CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error)
-	GetOrderById(id string) (*models.Order, error)
-	GetAllOrders() ([]*models.Order, error)
-	UpdateOrder(order *models.Order) error
-	DeleteOrder(id string) error
+	GetOrderById(id string, InitData initdata.InitData) (*models.Order, error)
+	GetAllOrders(InitData initdata.InitData) ([]*models.Order, error)
+	UpdateOrder(orderID string, order *models.NewOrder, InitData initdata.InitData) error
+	DeleteOrder(orderID string, InitData initdata.InitData) error
 }
 
 type OrderService struct {
@@ -28,18 +28,18 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData init
 	return orderServ.orderRepository.CreateOrder(order, InitData)
 }
 
-func (orderServ *OrderService) GetOrderById(id string) (*models.Order, error) {
-	return orderServ.orderRepository.GetByID(id)
+func (orderServ *OrderService) GetOrderById(id string, InitData initdata.InitData) (*models.Order, error) {
+	return orderServ.orderRepository.GetByID(id, InitData)
 }
 
-func (orderServ *OrderService) GetAllOrders() ([]*models.Order, error) {
-	return orderServ.orderRepository.GetAllOrders()
+func (orderServ *OrderService) GetAllOrders(InitData initdata.InitData) ([]*models.Order, error) {
+	return orderServ.orderRepository.GetAllOrders(InitData)
 }
 
-func (orderServ *OrderService) UpdateOrder(order *models.Order) error {
-	return orderServ.orderRepository.UpdateOrder(order)
+func (orderServ *OrderService) UpdateOrder(orderID string, order *models.NewOrder, InitData initdata.InitData) error {
+	return orderServ.orderRepository.UpdateOrder(orderID, order, InitData)
 }
 
-func (orderServ *OrderService) DeleteOrder(id string) error {
-	return orderServ.orderRepository.DeleteOrder(id)
+func (orderServ *OrderService) DeleteOrder(orderID string, InitData initdata.InitData) error {
+	return orderServ.orderRepository.DeleteOrder(orderID, InitData)
 }
