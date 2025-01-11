@@ -17,7 +17,7 @@
                 <constraints nullable="false" unique="true" />
             </column>
 
-            <column name="student_id" type="INTEGER" remarks="">
+            <column name="student_id" type="BIGINT" remarks="">
                 <constraints nullable="false"/> 
             </column>
 
