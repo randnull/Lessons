@@ -30,6 +30,7 @@ entity "tutors" as tutors_table {
 entity "answer_engine" as answer_engine_table {
   *id : UUID <<PK>>
   --
+  *status: VARCHAR
   *order_id: UUID <<FK>>
   *tutors_id_pool: UUID[] <<FK>>
   tutor_id: UUID <<FK>>

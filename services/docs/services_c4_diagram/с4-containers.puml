@@ -21,27 +21,46 @@ Container(LessonsApp, "Приложение для учеников", "Telegram 
 
 ' Основные микросервисы
 Container(order_service, "Сервис заказов", "Go", "Управление заказами (принятие, отклонение)", "go")
-Container(answer_engine_service, "Сервис обработки заказов и уведомлений", "Go", ".", "go")
-Container(user_service, "Сервис хранения информации о репетиторе", "Go", ".", "go")
-Container(review_service, "Сервис хранения отзывов", "Go", ".", "go")
+Container(answer_engine_service, "Сервис обработки заказов и уведомлений, бот", "Go", ".", "go")
+Container(tutors_service, "Сервис хранения информации о репетиторе (биография, отзывы)", "Go", ".", "go")
+'Container(review_service, "Сервис хранения отзывов", "Go", ".", "go")
 'Container(telegram_bot, "Сервис хранения отзывов", "Go", ".", "go")
+
+' Брокер сообщений
+ContainerQueue(NotificationQueue, "notifications_topic", "kafka", "Очередь для уведомлений", "kafka")
 
 ' Базы данных
 ContainerDb(OrderDB, "orders_postgres", "Postgres", "Хранение данных заказов", "postgresql")
-'ContainerQueue(NotificationQueue, "notifications_topic", "kafka", "Очередь для уведомлений", "kafka")
+ContainerDb(AnswersDB, "answer_postgres", "Postgres", "Хранение данных состояния заказа", "postgresql")
+ContainerDb(TutorsDB, "tutors_postgres", "Postgres", "Хранение данных о репетиторе", "postgresql")
 
 ' Связи
-Rel(tutor, TutorsBot, "Открыть приложение, получить уведомление")
-Rel(TutorsBot, TutorApp, "Управление профилем, управление заказами")
+Rel(tutor, TutorsBot, "Открыть приложение")
+Rel(TutorsBot, tutor, "получить уведомление")
+Rel(tutor, TutorApp, "Управление профилем, управление заказами")
 
-Rel(student, LessonsBot, "Открыть приложение, получить уведомление")
-Rel(LessonsBot, LessonsApp, "Создание заказов, просмотр откликов")
+Rel(student, LessonsBot, "Открыть приложение")
+Rel(LessonsBot, student, "получить уведомление")
+
+Rel(student, LessonsApp, "Создание заказов, просмотр откликов")
 
 Rel(TutorApp, order_service, "Просмотр/отклик на заказ", "REST")
 Rel(LessonsApp, order_service, "Создание/Просмотр заказа", "REST")
 
-Rel(order_service, OrderDB, "Хранение данных заказов")
+Rel(order_service, NotificationQueue, "Пишет в топик информацию о создании заказа и отклике")
 
+Rel(answer_engine_service, NotificationQueue, "Читает событие из топика")
+' answer_engine_service
+Rel(order_service, OrderDB, "Хранение данных заказов")
+Rel(answer_engine_service, AnswersDB, "Хранение данных заказов")
+
+Rel(answer_engine_service, TutorsBot, "уведомляет о новом заказе")
+Rel(answer_engine_service, LessonsBot, "уведомляет об отклике")
+
+Rel(TutorApp, tutors_service, "Изменить информацию о себе")
+Rel(LessonsApp, tutors_service, "Оставить отзыв")
+
+Rel(tutors_service, TutorsDB, "Хранение данных о репетиторе")
 '
 'Rel(order_service, notification_service, "Уведомление об изменениях статуса", "gRPC")
 'Rel(notification_service, NotificationQueue, "Отправка уведомлений в очередь", "Kafka")
