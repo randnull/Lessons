@@ -47,6 +47,8 @@ func (a *App) Run() {
 		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",
 	}))
 
+	router.Get("/", a.controllers.HealtzHandler)
+
 	orders := router.Group("/orders")
 	orders.Use(controllers.TokenAuthMiddleware(a.cfg.BotConfig))
 

@@ -19,6 +19,10 @@ func NewOrderController(OrderService service.OrderServiceInt) *OrderController {
 	}
 }
 
+func (c *OrderController) HealtzHandler(ctx *fiber.Ctx) error {
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+}
+
 // Create order
 func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 	var order models.NewOrder
