@@ -20,7 +20,7 @@ services:
   migrations:
     image: liquibase/liquibase:latest
     volumes:
-      - ./migrations:/app
+      - ./services/order_service/migrations:/app
     command: --defaultsFile=/app/order.properties update
     depends_on:
       postgresql:
@@ -30,8 +30,8 @@ services:
   order-service:
     container_name: "order-service"
     build:
-      context: order_service
-      dockerfile: order_service/internal/orders.dockerfile
+      context: services/order_service
+      dockerfile: internal/orders.dockerfile
     ports:
       - "8001:8001"
     depends_on:
@@ -39,6 +39,24 @@ services:
         condition: service_healthy
       migrations:
         condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - order-network
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment:
+      RABBITMQ_USER: guest
+      RABBITMQ_PASS: guest
     networks:
       - order-network
 
