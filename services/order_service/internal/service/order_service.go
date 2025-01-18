@@ -38,7 +38,7 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData init
 	err = orderServ.ProducerBroker.Publish("my_queue", createdOrder)
 	if err != nil {
 		log.Printf("Error publishing order: %v", err)
-		// нужно что-то придумать
+		// нужно что-то придумать .
 	}
 
 	return createdOrder.ID, nil
