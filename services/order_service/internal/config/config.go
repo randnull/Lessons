@@ -9,6 +9,7 @@ type Config struct {
 	DBConfig
 	ServerConfig
 	BotConfig
+	MQConfig
 }
 
 type DBConfig struct {
@@ -26,6 +27,13 @@ type ServerConfig struct {
 type BotConfig struct {
 	BotToken  string        `env:"BOT_TOKEN" env-default:"7629903300:AAFwHNldwaNDI8cqv7FneC6DtYetbhe0DP0"`
 	AliveTime time.Duration `env:"ALIVE_TIME" env-default:"30h"`
+}
+
+type MQConfig struct {
+	User string `env:"MQ_USER" env-default:"guest"`
+	Pass string `env:"MQ_PASS" env-default:"guest"`
+	Host string `env:"MQ_HOST" env-default:"rabbitmq"`
+	Port string `env:"MQ_PORT" env-default:"5672"`
 }
 
 func NewConfig() (*Config, error) {

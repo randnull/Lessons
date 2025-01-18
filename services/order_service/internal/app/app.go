@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/randnull/Lessons/internal/config"
+	"github.com/randnull/Lessons/internal/rabbitmq"
 	"log"
 
 	"github.com/randnull/Lessons/internal/controllers"
@@ -21,7 +22,9 @@ type App struct {
 
 func NewApp(cfg *config.Config) *App {
 	orderRepo := repository.NewRepository(cfg.DBConfig)
-	orderService := service.NewOrderService(orderRepo)
+	orderBrokerProducer := rabbitmq.NewRabbitMQ(cfg.MQConfig)
+	
+	orderService := service.NewOrderService(orderRepo, orderBrokerProducer)
 	orderController := controllers.NewOrderController(orderService)
 
 	return &App{

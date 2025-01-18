@@ -53,7 +53,7 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	}
 }
 
-func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error) {
+func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData initdata.InitData) (models.OrderToBrokerWithID, error) {
 	timestamp := time.Now()
 
 	fmt.Println(timestamp)
@@ -85,7 +85,18 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData ini
 		log.Fatal(err)
 	} // Норм проверку TODO
 
-	return orderID, nil
+	CreatedOrder := models.OrderToBrokerWithID{
+		ID:          orderID,
+		StudentID:   int(InitData.User.ID),
+		Title:       order.Title,
+		Description: order.Description,
+		Tags:        order.Tags,
+		MinPrice:    order.MinPrice,
+		MaxPrice:    order.MaxPrice,
+		ChatID:      InitData.Chat.ID,
+	}
+
+	return CreatedOrder, nil
 }
 
 func (orderStorage *Repository) GetByID(id string, InitData initdata.InitData) (*models.Order, error) {

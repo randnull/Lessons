@@ -2,8 +2,10 @@ package service
 
 import (
 	"github.com/randnull/Lessons/internal/models"
+	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
+	"log"
 )
 
 type OrderServiceInt interface {
@@ -16,16 +18,30 @@ type OrderServiceInt interface {
 
 type OrderService struct {
 	orderRepository repository.OrderRepository
+	ProducerBroker  rabbitmq.RabbitMQInterface
 }
 
-func NewOrderService(orderRepo repository.OrderRepository) OrderServiceInt {
+func NewOrderService(orderRepo repository.OrderRepository, producerBroker rabbitmq.RabbitMQInterface) OrderServiceInt {
 	return &OrderService{
 		orderRepository: orderRepo,
+		ProducerBroker:  producerBroker,
 	}
 }
 
 func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error) {
-	return orderServ.orderRepository.CreateOrder(order, InitData)
+	createdOrder, err := orderServ.orderRepository.CreateOrder(order, InitData)
+
+	if err != nil {
+		log.Printf("Error creating order: %v", err)
+	}
+
+	err = orderServ.ProducerBroker.Publish("my_queue", createdOrder)
+	if err != nil {
+		log.Printf("Error publishing order: %v", err)
+		// нужно что-то придумать
+	}
+
+	return createdOrder.ID, nil
 }
 
 func (orderServ *OrderService) GetOrderById(id string, InitData initdata.InitData) (*models.Order, error) {

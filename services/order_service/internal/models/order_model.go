@@ -25,3 +25,15 @@ type Order struct {
 	CreatedAt   time.Time      `json:"created_at"`
 	UpdatedAt   time.Time      `json:"updated_at"`
 }
+
+type OrderToBrokerWithID struct {
+	ID          string   `json:"id"`
+	StudentID   int      `json:"student_id"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	MinPrice    int      `json:"min_price"`
+	MaxPrice    int      `json:"max_price"`
+	Tags        []string `json:"tags"`
+	ChatID      int64    `json:"chat_id"`
+	Status      string   `json:"status"`
+}

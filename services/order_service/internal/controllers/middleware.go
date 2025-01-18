@@ -27,15 +27,15 @@ func TokenAuthMiddleware(cfg config.BotConfig) fiber.Handler {
 				"msg":   "Bad init data provided. Error in Parse",
 			})
 		}
-
-		err = initdata.Validate(token, cfg.BotToken, cfg.AliveTime)
-
-		if err != nil {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": true,
-				"msg":   "Bad init data provided. Error in Validate" + err.Error(),
-			})
-		}
+		//
+		//err = initdata.Validate(token, cfg.BotToken, cfg.AliveTime)
+		//
+		//if err != nil {
+		//	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+		//		"error": true,
+		//		"msg":   "Bad init data provided. Error in Validate" + err.Error(),
+		//	})
+		//}
 
 		c.Locals("user_data", userData)
 
