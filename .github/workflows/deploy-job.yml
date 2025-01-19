@@ -5,16 +5,16 @@ on:
     branches: [ "main", "develop" ]
 
 jobs:
-  prepare-environment:
-    runs-on: self-hosted
-    steps:
-      - name: Stop and remove containers, networks
-        run: docker-compose down
-      - name: Remove unused data
-        run: docker system prune -a -f
+#  prepare-environment:
+#    runs-on: self-hosted
+#    steps:
+#      - name: Stop and remove containers, networks
+#        run: docker-compose down
+#      - name: Remove unused data
+#        run: docker system prune -a -f
   deploy:
     runs-on: self-hosted
-    needs: prepare-environment
+#    needs: prepare-environment
     steps:
       - name: checkout repo
         uses: actions/checkout@v3
