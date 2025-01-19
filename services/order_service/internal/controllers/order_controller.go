@@ -114,7 +114,7 @@ func (c *OrderController) DeleteOrderByID(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusNoContent).JSON(fiber.Map{})
 }
 
-// Update order by id
+// Update order by id .
 func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
 	orderID := ctx.Params("id")
 
