@@ -23,7 +23,7 @@ type App struct {
 func NewApp(cfg *config.Config) *App {
 	orderRepo := repository.NewRepository(cfg.DBConfig)
 	orderBrokerProducer := rabbitmq.NewRabbitMQ(cfg.MQConfig)
-	
+
 	orderService := service.NewOrderService(orderRepo, orderBrokerProducer)
 	orderController := controllers.NewOrderController(orderService)
 
@@ -56,9 +56,12 @@ func (a *App) Run() {
 	orders.Use(controllers.TokenAuthMiddleware(a.cfg.BotConfig))
 
 	orders.Post("/", a.controllers.CreateOrder)
-	orders.Get("/:id", a.controllers.GetOrderByID)
+	orders.Get("/id/:id", a.controllers.GetOrderByID)
 	orders.Get("/", a.controllers.GetAllUsersOrders)
-	orders.Delete("/:id", a.controllers.DeleteOrderByID)
+	orders.Delete("/id/:id", a.controllers.DeleteOrderByID)
+
+	orders.Get("/all", a.controllers.GetAllOrders)
+
 	// Put or patch
 
 	log.Fatal(router.Listen(":8001"))

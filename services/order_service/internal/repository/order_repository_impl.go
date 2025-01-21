@@ -154,6 +154,59 @@ func (orderStorage *Repository) GetAllOrders(InitData initdata.InitData) ([]*mod
     			status, 
     			created_at, 
     			updated_at 
+			FROM orders`
+
+	rows, err := orderStorage.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var order models.Order
+		err := rows.Scan(
+			&order.ID,
+			&order.StudentID,
+			&order.Title,
+			&order.Description,
+			&order.Tags,
+			&order.MinPrice,
+			&order.MaxPrice,
+			&order.Status,
+			&order.CreatedAt,
+			&order.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, &order)
+	}
+
+	for i, j := 0, len(orders)-1; i < j; i, j = i+1, j-1 {
+		orders[i], orders[j] = orders[j], orders[i]
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (orderStorage *Repository) GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error) {
+	var orders []*models.Order
+
+	query := `SELECT 
+    			id, 
+    			student_id, 
+    			title, 
+    			description, 
+    			tags, 
+    			min_price, 
+    			max_price, 
+    			status, 
+    			created_at, 
+    			updated_at 
 			FROM orders WHERE student_id = $1`
 
 	rows, err := orderStorage.db.Query(query, InitData.User.ID)

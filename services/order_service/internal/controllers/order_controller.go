@@ -68,15 +68,24 @@ func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {
 }
 
 // Get all exist orders
-//func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
-//	orders, err := c.OrderService.GetAllOrders()
-//
-//	if err != nil {
-//		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
-//	}
-//
-//	return ctx.JSON(orders)
-//}
+func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
+	log.Printf("Get All Orders Called")
+	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	log.Printf("Get All Orders Called")
+
+	orders, err := c.OrderService.GetAllOrders(InitData)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
+	}
+
+	return ctx.JSON(orders)
+}
 
 // Get all order by user_id
 func (c *OrderController) GetAllUsersOrders(ctx *fiber.Ctx) error {
@@ -86,7 +95,7 @@ func (c *OrderController) GetAllUsersOrders(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	orders, err := c.OrderService.GetAllOrders(InitData)
+	orders, err := c.OrderService.GetAllUsersOrders(InitData)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})

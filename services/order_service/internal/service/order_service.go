@@ -12,6 +12,7 @@ type OrderServiceInt interface {
 	CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error)
 	GetOrderById(id string, InitData initdata.InitData) (*models.Order, error)
 	GetAllOrders(InitData initdata.InitData) ([]*models.Order, error)
+	GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error)
 	UpdateOrder(orderID string, order *models.NewOrder, InitData initdata.InitData) error
 	DeleteOrder(orderID string, InitData initdata.InitData) error
 }
@@ -58,4 +59,8 @@ func (orderServ *OrderService) UpdateOrder(orderID string, order *models.NewOrde
 
 func (orderServ *OrderService) DeleteOrder(orderID string, InitData initdata.InitData) error {
 	return orderServ.orderRepository.DeleteOrder(orderID, InitData)
+}
+
+func (orderServ *OrderService) GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error) {
+	return orderServ.orderRepository.GetAllUsersOrders(InitData)
 }

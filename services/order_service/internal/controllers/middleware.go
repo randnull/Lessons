@@ -2,16 +2,14 @@ package controllers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
-	"log"
-
 	"github.com/randnull/Lessons/internal/config"
+	initdata "github.com/telegram-mini-apps/init-data-golang"
 )
 
 func TokenAuthMiddleware(cfg config.BotConfig) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		token := c.Get("token")
-		log.Printf("token: %s", token)
+
 		if token == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,

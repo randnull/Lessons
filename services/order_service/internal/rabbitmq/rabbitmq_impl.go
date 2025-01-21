@@ -32,10 +32,10 @@ func NewRabbitMQ(cfg config.MQConfig) *RabbitMQ {
 		if conn != nil {
 			conn.Close()
 		}
-		//log.Fatalf("failed to connect to RabbitMQ: %v", err)
+		log.Fatalf("failed to connect to RabbitMQ: %v", err)
+	} else {
+		log.Println("Connected to RabbitMQ")
 	}
-
-	//log.Println("Connected to RabbitMQ")
 
 	channel, err := conn.Channel()
 
@@ -43,10 +43,10 @@ func NewRabbitMQ(cfg config.MQConfig) *RabbitMQ {
 		if channel != nil {
 			channel.Close()
 		}
-		//log.Fatalf("failed to open a channel: %v", err)
+		log.Fatalf("failed to open a channel: %v", err)
 	}
 
-	//log.Println("Channel opened")
+	log.Println("Channel opened")
 
 	return &RabbitMQ{
 		conn:    conn,
