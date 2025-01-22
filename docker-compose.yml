@@ -59,6 +59,15 @@ services:
       RABBITMQ_PASS: guest
     networks:
       - order-network
+  answer_engine_fastapi:
+    container_name: "lessons-answer-engine"
+    build:
+      context: services/AnswerEngine
+      dockerfile: src/bot.dockerfile
+    ports:
+      - "7090:7090"
+    networks:
+      - order-network
 
 networks:
   order-network:
