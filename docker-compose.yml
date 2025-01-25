@@ -16,7 +16,9 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - order-network
+      - lessons-network
+    volumes:
+      - habrdb-data:/var/lib/postgresql/data
   migrations:
     image: liquibase/liquibase:latest
     volumes:
@@ -26,9 +28,9 @@ services:
       postgresql:
         condition: service_healthy
     networks:
-      - order-network
+      - lessons-network
   order-service:
-    container_name: "order-service"
+    container_name: "lessons-order-service"
     build:
       context: services/order_service
       dockerfile: internal/orders.dockerfile
@@ -54,7 +56,7 @@ services:
       rabbitmq:
         condition: service_healthy
     networks:
-      - order-network
+      - lessons-network
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -70,7 +72,9 @@ services:
       RABBITMQ_USER: ${MQ_USER}
       RABBITMQ_PASS: ${MQ_PASS}
     networks:
-      - order-network
+      - lessons-network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
   answer_engine_fastapi:
     container_name: "lessons-answer-engine"
     build:
@@ -82,11 +86,15 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
       - FQND_HOST=${FQND_HOST}
     networks:
-      - order-network
+      - lessons-network
     depends_on:
       rabbitmq:
         condition: service_healthy
 
+volumes:
+  habrdb-data:
+  rabbitmq_data:
+
 networks:
-  order-network:
-    name: "order-network"
+  lessons-network:
+    name: "lessons-network"
