@@ -26,7 +26,7 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	DbPort := cfg.DBPort
 	DbDatabase := cfg.DBName
 
-	link := fmt.Sprintf("postgres://%v:%v@%v:%v/%v",
+	link := fmt.Sprintf("postgres://%v:%v@%v:%v/%v?sslmode=disable",
 		DbUser,
 		DbPassword,
 		DbHost,
@@ -56,8 +56,6 @@ func NewRepository(cfg config.DBConfig) *Repository {
 func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData initdata.InitData) (models.OrderToBrokerWithID, error) {
 	timestamp := time.Now()
 
-	fmt.Println(timestamp)
-	//student_id, tutor_id, subject, description, min_price, max_price, created_at, updated_at
 	query := `INSERT INTO orders (student_id, title, description, tags, min_price, max_price, status, created_at, updated_at)
               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)  RETURNING id`
 

@@ -49,9 +49,9 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="otklick_count" type="INTEGER" remarks="">
-                <constraints nullable="false"/>
-            </column>
+<!--            <column name="otklick_count" type="INTEGER" remarks="">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
 
             <column name="created_at" type="TIMESTAMPTZ" remarks="">
                 <constraints nullable="false"/>
