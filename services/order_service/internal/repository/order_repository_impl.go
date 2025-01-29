@@ -261,3 +261,17 @@ func (orderStorage *Repository) DeleteOrder(id string, InitData initdata.InitDat
 }
 
 //func (orderStorage *Repository) VerifyUserOrder(studentID string) ([]*models.Order, error) {}
+
+func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel, InitData initdata.InitData) error {
+	timestamp := time.Now()
+
+	query := `INSERT INTO responses (order_id, tutor_id, created_at) VALUES ($1, $2, $3) RETURNING id`
+
+	_, err := orderStorage.db.Exec(query, response.OrderId, response.OrderId, timestamp)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

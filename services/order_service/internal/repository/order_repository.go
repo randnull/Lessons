@@ -12,4 +12,5 @@ type OrderRepository interface {
 	UpdateOrder(orderID string, order *models.NewOrder, InitData initdata.InitData) error
 	GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error)
 	DeleteOrder(id string, InitData initdata.InitData) error
+	CreateResponse(response *models.NewResponseModel, InitData initdata.InitData) error
 }

@@ -1,0 +1,30 @@
+@startuml er-diagram
+
+skinparam linetype ortho
+
+entity "orders" as orders_table {
+  *id : UUID <<PK>>
+  --
+  *telegram_student_id: INTEGER
+  *title: VARCHAR
+  description: VARCHAR
+  *tags: TEXT[]
+  *min_price: INTEGER
+  *max_price: INTEGER
+  *status: VARCHAR
+'  grade
+  *created_at: TIMESTAMPZ
+  *updated_at: TIMESTAMPZ
+}
+
+entity "responses" as response_table {
+  *id : UUID <<PK>>
+  --
+  *order_id UUID <<FK>>
+  *tutor_id: UUID
+
+  *created_at: TIMESTAMPZ
+}
+
+orders_table::id --> response_table::order_id
+@enduml

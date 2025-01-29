@@ -6,7 +6,6 @@ import (
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/randnull/Lessons/internal/config"
-	"github.com/randnull/Lessons/internal/models"
 	"log"
 	"time"
 )
@@ -54,25 +53,27 @@ func NewRabbitMQ(cfg config.MQConfig) *RabbitMQ {
 	}
 }
 
-func (r *RabbitMQ) Publish(queueName string, OrderInfo models.OrderToBrokerWithID) error {
-	_, err := r.channel.QueueDeclare(
+func (r *RabbitMQ) Publish(queueName string, messageData interface{}) error {
+	//if reflect.TypeOf(messageData).Kind() != reflect.Struct {
+	//	return errors.New("message must be a struct")
+	//}
+
+	message, err := json.Marshal(messageData)
+	if err != nil {
+		log.Fatalf("failed to marshal order info: %v", err)
+	}
+
+	_, err = r.channel.QueueDeclare(
 		queueName, // Имя очереди
 		true,      // Долговечность (durable)
 		false,     // Автоудаление (auto-delete)
 		false,     // Эксклюзивная (exclusive)
 		false,     // Без ожидания (no-wait)
 		nil,       // Доп. аргументы
-	)
-
-	message, err := json.Marshal(OrderInfo)
-
-	if err != nil {
-		log.Fatalf("failed to marshal order info: %v", err)
-	}
+	) // убрать отсюда в New
 
 	if err != nil {
 		log.Printf("failed to declare a queue: %v", err)
-		return err
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

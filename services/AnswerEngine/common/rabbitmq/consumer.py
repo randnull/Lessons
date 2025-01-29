@@ -4,12 +4,14 @@ from typing import Callable
 import aio_pika
 
 class RabbitMQConsumer:
-    def __init__(self, proceed_func: Callable):
+    def __init__(self, proceed_func: Callable, queue_name: str):
         self.user: str = os.getenv('RABBITMQ_USER', "guest") # TODO что-то с кредами приудмать
         self.password: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
         self.host: str = os.getenv('RABBITMQ_HOST', 'rabbitmq')
         self.port: int = int(os.getenv('RABBITMQ_PORT', 5672))
-        self.queue_name: str = os.getenv('RABBITMQ_QUEUE_NAME', 'my_queue')
+
+        self.queue_name: str = queue_name
+
         self.creds: str = f"amqp://{self.user}:{self.password}@{self.host}:{self.port}/"
         self.queue: aio_pika.Queue | None = None
 

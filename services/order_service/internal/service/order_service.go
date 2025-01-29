@@ -34,11 +34,13 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData init
 
 	if err != nil {
 		log.Printf("Error creating order: %v", err)
+		return "", err
 	}
 
 	err = orderServ.ProducerBroker.Publish("my_queue", createdOrder)
 	if err != nil {
 		log.Printf("Error publishing order: %v", err)
+		return "", err
 		// нужно что-то придумать .
 	}
 

@@ -13,6 +13,3 @@ class OrderEngineDto(BaseModel):
 
     pass #     name: str = Field(..., min_length=2, max_length=50, description="Имя клиента")
 
-
-class ResponsesDto(BaseModel):
-    pass

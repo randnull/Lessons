@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -14,10 +15,14 @@ import (
 )
 
 type App struct {
-	cfg         *config.Config
-	repository  repository.OrderRepository
-	service     service.OrderServiceInt
-	controllers *controllers.OrderController
+	cfg        *config.Config
+	repository repository.OrderRepository
+
+	orderService     service.OrderServiceInt
+	orderControllers *controllers.OrderController
+
+	responseService     service.ResponseServiceInt
+	responseControllers *controllers.ResponseController
 }
 
 func NewApp(cfg *config.Config) *App {
@@ -27,11 +32,19 @@ func NewApp(cfg *config.Config) *App {
 	orderService := service.NewOrderService(orderRepo, orderBrokerProducer)
 	orderController := controllers.NewOrderController(orderService)
 
+	responsesService := service.NewResponseService(orderRepo, orderBrokerProducer)
+	responseControllers := controllers.NewResponseController(responsesService)
+
 	return &App{
-		repository:  orderRepo,
-		service:     orderService,
-		controllers: orderController,
-		cfg:         cfg,
+		repository: orderRepo,
+
+		orderService:     orderService,
+		orderControllers: orderController,
+
+		responseService:     responsesService,
+		responseControllers: responseControllers,
+
+		cfg: cfg,
 	}
 }
 
@@ -50,19 +63,26 @@ func (a *App) Run() {
 		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",
 	}))
 
-	router.Get("/", a.controllers.HealtzHandler)
+	router.Get("/", a.orderControllers.HealtzHandler)
 
 	orders := router.Group("/orders")
 	orders.Use(controllers.TokenAuthMiddleware(a.cfg.BotConfig))
 
-	orders.Post("/", a.controllers.CreateOrder)
-	orders.Get("/id/:id", a.controllers.GetOrderByID)
-	orders.Get("/", a.controllers.GetAllUsersOrders)
-	orders.Delete("/id/:id", a.controllers.DeleteOrderByID)
+	orders.Post("/", a.orderControllers.CreateOrder)
+	orders.Get("/id/:id", a.orderControllers.GetOrderByID)
+	orders.Get("/", a.orderControllers.GetAllUsersOrders)
+	orders.Delete("/id/:id", a.orderControllers.DeleteOrderByID)
 
-	orders.Get("/all", a.controllers.GetAllOrders)
+	orders.Get("/all", a.orderControllers.GetAllOrders)
 
 	// Put or patch
 
-	log.Fatal(router.Listen(":8001"))
+	responses := router.Group("/responses")
+	responses.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
+
+	responses.Post("/id/:id", a.responseControllers.ResponseToOrder)
+
+	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
+
+	log.Fatal(router.Listen(ListenPort)) // graceful shutdown
 }

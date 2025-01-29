@@ -11,7 +11,7 @@ services:
       - POSTGRES_PASSWORD=${ORDER_DB_PASSWORD}
       - POSTGRES_DB=${ORDER_DB_NAME}
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "postgresql"]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
       timeout: 5s
       retries: 5

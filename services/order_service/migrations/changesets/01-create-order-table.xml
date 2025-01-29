@@ -33,6 +33,10 @@
                 <constraints nullable="false"/>
             </column>
 
+<!--            <column name="grade" type="VARCHAR" remarks="">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+
             <column name="tags" type="TEXT[]" remarks="">
                 <constraints nullable="false"/>
             </column>

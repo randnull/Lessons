@@ -5,3 +5,5 @@ SQLAlchemy==2.0.37
 uvicorn==0.34.0
 pydantic-settings==2.7.1
 pydantic==2.10.4
+psutil==6.1.1
+

@@ -1,8 +1,8 @@
 from AnswerEngine.common.rabbitmq.consumer import RabbitMQConsumer
-from AnswerEngine.src.rabbitmq.rabbitmq_functions import user_func
+from AnswerEngine.src.rabbitmq.rabbitmq_functions import user_func, response_func
 
-OrderConsumer = RabbitMQConsumer(user_func)
-
+OrderConsumer = RabbitMQConsumer(user_func, "my_queue")
+ResponseConsumer = RabbitMQConsumer(response_func, "order_response")
 
 # Task exception was never retrieved
 
