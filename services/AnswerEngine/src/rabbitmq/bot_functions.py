@@ -29,4 +29,4 @@ async def proceed_response(response: ResponsesDto) -> None:
     print('Я на proceed response', response)
     # await bot.send_message(chat_id=response.order_id, text=message, parse_mode="html")
 
-    await bot.send_message(chat_id=settings.ADMIN_USER, text=message, parse_mode="html")
+    await bot.send_message(chat_id=response.user_id, text=message, parse_mode="html")

@@ -26,7 +26,15 @@ func NewResponseService(orderRepo repository.OrderRepository, producerBroker rab
 func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, InitData initdata.InitData) error {
 	err := s.orderRepository.CreateResponse(Response, InitData)
 
-	err = s.ProducerBroker.Publish("order_response", Response)
+	var ResponseToBroker models.ResponseToBrokerModel
+
+	ResponseToBroker = models.ResponseToBrokerModel{
+		UserId:  InitData.User.ID,
+		OrderId: Response.OrderId,
+		ChatId:  InitData.Chat.ID,
+	}
+
+	err = s.ProducerBroker.Publish("order_response", ResponseToBroker)
 
 	if err != nil {
 		return err
