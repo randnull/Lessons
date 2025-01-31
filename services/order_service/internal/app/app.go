@@ -65,7 +65,7 @@ func (a *App) Run() {
 
 	router.Get("/", a.orderControllers.HealtzHandler)
 
-	orders := router.Group("/orders")
+	orders := router.Group("api/orders")
 	orders.Use(controllers.TokenAuthMiddleware(a.cfg.BotConfig))
 
 	orders.Post("/", a.orderControllers.CreateOrder)
@@ -77,7 +77,7 @@ func (a *App) Run() {
 
 	// Put or patch
 
-	responses := router.Group("/responses")
+	responses := router.Group("api/responses")
 	responses.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
 
 	responses.Post("/id/:id", a.responseControllers.ResponseToOrder)
