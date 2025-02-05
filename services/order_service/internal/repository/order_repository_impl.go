@@ -12,6 +12,7 @@ import (
 	"github.com/randnull/Lessons/internal/models"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -152,7 +153,7 @@ func (orderStorage *Repository) GetAllOrders(InitData initdata.InitData) ([]*mod
     			status, 
     			created_at, 
     			updated_at 
-			FROM orders`
+			FROM orders ORDER BY created_at DESC`
 
 	rows, err := orderStorage.db.Query(query)
 	if err != nil {
@@ -180,10 +181,6 @@ func (orderStorage *Repository) GetAllOrders(InitData initdata.InitData) ([]*mod
 		orders = append(orders, &order)
 	}
 
-	for i, j := 0, len(orders)-1; i < j; i, j = i+1, j-1 {
-		orders[i], orders[j] = orders[j], orders[i]
-	}
-
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
@@ -205,7 +202,7 @@ func (orderStorage *Repository) GetAllUsersOrders(InitData initdata.InitData) ([
     			status, 
     			created_at, 
     			updated_at 
-			FROM orders WHERE student_id = $1`
+			FROM orders WHERE student_id = $1 ORDER BY created_at DESC`
 
 	rows, err := orderStorage.db.Query(query, InitData.User.ID)
 	if err != nil {
@@ -233,10 +230,6 @@ func (orderStorage *Repository) GetAllUsersOrders(InitData initdata.InitData) ([
 		orders = append(orders, &order)
 	}
 
-	for i, j := 0, len(orders)-1; i < j; i, j = i+1, j-1 {
-		orders[i], orders[j] = orders[j], orders[i]
-	}
-
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
@@ -244,7 +237,51 @@ func (orderStorage *Repository) GetAllUsersOrders(InitData initdata.InitData) ([
 	return orders, nil
 }
 
-func (orderStorage *Repository) UpdateOrder(orderID string, order *models.NewOrder, InitData initdata.InitData) error {
+func (orderStorage *Repository) UpdateOrder(orderID string, order *models.UpdateOrder, InitData initdata.InitData) error {
+	query := `UPDATE orders SET `
+	values := []interface{}{}
+
+	index := 1
+
+	if order.Title != "" {
+		query += fmt.Sprintf(`title = $%v, `, strconv.Itoa(index))
+		values = append(values, order.Title)
+		index += 1
+	}
+
+	if order.Description != "" {
+		query += fmt.Sprintf(`description = $%v, `, strconv.Itoa(index))
+		values = append(values, order.Description)
+		index += 1
+	}
+
+	if order.MinPrice != 0 {
+		query += fmt.Sprintf(`min_price = $%v, `, strconv.Itoa(index))
+		values = append(values, order.MinPrice)
+		index += 1
+	}
+
+	if order.MaxPrice != 0 {
+		query += fmt.Sprintf(`max_price = $%v, `, strconv.Itoa(index))
+		values = append(values, order.MaxPrice)
+		index += 1
+	}
+
+	if index == 1 {
+		return nil
+	}
+
+	query = query[:len(query)-2] + ` WHERE id = $` + strconv.Itoa(index)
+	values = append(values, orderID)
+
+	fmt.Println(query, values)
+
+	_, err := orderStorage.db.Exec(query, values...)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

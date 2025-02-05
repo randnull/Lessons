@@ -27,6 +27,8 @@ func (c *OrderController) HealtzHandler(ctx *fiber.Ctx) error {
 func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 	var order models.NewOrder
 
+	log.Printf("Controller: CreateOrder\nRequest model: %v", order)
+
 	if err := ctx.BodyParser(&order); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
@@ -69,14 +71,13 @@ func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {
 
 // Get all exist orders
 func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
-	log.Printf("Get All Orders Called")
 	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	log.Printf("Get All Orders Called")
+	//log.Printf("Controller: GetAllOrders")
 
 	orders, err := c.OrderService.GetAllOrders(InitData)
 
@@ -127,11 +128,15 @@ func (c *OrderController) DeleteOrderByID(ctx *fiber.Ctx) error {
 func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
 	orderID := ctx.Params("id")
 
-	var order models.NewOrder
+	log.Printf("Update Order %+v", orderID)
+
+	var order models.UpdateOrder
 
 	if err := ctx.BodyParser(&order); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
+
+	log.Printf("Update Order %+v", order)
 
 	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
 

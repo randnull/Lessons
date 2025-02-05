@@ -13,6 +13,14 @@ type NewOrder struct {
 	Tags        []string `json:"tags"`
 }
 
+type UpdateOrder struct {
+	Title       string   `json:"title,omitempty"`
+	Description string   `json:"description,omitempty"`
+	MinPrice    int      `json:"min_price,omitempty"`
+	MaxPrice    int      `json:"max_price,omitempty"`
+	Tags        []string `json:"tags,omitempty"`
+}
+
 type Order struct {
 	ID          string         `json:"id"`
 	StudentID   int            `json:"student_id"`

@@ -13,7 +13,7 @@ type OrderServiceInt interface {
 	GetOrderById(id string, InitData initdata.InitData) (*models.Order, error)
 	GetAllOrders(InitData initdata.InitData) ([]*models.Order, error)
 	GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error)
-	UpdateOrder(orderID string, order *models.NewOrder, InitData initdata.InitData) error
+	UpdateOrder(orderID string, order *models.UpdateOrder, InitData initdata.InitData) error
 	DeleteOrder(orderID string, InitData initdata.InitData) error
 }
 
@@ -55,7 +55,7 @@ func (orderServ *OrderService) GetAllOrders(InitData initdata.InitData) ([]*mode
 	return orderServ.orderRepository.GetAllOrders(InitData)
 }
 
-func (orderServ *OrderService) UpdateOrder(orderID string, order *models.NewOrder, InitData initdata.InitData) error {
+func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateOrder, InitData initdata.InitData) error {
 	return orderServ.orderRepository.UpdateOrder(orderID, order, InitData)
 }
 

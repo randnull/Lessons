@@ -51,7 +51,13 @@ func NewApp(cfg *config.Config) *App {
 func (a *App) Run() {
 	router := fiber.New()
 
-	router.Use(logger.New())
+	// В случае плохой производительности - расширить
+	//fiber.Config{
+	//        Prefork:       true,  // включаем предварительное форкование для увеличения производительности на многоядерных процессорах
+	//        ServerHeader:  "Fiber", // добавляем заголовок для идентификации сервера
+	//        CaseSensitive: true,    // включаем чувствительность к регистру в URL
+	//        StrictRouting: true,    // включаем строгую маршрутизацию
+	//    })
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: "*", // НЕБЕЗОПАСНО, ЗАМЕНИТЬ ТОЛЬКО НА ХОСТ ФРОНТА!
@@ -60,7 +66,8 @@ func (a *App) Run() {
 	}))
 
 	router.Use(logger.New(logger.Config{
-		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",
+		Format: "[LOG] ${time} [${ip}]:${port} ${status} - ${method} - ${latency} ${path}\n",
+		// output ...
 	}))
 
 	router.Get("/", a.orderControllers.HealtzHandler)
@@ -68,14 +75,12 @@ func (a *App) Run() {
 	orders := router.Group("api/orders")
 	orders.Use(controllers.TokenAuthMiddleware(a.cfg.BotConfig))
 
-	orders.Post("/", a.orderControllers.CreateOrder)
-	orders.Get("/id/:id", a.orderControllers.GetOrderByID)
-	orders.Get("/", a.orderControllers.GetAllUsersOrders)
-	orders.Delete("/id/:id", a.orderControllers.DeleteOrderByID)
-
-	orders.Get("/all", a.orderControllers.GetAllOrders)
-
-	// Put or patch
+	orders.Post("/", a.orderControllers.CreateOrder)             // StudentOnly
+	orders.Get("/id/:id", a.orderControllers.GetOrderByID)       // All
+	orders.Get("/", a.orderControllers.GetAllUsersOrders)        // All
+	orders.Delete("/id/:id", a.orderControllers.DeleteOrderByID) // StudentOnly
+	orders.Get("/all", a.orderControllers.GetAllOrders)          // TutorOnly
+	orders.Patch("/id/:id", a.orderControllers.UpdateOrderByID)  // StudentOnly
 
 	responses := router.Group("api/responses")
 	responses.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
