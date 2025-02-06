@@ -4,8 +4,8 @@ services:
     image: postgres:latest
     container_name: postgresql
     restart: unless-stopped
-    ports:
-      - "${ORDER_DB_PORT}:${ORDER_DB_PORT}"
+#    ports:
+#      - "${ORDER_DB_PORT}:${ORDER_DB_PORT}"
     environment:
       - POSTGRES_USER=${ORDER_DB_USER}
       - POSTGRES_PASSWORD=${ORDER_DB_PASSWORD}
@@ -60,9 +60,9 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
-    ports:
-      - "${MQ_PORT}:${MQ_PORT}"
-      - "${MQ_UI_PORT}:${MQ_UI_PORT}"
+#    ports:
+#      - "${MQ_PORT}:${MQ_PORT}"
+#      - "${MQ_UI_PORT}:${MQ_UI_PORT}"
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 30s
