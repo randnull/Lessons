@@ -131,21 +131,9 @@ func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
 	log.Println("Пришел запрос на обновление:")
 	orderID := ctx.Params("id")
 
-	body := ctx.Body()
-	fmt.Println("RAW BODY:", string(body))
-
 	log.Printf("Update Order %+v", orderID)
 
 	var order models.UpdateOrder
-
-	var test interface{}
-
-	if err := ctx.BodyParser(&test); err != nil {
-		log.Println("Error :", err.Error())
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
-	}
-
-	fmt.Println(test)
 
 	fmt.Println(ctx)
 

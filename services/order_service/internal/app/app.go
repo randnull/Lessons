@@ -8,6 +8,7 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"log"
+	"strings"
 
 	"github.com/randnull/Lessons/internal/controllers"
 	"github.com/randnull/Lessons/internal/repository"
@@ -61,7 +62,15 @@ func (a *App) Run() {
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: "*", // НЕБЕЗОПАСНО, ЗАМЕНИТЬ ТОЛЬКО НА ХОСТ ФРОНТА!
-		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
+		AllowMethods: strings.Join([]string{
+			fiber.MethodGet,
+			fiber.MethodPost,
+			fiber.MethodHead,
+			fiber.MethodPut,
+			fiber.MethodDelete,
+			fiber.MethodPatch,
+			fiber.MethodOptions,
+		}, ","),
 		AllowHeaders: "*",
 	}))
 
