@@ -135,6 +135,15 @@ func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
 
 	var order models.UpdateOrder
 
+	var test interface{}
+
+	if err := ctx.BodyParser(&test); err != nil {
+		log.Println("Error :", err.Error())
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	fmt.Println(test)
+
 	fmt.Println(ctx)
 
 	if err := ctx.BodyParser(&order); err != nil {
