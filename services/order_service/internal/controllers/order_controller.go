@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 	//"github.com/golang-jwt/jwt/v5"
@@ -126,13 +127,18 @@ func (c *OrderController) DeleteOrderByID(ctx *fiber.Ctx) error {
 
 // Update order by id .
 func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
+
+	log.Println("Пришел запрос на обновление:")
 	orderID := ctx.Params("id")
 
 	log.Printf("Update Order %+v", orderID)
 
 	var order models.UpdateOrder
 
+	fmt.Println(ctx)
+
 	if err := ctx.BodyParser(&order); err != nil {
+		log.Println("Error :", err.Error())
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
