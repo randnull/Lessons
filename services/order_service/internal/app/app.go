@@ -61,7 +61,7 @@ func (a *App) Run() {
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: "*", // НЕБЕЗОПАСНО, ЗАМЕНИТЬ ТОЛЬКО НА ХОСТ ФРОНТА!
-		AllowMethods: "GET,POST,PUT,DELETE",
+		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders: "*",
 	}))
 
@@ -80,7 +80,7 @@ func (a *App) Run() {
 	orders.Get("/", a.orderControllers.GetAllUsersOrders)        // All
 	orders.Delete("/id/:id", a.orderControllers.DeleteOrderByID) // StudentOnly
 	orders.Get("/all", a.orderControllers.GetAllOrders)          // TutorOnly
-	orders.Patch("/id/:id", a.orderControllers.UpdateOrderByID)  // StudentOnly
+	orders.Put("/id/:id", a.orderControllers.UpdateOrderByID)    // StudentOnly
 
 	responses := router.Group("api/responses")
 	responses.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
