@@ -19,10 +19,39 @@ services:
       - lessons-network
     volumes:
       - habrdb-data:/var/lib/postgresql/data
+  answer-engine-postgresql:
+    image: postgres:latest
+    container_name: postgresql
+    restart: unless-stopped
+    ports:
+      - "${ANSWER_DB_PORT}:${ANSWER_DB_PORT}"
+    environment:
+      - POSTGRES_USER=${ANSWER_DB_USER}
+      - POSTGRES_PASSWORD=${ANSWER_DB_PASSWORD}
+      - POSTGRES_DB=${ANSWER_DB_NAME}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lessons-network
+    volumes:
+      - habrdb-data-answer-engine:/var/lib/postgresql/data
   migrations:
     image: liquibase/liquibase:latest
     volumes:
       - ./services/order_service/migrations:/app
+    command: --defaultsFile=/app/order.properties update
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - lessons-network
+  migrations-answer-engine:
+    image: liquibase/liquibase:latest
+    volumes:
+      - ./services/AnswerEngine/migrations:/app
     command: --defaultsFile=/app/order.properties update
     depends_on:
       postgresql:
@@ -60,9 +89,9 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
-#    ports:
-#      - "${MQ_PORT}:${MQ_PORT}"
-#      - "${MQ_UI_PORT}:${MQ_UI_PORT}"
+    ports:
+      - "${MQ_PORT}:${MQ_PORT}"
+      - "${MQ_UI_PORT}:${MQ_UI_PORT}"
     healthcheck:
       test: rabbitmq-diagnostics -q ping
       interval: 30s
@@ -91,9 +120,10 @@ services:
       rabbitmq:
         condition: service_healthy
 
-volumes:
+volumes: # Volume только вручную!!!!!!
   habrdb-data:
   rabbitmq_data:
+  habrdb-data-answer-engine:
 
 networks:
   lessons-network:

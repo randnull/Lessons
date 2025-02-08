@@ -1,10 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-from config.settings import settings
+from AnswerEngine.src.config.settings import settings
 
-
-DATABASE_URL = f"postgresql+asyncpg://{settings.DB_LOGIN}:{settings.DB_PASSWORD}@{settings.DB_HOST}/{settings.DB_NAME}"
+DATABASE_URL = f"postgresql+asyncpg://{settings.ANSWER_DB_USER}:{settings.ANSWER_DB_PASSWORD}@{settings.ANSWER_DB_HOST}/{settings.ANSWER_DB_NAME}"
 
 engine = create_async_engine(DATABASE_URL, echo=True, future=True)
 

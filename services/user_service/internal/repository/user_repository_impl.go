@@ -37,5 +37,5 @@ func NewRepository() *Repository {
 }
 
 func (r *Repository) CreateUser(user *models.User) (string, error) {
-
+	return "", nil
 }

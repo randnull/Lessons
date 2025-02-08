@@ -3,7 +3,9 @@
 from sqlalchemy import DateTime, Enum, UUID, func, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
-from AnswerEngine.common.database_connection import Base
+from AnswerEngine.common.database_connection.base import Base
+
+import datetime
 
 
 class OrderEngineDao(Base):
@@ -25,6 +27,26 @@ class OrderEngineDao(Base):
     updated_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
 
     responses: Mapped[list["ResponsesDao"]] = relationship(back_populates="order_engine")
+
+    @classmethod
+    def to_dao(cls, order_engine_dto): #-> OrderEngineDao
+        return OrderEngineDao(
+            status=order_engine_dto.status,
+            order_id=order_engine_dto.id,
+            created_at=datetime.datetime.now(),
+            updated_at=datetime.datetime.now()
+        )
+
+    # id: UUID4 = Field(..., title="Chat ID")
+    # student_id: int = Field(..., title="Order Title")
+    # title: str = Field(..., title="Order Title")
+    # description: str = Field(..., title="Order Description")
+    # min_price: int = Field(..., title="Order MinPrice")
+    # max_price: int = Field(..., title="Order MaxPrice")
+    # tags: list = Field(..., title="Order Tags")
+    # status: str = Field(..., title="Order Status")
+    # # chat_id: int = Field(..., title="Chat ID")
+    #
 
 class ResponsesDao(Base):
     __tablename__ = "responses"

@@ -7,7 +7,7 @@ class RabbitMQConsumer:
     def __init__(self, proceed_func: Callable, queue_name: str):
         self.user: str = os.getenv('RABBITMQ_USER', "guest") # TODO что-то с кредами приудмать
         self.password: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
-        self.host: str = os.getenv('RABBITMQ_HOST', 'rabbitmq')
+        self.host: str = os.getenv('RABBITMQ_HOST', '127.0.0.1')
         self.port: int = int(os.getenv('RABBITMQ_PORT', 5672))
 
         self.queue_name: str = queue_name
