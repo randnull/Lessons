@@ -12,7 +12,7 @@
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
 
     <changeSet author="k.goryunov" id="create-order-table">
-        <createTable tableName="orders" remarks="table with clients orders">
+        <createTable tableName="order_engine" remarks="table with clients orders">
             <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
                 <constraints nullable="false" unique="true" />
             </column>

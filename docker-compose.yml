@@ -36,8 +36,8 @@ services:
       retries: 5
     networks:
       - lessons-network
-    volumes:
-      - habrdb-data-answer-engine:/var/lib/postgresql/data
+#    volumes:
+#      - habrdb-data-answer-engine:/var/lib/postgresql/data
   migrations:
     image: liquibase/liquibase:latest
     volumes:
@@ -52,10 +52,10 @@ services:
     image: liquibase/liquibase:latest
     volumes:
       - ./services/AnswerEngine/migrations:/app
-    command: --defaultsFile=/app/order.properties update
-    depends_on:
-      postgresql:
-        condition: service_healthy
+    command: --defaultsFile=/app/answer.properties update
+#    depends_on:
+#      postgresql:
+#        condition: service_healthy
     networks:
       - lessons-network
   order-service:
