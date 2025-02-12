@@ -1,19 +1,27 @@
 package service
 
 import (
+	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/repository"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
 )
 
-type OrderServiceInt interface {
+type UserServiceInt interface {
+	GetUserById(userID string) (*models.User, error)
 }
 
-type OrderService struct {
-	orderRepository repository.UserRepository
+type UserService struct {
+	userRepository repository.UserRepository
 }
 
-func NewOrderService(orderRepo repository.UserRepository) OrderServiceInt {
-	return &OrderService{
-		orderRepository: orderRepo,
+func NewUserService(userRepo repository.UserRepository) UserServiceInt {
+	return &UserService{
+		userRepository: userRepo,
 	}
+}
+
+func (s UserService) GetUserById(userID string) (*models.User, error) {
+	return &models.User{
+		UserId: "c1f6d20d-35aa-4268-b711-fd19f994c0ae",
+		Name:   "John",
+	}, nil
 }
