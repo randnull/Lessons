@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+package users;
+
+option go_package = "./";
+
+import "google/protobuf/timestamp.proto";
+
+message User {
+  string id = 1;
+  string name = 2;
+//  int64 telegram_id = 2;
+//  string title = 3;
+//  string body = 4;
+//  google.protobuf.Timestamp created_at = 5;
+//  int64 status = 6;
+}
+
+service PostsService {
+  rpc CreateUser(CreateUserRequest) returns (CreateResponse);
+//  rpc DeletePost(DeleteRequest) returns (Response);
+  rpc GetUserById(GetById) returns (User);
+//  rpc UpdatePost(UpdateRequest) returns (Response);
+  rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
+}
+
+message CreateUserRequest {
+  int64 telegram_id = 1;
+  string name = 2;
+}
+
+message CreateResponse {
+  string id = 1;
+}
+
+message GetById {
+  string id = 1;
+}
+
+message GetAllRequest {
+
+}
+
+message GetAllResponse {
+  repeated User users = 1;
+}
