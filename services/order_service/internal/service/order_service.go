@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
@@ -10,7 +11,7 @@ import (
 
 type OrderServiceInt interface {
 	CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error)
-	GetOrderById(id string, InitData initdata.InitData) (*models.Order, error)
+	GetOrderById(id string, InitData initdata.InitData) (*models.OrderDetails, error)
 	GetAllOrders(InitData initdata.InitData) ([]*models.Order, error)
 	GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error)
 	UpdateOrder(orderID string, order *models.UpdateOrder, InitData initdata.InitData) error
@@ -20,12 +21,14 @@ type OrderServiceInt interface {
 type OrderService struct {
 	orderRepository repository.OrderRepository
 	ProducerBroker  rabbitmq.RabbitMQInterface
+	GRPCClient      gRPC_client.GRPCClientInt
 }
 
-func NewOrderService(orderRepo repository.OrderRepository, producerBroker rabbitmq.RabbitMQInterface) OrderServiceInt {
+func NewOrderService(orderRepo repository.OrderRepository, producerBroker rabbitmq.RabbitMQInterface, grpcClient gRPC_client.GRPCClientInt) OrderServiceInt {
 	return &OrderService{
 		orderRepository: orderRepo,
 		ProducerBroker:  producerBroker,
+		GRPCClient:      grpcClient,
 	}
 }
 
@@ -47,7 +50,14 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData init
 	return createdOrder.ID, nil
 }
 
-func (orderServ *OrderService) GetOrderById(id string, InitData initdata.InitData) (*models.Order, error) {
+func (orderServ *OrderService) GetOrderById(id string, InitData initdata.InitData) (*models.OrderDetails, error) {
+	//get, err := http.Get(fmt.Sprintf("127.0.0.1:7090/responses/%v", id))
+	//if err != nil {
+	//	return nil, err
+	//}
+	//fmt.Println(get)
+	//fmt.Println(orderServ.GRPCClient.GetUser(context.Background(), "123"))
+
 	return orderServ.orderRepository.GetByID(id, InitData)
 }
 

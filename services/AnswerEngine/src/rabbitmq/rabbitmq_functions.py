@@ -14,9 +14,15 @@ async def user_func(message: IncomingMessage):
         body = json.loads(message.body.decode())
         new_order: OrderEngineDto = OrderEngineDto(**body)
 
+        print('Success dto')
+
         await create_new_answer(new_order)
 
+        # await message.ack()
+
         await proceed_order(new_order)
+
+        print('Success response')
 
 
 async def response_func(message: IncomingMessage):

@@ -21,7 +21,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="tutor_id" type="${uuid_type}" remarks="">
+            <column name="tutor_id" type="BIGINT" remarks="">
                 <constraints nullable="false"/>
             </column>
 

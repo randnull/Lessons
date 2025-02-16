@@ -7,7 +7,7 @@ import (
 
 type OrderRepository interface {
 	CreateOrder(order *models.NewOrder, InitData initdata.InitData) (models.OrderToBrokerWithID, error)
-	GetByID(id string, InitData initdata.InitData) (*models.Order, error)
+	GetByID(id string, InitData initdata.InitData) (*models.OrderDetails, error)
 	GetAllOrders(InitData initdata.InitData) ([]*models.Order, error)
 	UpdateOrder(orderID string, order *models.UpdateOrder, InitData initdata.InitData) error
 	GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error)

@@ -9,8 +9,8 @@ answers_router = APIRouter(prefix="/responses", tags=["responses"])
 
 AnswersServiceBase = Annotated[AnswersService, Depends(AnswersService)]
 
-@answers_router.post("/{order_id}", tags=["responses"])
-async def get_responses(order_id: int, answers_service: AnswersServiceBase):
+@answers_router.get("/{order_id}", tags=["responses"])
+async def get_responses(order_id: str, answers_service: AnswersServiceBase):
     """
     Get responses by order_id
     """

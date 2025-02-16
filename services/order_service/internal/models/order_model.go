@@ -8,6 +8,7 @@ import (
 type NewOrder struct {
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
+	Grade       string   `json:"grade"`
 	MinPrice    int      `json:"min_price"`
 	MaxPrice    int      `json:"max_price"`
 	Tags        []string `json:"tags"`
@@ -16,22 +17,41 @@ type NewOrder struct {
 type UpdateOrder struct {
 	Title       string   `json:"title,omitempty"`
 	Description string   `json:"description,omitempty"`
+	Grade       string   `json:"grade,omitempty"`
 	MinPrice    int      `json:"min_price,omitempty"`
 	MaxPrice    int      `json:"max_price,omitempty"`
 	Tags        []string `json:"tags,omitempty"`
 }
 
 type Order struct {
-	ID          string         `json:"id"`
-	StudentID   int            `json:"student_id"`
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	MinPrice    int            `json:"min_price"`
-	MaxPrice    int            `json:"max_price"`
-	Tags        pq.StringArray `json:"tags"`
-	Status      string         `json:"status"`
-	CreatedAt   time.Time      `json:"created_at"`
-	UpdatedAt   time.Time      `json:"updated_at"`
+	ID            string         `json:"id"`
+	StudentID     int            `json:"student_id"`
+	Title         string         `json:"title"`
+	Description   string         `json:"description"`
+	Grade         string         `json:"grade"`
+	MinPrice      int            `json:"min_price"`
+	MaxPrice      int            `json:"max_price"`
+	Tags          pq.StringArray `json:"tags"`
+	Status        string         `json:"status"`
+	ResponseCount int            `json:"response_count"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
+}
+
+type OrderDetails struct {
+	ID            string         `json:"id"`
+	StudentID     int            `json:"student_id"`
+	Title         string         `json:"title"`
+	Description   string         `json:"description"`
+	Grade         string         `json:"grade"`
+	MinPrice      int            `json:"min_price"`
+	MaxPrice      int            `json:"max_price"`
+	Tags          pq.StringArray `json:"tags"`
+	Status        string         `json:"status"`
+	ResponseCount int            `json:"response_count"`
+	Responses     []Response     `json:"responses"`
+	CreatedAt     time.Time      `json:"created_at"`
+	UpdatedAt     time.Time      `json:"updated_at"`
 }
 
 type OrderToBrokerWithID struct {

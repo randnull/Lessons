@@ -18,11 +18,15 @@ func NewResponseController(ResponseServ service.ResponseServiceInt) *ResponseCon
 }
 
 func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
+	orderID := ctx.Params("id")
+
 	var NewResponse models.NewResponseModel
 
-	if err := ctx.BodyParser(&NewResponse); err != nil {
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	}
+	//if err := ctx.BodyParser(&NewResponse); err != nil {
+	//	return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	//}
+
+	NewResponse.OrderId = orderID
 
 	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
 

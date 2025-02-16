@@ -11,41 +11,21 @@
     <property name="uuid_type" value="uuid" dbms="postgresql"/>
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
 
-    <changeSet author="k.goryunov" id="create-product-table">
-        <createTable tableName="orders" remarks="table with clients orders">
+    <changeSet author="k.goryunov" id="create-users-table">
+        <createTable tableName="users" remarks="table with users">
             <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
                 <constraints nullable="false" unique="true" />
             </column>
 
-            <column name="student_id" type="${uuid_type}" remarks="">
+            <column name="telegram_id" type="${uuid_type}" remarks="">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="tutor_id" type="${uuid_type}" remarks="">
-                <constraints nullable="false"/>
-            </column>
-
-            <column name="subject" type="VARCHAR" remarks="">
-                <constraints nullable="false"/>
-            </column>
-
-            <column name="description" type="VARCHAR" remarks="">
-                <constraints nullable="false"/>
-            </column>
-
-            <column name="min_price" type="INTEGER" remarks="">
-                <constraints nullable="false"/>
-            </column>
-
-            <column name="max_price" type="INTEGER" remarks="">
+            <column name="name" type="VARCHAR" remarks="">
                 <constraints nullable="false"/>
             </column>
 
             <column name="created_at" type="TIMESTAMP" remarks="">
-                <constraints nullable="false"/>
-            </column>
-
-            <column name="updated_at" type="TIMESTAMP" remarks="">
                 <constraints nullable="false"/>
             </column>
         </createTable>

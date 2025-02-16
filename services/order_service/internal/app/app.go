@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/randnull/Lessons/internal/config"
+	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"log"
 	"strings"
@@ -27,10 +28,11 @@ type App struct {
 }
 
 func NewApp(cfg *config.Config) *App {
+	ordergRPC := gRPC_client.NewGRPCClient()
 	orderRepo := repository.NewRepository(cfg.DBConfig)
 	orderBrokerProducer := rabbitmq.NewRabbitMQ(cfg.MQConfig)
 
-	orderService := service.NewOrderService(orderRepo, orderBrokerProducer)
+	orderService := service.NewOrderService(orderRepo, orderBrokerProducer, ordergRPC)
 	orderController := controllers.NewOrderController(orderService)
 
 	responsesService := service.NewResponseService(orderRepo, orderBrokerProducer)
@@ -54,11 +56,11 @@ func (a *App) Run() {
 
 	// В случае плохой производительности - расширить
 	//fiber.Config{
-	//        Prefork:       true,  // включаем предварительное форкование для увеличения производительности на многоядерных процессорах
-	//        ServerHeader:  "Fiber", // добавляем заголовок для идентификации сервера
-	//        CaseSensitive: true,    // включаем чувствительность к регистру в URL
-	//        StrictRouting: true,    // включаем строгую маршрутизацию
-	//    })
+	//       Prefork:       true,  // включаем предварительное форкование для увеличения производительности на многоядерных процессорах
+	//       ServerHeader:  "Fiber", // добавляем заголовок для идентификации сервера
+	//       CaseSensitive: true,    // включаем чувствительность к регистру в URL
+	//       StrictRouting: true,    // включаем строгую маршрутизацию
+	//   })
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: "*", // НЕБЕЗОПАСНО, ЗАМЕНИТЬ ТОЛЬКО НА ХОСТ ФРОНТА!

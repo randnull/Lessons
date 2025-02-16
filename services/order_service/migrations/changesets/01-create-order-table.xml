@@ -21,10 +21,6 @@
                 <constraints nullable="false"/> 
             </column>
 
-<!--            <column name="tutor_id" type="${uuid_type}" remarks="">-->
-<!--                <constraints nullable="false"/>-->
-<!--            </column>-->
-
             <column name="title" type="VARCHAR" remarks="">
                 <constraints nullable="false"/>
             </column>
@@ -33,9 +29,9 @@
                 <constraints nullable="false"/>
             </column>
 
-<!--            <column name="grade" type="VARCHAR" remarks="">-->
-<!--                <constraints nullable="false"/>-->
-<!--            </column>-->
+            <column name="grade" type="VARCHAR" remarks="">
+                <constraints nullable="false"/>
+            </column>
 
             <column name="tags" type="TEXT[]" remarks="">
                 <constraints nullable="false"/>
@@ -53,9 +49,9 @@
                 <constraints nullable="false"/>
             </column>
 
-<!--            <column name="otklick_count" type="INTEGER" remarks="">-->
-<!--                <constraints nullable="false"/>-->
-<!--            </column>-->
+            <column name="response_count" type="INTEGER" remarks="">
+                <constraints nullable="false"/>
+            </column>
 
             <column name="created_at" type="TIMESTAMPTZ" remarks="">
                 <constraints nullable="false"/>

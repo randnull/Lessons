@@ -4,8 +4,8 @@ services:
     image: postgres:latest
     container_name: postgresql
     restart: unless-stopped
-#    ports:
-#      - "${ORDER_DB_PORT}:${ORDER_DB_PORT}"
+    ports:
+      - "${ORDER_DB_PORT}:${ORDER_DB_PORT}"
     environment:
       - POSTGRES_USER=${ORDER_DB_USER}
       - POSTGRES_PASSWORD=${ORDER_DB_PASSWORD}
@@ -17,14 +17,14 @@ services:
       retries: 5
     networks:
       - lessons-network
-    volumes:
-      - habrdb-data:/var/lib/postgresql/data
+#    volumes:
+#      - habrdb-data:/var/lib/postgresql/data
   answer-engine-postgresql:
     image: postgres:latest
-    container_name: postgresql
+    container_name: postgresql-answer
     restart: unless-stopped
     ports:
-      - "${ANSWER_DB_PORT}:${ANSWER_DB_PORT}"
+      - "5433:5432"
     environment:
       - POSTGRES_USER=${ANSWER_DB_USER}
       - POSTGRES_PASSWORD=${ANSWER_DB_PASSWORD}

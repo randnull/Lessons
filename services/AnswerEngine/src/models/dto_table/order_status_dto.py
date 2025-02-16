@@ -9,7 +9,7 @@ class OrderEngineDto(BaseModel):
     max_price: int = Field(..., title="Order MaxPrice")
     tags: list = Field(..., title="Order Tags")
     status: str = Field(..., title="Order Status")
-    # chat_id: int = Field(..., title="Chat ID")
+    chat_id: int = Field(..., title="Chat ID")
 
     #     name: str = Field(..., min_length=2, max_length=50, description="Имя клиента")
     @classmethod
