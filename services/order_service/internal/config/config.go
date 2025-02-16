@@ -20,29 +20,6 @@ type DBConfig struct {
 	DBName     string `env:"DB_NAME" env-default:"orders_database"` //  env-default:"orders_database_bhw2"
 }
 
-//ORDER_DB_USER=postgres
-//ORDER_DB_PASSWORD=postgres
-//ORDER_DB_NAME=orders_database
-//ORDER_DB_PORT=5432
-//ORDER_DB_HOST=postgresql
-//ORDER_SERVER_PORT=8001
-//
-//ANSWER_SERVER_PORT=7090
-//ANSWER_DB_USER=postgres
-//ANSWER_DB_PASSWORD=postgres
-//ANSWER_DB_NAME=answer_engine_database
-//ANSWER_DB_PORT=5432
-//ANSWER_DB_HOST=
-//FQND_HOST=jc3nis-185-200-106-136.ru.tuna.am
-//
-//BOT_TOKEN=7629903300:AAFwHNldwaNDI8cqv7FneC6DtYetbhe0DP0
-//
-//MQ_USER=guest
-//MQ_PASS=guest
-//MQ_HOST=rabbitmq
-//MQ_PORT=5672
-//MQ_UI_PORT=15672
-
 type ServerConfig struct {
 	ServerPort string `env:"SERVER_PORT" env-default:"6050"` //  env-default:"6050"
 }

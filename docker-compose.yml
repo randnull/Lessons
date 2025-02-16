@@ -23,8 +23,8 @@ services:
     image: postgres:latest
     container_name: postgresql-answer
     restart: unless-stopped
-    ports:
-      - "5433:5432"
+#    ports:
+#      - "5433:5432"
     environment:
       - POSTGRES_USER=${ANSWER_DB_USER}
       - POSTGRES_PASSWORD=${ANSWER_DB_PASSWORD}
@@ -114,6 +114,7 @@ services:
     environment:
       - BOT_TOKEN=${BOT_TOKEN}
       - FQND_HOST=${FQND_HOST}
+      
     networks:
       - lessons-network
     depends_on:

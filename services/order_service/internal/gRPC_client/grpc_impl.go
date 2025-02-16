@@ -18,7 +18,7 @@ func NewGRPCClient() *GRPCClient {
 	fmt.Println("Waiting connection")
 
 	// FATAL!!!! ОЖИДАЕТ Connection до КОНЦА!! СРОЧНО ИСПРАВИТЬ
-	conn, err := grpc.Dial("localhost:2000", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial("lessons-user-service:2000", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatal("Can't establish connect with gRPC. Fatal Error")
 	}
