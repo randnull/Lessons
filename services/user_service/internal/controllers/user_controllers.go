@@ -2,10 +2,9 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	pb "github.com/randnull/Lessons/internal/gRPC"
+	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
-	"log"
 )
 
 type UserControllers struct {
@@ -19,28 +18,28 @@ func NewUserControllers(userService service.UserServiceInt) *UserControllers {
 	}
 }
 
-func (s *UserControllers) GetUserById(ctx context.Context, in *pb.GetById) (*pb.User, error) {
-	//post, err := s.repo.GetById(in.Id, int(in.UserId))
-	user, err := s.UserService.GetUserById(in.Id)
-	fmt.Println(in.Id)
+func (s *UserControllers) CreateUser(ctx context.Context, in *pb.CreateUserRequest) (*pb.CreateResponse, error) {
+	userID, err := s.UserService.CreateUser(models.CreateUser{Name: in.Name, TelegramId: in.TelegramId})
 	if err != nil {
-		log.Fatal("aaaaa")
+		return nil, err
 	}
-	//if err != nil {
-	//	status = 1
-	//	postAnswer := &pb.Post{
-	//		Id:        "",
-	//		UserId:    0,
-	//		Title:     "",
-	//		Body:      "",
-	//		CreatedAt: timestamppb.New(time.Now()),
-	//		Status:    int64(status),
-	//	}
-	//	return postAnswer, nil
-	//}
+
+	userPB := &pb.CreateResponse{
+		Id: userID,
+	}
+
+	return userPB, nil
+}
+
+func (s *UserControllers) GetUserById(ctx context.Context, in *pb.GetById) (*pb.User, error) {
+	user, err := s.UserService.GetUserById(in.Id)
+
+	if err != nil {
+		return nil, err
+	}
 
 	userPB := &pb.User{
-		Id:   user.UserId,
+		Id:   user.Id,
 		Name: user.Name,
 	}
 

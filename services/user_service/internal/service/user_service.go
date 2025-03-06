@@ -6,7 +6,8 @@ import (
 )
 
 type UserServiceInt interface {
-	GetUserById(userID string) (*models.User, error)
+	GetUserById(telegramID int64) (*models.UserDB, error)
+	CreateUser(user models.CreateUser) (string, error)
 }
 
 type UserService struct {
@@ -19,9 +20,10 @@ func NewUserService(userRepo repository.UserRepository) UserServiceInt {
 	}
 }
 
-func (s UserService) GetUserById(userID string) (*models.User, error) {
-	return &models.User{
-		UserId: "c1f6d20d-35aa-4268-b711-fd19f994c0ae",
-		Name:   "John",
-	}, nil
+func (s UserService) GetUserById(telegramID int64) (*models.UserDB, error) {
+	return s.userRepository.GetUserInfoById(telegramID)
+}
+
+func (s UserService) CreateUser(user models.CreateUser) (string, error) {
+	return s.userRepository.CreateUser(&user)
 }

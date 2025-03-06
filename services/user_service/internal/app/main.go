@@ -20,7 +20,7 @@ type App struct {
 }
 
 func NewApp(cfg *config.Config) *App {
-	userRepo := repository.NewRepository() //cfg.DBConfig
+	userRepo := repository.NewRepository(cfg.DBConfig) //cfg.DBConfig
 	userServic := service.NewUserService(userRepo)
 	userController := controllers.NewUserControllers(userServic)
 	return &App{

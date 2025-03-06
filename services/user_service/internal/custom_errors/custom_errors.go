@@ -1,4 +1,4 @@
-package errors
+package custom_errors
 
 import "errors"
 
@@ -6,3 +6,4 @@ import "errors"
 
 // Ошибки запроса
 var UserNotFound = errors.New("user not found")
+var ErrorWithCreate = errors.New("cannot create user")
