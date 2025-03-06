@@ -2,10 +2,11 @@ package gRPC_client
 
 import (
 	"context"
-	pb "github.com/randnull/Lessons/internal/gRPC"
+	"github.com/randnull/Lessons/internal/models"
 )
 
 type GRPCClientInt interface {
-	GetUser(ctx context.Context, userID string) (*pb.User, error)
+	GetUser(ctx context.Context, userID int64) (*models.User, error)
+	CreateUser(ctx context.Context, user *models.CreateUser) (string, error)
 	Close()
 }

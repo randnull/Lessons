@@ -21,7 +21,11 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="tutor_id" type="BIGINT" remarks="">
+            <column name="name" type="VARCHAR" remarks="">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="tutor_id" type="${uuid_type}" remarks="">
                 <constraints nullable="false"/>
             </column>
 

@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v5.29.3
-// source: services/shared/tutors.proto
+// source: tutors.proto
 
-package __
+package gRPC
 
 import (
 	context "context"
@@ -197,5 +197,5 @@ var PostsService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "services/shared/tutors.proto",
+	Metadata: "tutors.proto",
 }

@@ -25,6 +25,9 @@ type App struct {
 
 	responseService     service.ResponseServiceInt
 	responseControllers *controllers.ResponseController
+
+	userService     service.UserServiceInt
+	userControllers *controllers.UserController
 }
 
 func NewApp(cfg *config.Config) *App {
@@ -35,8 +38,11 @@ func NewApp(cfg *config.Config) *App {
 	orderService := service.NewOrderService(orderRepo, orderBrokerProducer, ordergRPC)
 	orderController := controllers.NewOrderController(orderService)
 
-	responsesService := service.NewResponseService(orderRepo, orderBrokerProducer)
+	responsesService := service.NewResponseService(orderRepo, orderBrokerProducer, ordergRPC)
 	responseControllers := controllers.NewResponseController(responsesService)
+
+	usersService := service.NewUSerService(ordergRPC)
+	usersControllers := controllers.NewUserController(usersService)
 
 	return &App{
 		repository: orderRepo,
@@ -46,6 +52,9 @@ func NewApp(cfg *config.Config) *App {
 
 		responseService:     responsesService,
 		responseControllers: responseControllers,
+
+		userService:     usersService,
+		userControllers: usersControllers,
 
 		cfg: cfg,
 	}
@@ -97,6 +106,11 @@ func (a *App) Run() {
 	responses.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
 
 	responses.Post("/id/:id", a.responseControllers.ResponseToOrder)
+
+	users := router.Group("/api/users")
+	users.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
+
+	users.Post("/", a.userControllers.CreateUser)
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 

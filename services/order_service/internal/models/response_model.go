@@ -8,7 +8,7 @@ type NewResponseModel struct {
 
 type Response struct {
 	ID        string    `json:"id"`
-	TutorID   int64     `json:"tutor_id"`
+	TutorID   string    `json:"tutor_id"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"created_at"`
 }

@@ -1,6 +1,9 @@
 package service
 
 import (
+	"context"
+	"github.com/randnull/Lessons/internal/custom_errors"
+	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
@@ -14,17 +17,25 @@ type ResponseServiceInt interface {
 type ResponseService struct {
 	orderRepository repository.OrderRepository
 	ProducerBroker  rabbitmq.RabbitMQInterface
+	GRPCClient      gRPC_client.GRPCClientInt
 }
 
-func NewResponseService(orderRepo repository.OrderRepository, producerBroker rabbitmq.RabbitMQInterface) ResponseServiceInt {
+func NewResponseService(orderRepo repository.OrderRepository, producerBroker rabbitmq.RabbitMQInterface, grpcClient gRPC_client.GRPCClientInt) ResponseServiceInt {
 	return &ResponseService{
 		orderRepository: orderRepo,
 		ProducerBroker:  producerBroker,
+		GRPCClient:      grpcClient,
 	}
 }
 
 func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, InitData initdata.InitData) error {
-	err := s.orderRepository.CreateResponse(Response, InitData)
+	TutorInfo, err := s.GRPCClient.GetUser(context.Background(), InitData.User.ID)
+
+	if err != nil {
+		return custom_errors.ErrorGetUser
+	}
+
+	err = s.orderRepository.CreateResponse(Response, TutorInfo)
 
 	var ResponseToBroker models.ResponseToBrokerModel
 

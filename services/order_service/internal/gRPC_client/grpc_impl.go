@@ -3,7 +3,9 @@ package gRPC_client
 import (
 	"context"
 	"fmt"
+	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
+	"github.com/randnull/Lessons/internal/models"
 	"google.golang.org/grpc"
 	"log"
 	"time"
@@ -38,9 +40,31 @@ func (g GRPCClient) Close() {
 	}
 }
 
-func (g GRPCClient) GetUser(ctx context.Context, userID string) (*pb.User, error) {
+func (g GRPCClient) GetUser(ctx context.Context, userID int64) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	return g.client.GetUserById(ctx, &pb.GetById{Id: userID})
+	userPB, err := g.client.GetUserById(ctx, &pb.GetById{Id: userID})
+
+	if err != nil {
+		return nil, custom_errors.ErrorGetUser
+	}
+
+	return &models.User{
+		Id:   userPB.Id,
+		Name: userPB.Name,
+	}, nil
+}
+
+func (g GRPCClient) CreateUser(ctx context.Context, user *models.CreateUser) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	userID, err := g.client.CreateUser(ctx, &pb.CreateUserRequest{Name: user.Name, TelegramId: user.TelegramId})
+
+	if err != nil {
+		return "", custom_errors.ErrorCreateUser
+	}
+
+	return userID.Id, nil
 }

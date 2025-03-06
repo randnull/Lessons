@@ -43,7 +43,7 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData init
 	err = orderServ.ProducerBroker.Publish("my_queue", createdOrder)
 	if err != nil {
 		log.Printf("Error publishing order: %v", err)
-		return "", err
+		return createdOrder.ID, nil
 		// нужно что-то придумать .
 	}
 
@@ -51,12 +51,6 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData init
 }
 
 func (orderServ *OrderService) GetOrderById(id string, InitData initdata.InitData) (*models.OrderDetails, error) {
-	//get, err := http.Get(fmt.Sprintf("127.0.0.1:7090/responses/%v", id))
-	//if err != nil {
-	//	return nil, err
-	//}
-	//fmt.Println(get)
-	//fmt.Println(orderServ.GRPCClient.GetUser(context.Background(), "123"))
 
 	return orderServ.orderRepository.GetByID(id, InitData)
 }
