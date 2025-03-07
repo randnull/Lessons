@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
@@ -19,6 +20,7 @@ func NewUserControllers(userService service.UserServiceInt) *UserControllers {
 }
 
 func (s *UserControllers) CreateUser(ctx context.Context, in *pb.CreateUserRequest) (*pb.CreateResponse, error) {
+	fmt.Println(in.Name)
 	userID, err := s.UserService.CreateUser(models.CreateUser{Name: in.Name, TelegramId: in.TelegramId})
 	if err != nil {
 		return nil, err

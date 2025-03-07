@@ -69,7 +69,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 		user.Name,
 		currentTime,
 	).Scan(&UserId)
-
+	fmt.Println(err)
 	if err != nil {
 		return "", custom_errors.ErrorWithCreate
 	}

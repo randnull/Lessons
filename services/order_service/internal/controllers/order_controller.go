@@ -52,6 +52,23 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 	})
 }
 
+func (c *OrderController) GetOrderByIdTutor(ctx *fiber.Ctx) error {
+	id := ctx.Params("id")
+
+	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	order, err := c.OrderService.GetOrderByIdTutor(id, InitData)
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
+	}
+
+	return ctx.JSON(order)
+}
+
 // Get Info of current order by order_id
 func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")

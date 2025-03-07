@@ -9,6 +9,7 @@ import (
 	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"github.com/randnull/Lessons/internal/config"
+	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/models"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"log"
@@ -54,7 +55,7 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	}
 }
 
-func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData initdata.InitData) (models.OrderToBrokerWithID, error) {
+func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData initdata.InitData) (*models.OrderToBrokerWithID, error) {
 	timestamp := time.Now()
 
 	query := `INSERT INTO orders (student_id, title, description, grade, tags, min_price, max_price, status, response_count, created_at, updated_at)
@@ -84,6 +85,7 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData ini
 
 	if err != nil {
 		log.Println(err)
+		return nil, err
 	} // Норм проверку TODO
 
 	CreatedOrder := models.OrderToBrokerWithID{
@@ -97,7 +99,7 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData ini
 		ChatID:      InitData.Chat.ID,
 	}
 
-	return CreatedOrder, nil
+	return &CreatedOrder, nil
 }
 
 func (orderStorage *Repository) GetByID(id string, InitData initdata.InitData) (*models.OrderDetails, error) {
@@ -186,6 +188,22 @@ func (orderStorage *Repository) GetByID(id string, InitData initdata.InitData) (
 	return order, nil
 }
 
+func (orderStorage *Repository) GetUserByOrder(orderID string) (*int64, error) {
+	var UserID int64
+	fmt.Println(orderID)
+
+	query := `SELECT student_id FROM orders WHERE id = $1`
+
+	err := orderStorage.db.QueryRow(query, orderID).Scan(&UserID)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
+
+	return &UserID, nil
+}
+
 func (orderStorage *Repository) GetAllOrders(InitData initdata.InitData) ([]*models.Order, error) {
 	var orders []*models.Order
 
@@ -237,6 +255,32 @@ func (orderStorage *Repository) GetAllOrders(InitData initdata.InitData) ([]*mod
 	}
 
 	return orders, nil
+}
+
+func (orderStorage *Repository) GetOrderByIdTutor(id string, InitData initdata.InitData) (*models.OrderDetailsTutor, error) {
+	var order models.OrderDetailsTutor
+
+	query := `
+		SELECT 
+			id, 
+			title, 
+			description, 
+			grade,
+			min_price, 
+			max_price, 
+			tags,
+			status,
+			response_count,
+			created_at
+		FROM orders WHERE id = $1`
+
+	err := orderStorage.db.QueryRowx(query, id).StructScan(&order)
+
+	if err != nil {
+		return nil, custom_errors.ErrGetOrder
+	}
+
+	return &order, nil
 }
 
 func (orderStorage *Repository) GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error) {
@@ -358,38 +402,54 @@ func (orderStorage *Repository) DeleteOrder(id string, InitData initdata.InitDat
 
 //func (orderStorage *Repository) VerifyUserOrder(studentID string) ([]*models.Order, error) {}
 
-func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel, Tutor *models.User) error {
+func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel, Tutor *models.User) (string, error) {
+	var ResponseID string
+
+	queryCheck := `SELECT id FROM responses WHERE order_id = $1 AND tutor_id = $2`
+
+	err := orderStorage.db.QueryRow(queryCheck, response.OrderId, Tutor.Id).Scan(&ResponseID)
+
+	if err == nil || !errors.Is(err, sql.ErrNoRows) {
+		if err == nil {
+			return ResponseID, nil
+		}
+		return "", err
+	}
+
 	tx, err := orderStorage.db.Begin()
+	defer tx.Rollback()
+
 	if err != nil {
-		return err
+		tx.Rollback()
+		return "", err
 	}
 
 	timestamp := time.Now()
 	// SELECT WHERE order_id = ... без UPDATE
-	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, created_at) VALUES ($1, $2, $3, $4) RETURNING id`
+	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, created_at)
+					VALUES ($1, $2, $3, $4) RETURNING id`
 
-	//_, err := orderStorage.db.Exec(query, response.OrderId, response.OrderId, timestamp)
-
-	_, err = tx.Exec(queryInsert, response.OrderId, Tutor.Name, Tutor.Id, timestamp)
+	err = tx.QueryRow(queryInsert, response.OrderId, Tutor.Name, Tutor.Id, timestamp).Scan(&ResponseID)
 	if err != nil {
 		fmt.Println(err)
 		tx.Rollback()
-		return err
+		return "", err
 	}
 
 	// response_count = response_count + 1
 	queryUpdate := `UPDATE orders SET response_count = response_count + 1 WHERE id = $1`
-	fmt.Println(response.OrderId)
+
 	_, err = tx.Exec(queryUpdate, response.OrderId)
+
 	if err != nil {
 		tx.Rollback()
-		return err
+		return "", err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return ResponseID, nil
 }

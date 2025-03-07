@@ -38,6 +38,19 @@ type Order struct {
 	UpdatedAt     time.Time      `json:"updated_at"`
 }
 
+type OrderDetailsTutor struct {
+	ID            string         `json:"id" db:"id"`
+	Title         string         `json:"title" db:"title"`
+	Description   string         `json:"description" db:"description"`
+	Grade         string         `json:"grade" db:"grade"`
+	MinPrice      int            `json:"min_price" db:"min_price"`
+	MaxPrice      int            `json:"max_price" db:"max_price"`
+	Tags          pq.StringArray `json:"tags" db:"tags"`
+	Status        string         `json:"status" db:"status"`
+	ResponseCount int            `json:"response_count" db:"response_count"`
+	CreatedAt     time.Time      `json:"created_at" db:"created_at"`
+}
+
 type OrderDetails struct {
 	ID            string         `json:"id"`
 	StudentID     int            `json:"student_id"`

@@ -34,11 +34,13 @@ func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	err := r.ResponseService.ResponseToOrder(&NewResponse, InitData)
+	responseID, err := r.ResponseService.ResponseToOrder(&NewResponse, InitData)
 
 	if err != nil {
-		return fiber.NewError(fiber.StatusInternalServerError, err.Error())
+		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"response_id": responseID,
+	})
 }

@@ -10,6 +10,7 @@ type Config struct {
 	ServerConfig
 	BotConfig
 	MQConfig
+	GRPCConfig
 }
 
 type DBConfig struct {
@@ -34,6 +35,11 @@ type MQConfig struct {
 	Pass string `env:"MQ_PASS" env-default:"guest"`     //  env-default:"guest"
 	Host string `env:"MQ_HOST" env-default:"127.0.0.1"` //  env-default:"rabbitmq"
 	Port string `env:"MQ_PORT" env-default:"5672"`      // env-default:"5672"
+}
+
+type GRPCConfig struct {
+	Host string `env:"gRPCUserHost" env-default:"127.0.0.1"`
+	Port string `env:"gRPCUserPort" env-default:"2000"`
 }
 
 func NewConfig() (*Config, error) {

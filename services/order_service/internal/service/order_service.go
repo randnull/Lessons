@@ -12,6 +12,7 @@ import (
 type OrderServiceInt interface {
 	CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error)
 	GetOrderById(id string, InitData initdata.InitData) (*models.OrderDetails, error)
+	GetOrderByIdTutor(id string, InitData initdata.InitData) (*models.OrderDetailsTutor, error)
 	GetAllOrders(InitData initdata.InitData) ([]*models.Order, error)
 	GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error)
 	UpdateOrder(orderID string, order *models.UpdateOrder, InitData initdata.InitData) error
@@ -51,8 +52,11 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData init
 }
 
 func (orderServ *OrderService) GetOrderById(id string, InitData initdata.InitData) (*models.OrderDetails, error) {
-
 	return orderServ.orderRepository.GetByID(id, InitData)
+}
+
+func (orderServ *OrderService) GetOrderByIdTutor(id string, InitData initdata.InitData) (*models.OrderDetailsTutor, error) {
+	return orderServ.orderRepository.GetOrderByIdTutor(id, InitData)
 }
 
 func (orderServ *OrderService) GetAllOrders(InitData initdata.InitData) ([]*models.Order, error) {

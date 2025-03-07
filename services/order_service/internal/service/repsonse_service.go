@@ -11,7 +11,7 @@ import (
 )
 
 type ResponseServiceInt interface {
-	ResponseToOrder(model *models.NewResponseModel, InitData initdata.InitData) error
+	ResponseToOrder(model *models.NewResponseModel, InitData initdata.InitData) (string, error)
 }
 
 type ResponseService struct {
@@ -28,28 +28,34 @@ func NewResponseService(orderRepo repository.OrderRepository, producerBroker rab
 	}
 }
 
-func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, InitData initdata.InitData) error {
+func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, InitData initdata.InitData) (string, error) {
 	TutorInfo, err := s.GRPCClient.GetUser(context.Background(), InitData.User.ID)
 
 	if err != nil {
-		return custom_errors.ErrorGetUser
+		return "", custom_errors.ErrorGetUser
 	}
 
-	err = s.orderRepository.CreateResponse(Response, TutorInfo)
+	StudentID, err := s.orderRepository.GetUserByOrder(Response.OrderId)
+
+	if err != nil || StudentID == nil {
+		return "", custom_errors.ErrStudentByOrderNotFound
+	}
+
+	responseID, err := s.orderRepository.CreateResponse(Response, TutorInfo)
+
+	if err != nil {
+		return "", err
+	}
 
 	var ResponseToBroker models.ResponseToBrokerModel
 
 	ResponseToBroker = models.ResponseToBrokerModel{
-		UserId:  InitData.User.ID,
+		UserId:  *StudentID,
 		OrderId: Response.OrderId,
 		ChatId:  InitData.Chat.ID,
 	}
 
 	err = s.ProducerBroker.Publish("order_response", ResponseToBroker)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return responseID, nil
 }
