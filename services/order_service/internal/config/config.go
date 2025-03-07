@@ -38,8 +38,8 @@ type MQConfig struct {
 }
 
 type GRPCConfig struct {
-	Host string `env:"gRPCUserHost" env-default:"127.0.0.1"`
-	Port string `env:"gRPCUserPort" env-default:"2000"`
+	Host string `env:"GRPCUSERHOST" env-default:"127.0.0.1"`
+	Port string `env:"GRPCUSERPORT" env-default:"2000"`
 }
 
 func NewConfig() (*Config, error) {
