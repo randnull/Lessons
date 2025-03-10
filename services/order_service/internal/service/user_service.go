@@ -24,7 +24,6 @@ func NewUSerService(grpcClient gRPC_client.GRPCClientInt) UserServiceInt {
 }
 
 func (u *UserService) GetUser(TelegramID int64) (*models.User, error) {
-	fmt.Println(TelegramID)
 	return u.GRPCClient.GetUser(context.Background(), TelegramID)
 }
 

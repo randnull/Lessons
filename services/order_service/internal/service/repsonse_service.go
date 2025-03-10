@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
@@ -44,6 +45,9 @@ func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, Ini
 	responseID, err := s.orderRepository.CreateResponse(Response, TutorInfo)
 
 	if err != nil {
+		if errors.Is(custom_errors.ErrResponseAlredyExist, err) {
+			return responseID, nil
+		}
 		return "", err
 	}
 

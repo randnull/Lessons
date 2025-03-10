@@ -33,6 +33,18 @@ func (u *UserController) CreateUser(ctx *fiber.Ctx) error {
 	})
 }
 
-func (u *UserController) GetUser() {
+func (u *UserController) GetUser(ctx *fiber.Ctx) error {
+	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
 
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	user, err := u.UserService.GetUser(InitData.User.ID)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+	}
+
+	return ctx.JSON(user)
 }

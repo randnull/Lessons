@@ -411,7 +411,7 @@ func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel
 
 	if err == nil || !errors.Is(err, sql.ErrNoRows) {
 		if err == nil {
-			return ResponseID, nil
+			return ResponseID, custom_errors.ErrResponseAlredyExist
 		}
 		return "", err
 	}
