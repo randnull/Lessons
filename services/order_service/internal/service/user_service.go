@@ -10,7 +10,8 @@ import (
 
 type UserServiceInt interface {
 	CreateUser(InitData initdata.InitData) (string, error)
-	GetUser(TelegramID int64) (*models.User, error)
+	GetUser(UserID string) (*models.User, error)
+	GetAllUsers() ([]*models.User, error)
 }
 
 type UserService struct {
@@ -23,8 +24,8 @@ func NewUSerService(grpcClient gRPC_client.GRPCClientInt) UserServiceInt {
 	}
 }
 
-func (u *UserService) GetUser(TelegramID int64) (*models.User, error) {
-	return u.GRPCClient.GetUser(context.Background(), TelegramID)
+func (u *UserService) GetUser(UserID string) (*models.User, error) {
+	return u.GRPCClient.GetUser(context.Background(), UserID)
 }
 
 func (u *UserService) CreateUser(InitData initdata.InitData) (string, error) {
@@ -40,4 +41,23 @@ func (u *UserService) CreateUser(InitData initdata.InitData) (string, error) {
 	}
 
 	return userID, nil
+}
+
+func (u *UserService) GetAllUsers() ([]*models.User, error) {
+	usersRPC, err := u.GRPCClient.GetAllUsers(context.Background())
+
+	if err != nil {
+		return nil, err
+	}
+
+	var users []*models.User
+
+	for _, grpcUser := range usersRPC.Users {
+		users = append(users, &models.User{
+			Id:   grpcUser.Id,
+			Name: grpcUser.Name,
+		})
+	}
+
+	return users, nil
 }

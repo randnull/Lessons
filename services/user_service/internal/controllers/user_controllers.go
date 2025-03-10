@@ -33,6 +33,20 @@ func (s *UserControllers) CreateUser(ctx context.Context, in *pb.CreateUserReque
 	return userPB, nil
 }
 
+func (s *UserControllers) GetUserByTelegramId(ctx context.Context, in *pb.GetByTelegramId) (*pb.User, error) {
+	user, err := s.UserService.GetUserByTelegramId(in.Id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	userPB := &pb.User{
+		Id:   user.Id,
+		Name: user.Name,
+	}
+	return userPB, nil
+}
+
 func (s *UserControllers) GetUserById(ctx context.Context, in *pb.GetById) (*pb.User, error) {
 	user, err := s.UserService.GetUserById(in.Id)
 
@@ -44,6 +58,17 @@ func (s *UserControllers) GetUserById(ctx context.Context, in *pb.GetById) (*pb.
 		Id:   user.Id,
 		Name: user.Name,
 	}
-
 	return userPB, nil
+}
+
+func (s *UserControllers) GetAllUsers(ctx context.Context, in *pb.GetAllRequest) (*pb.GetAllResponse, error) {
+	users, err := s.UserService.GetAllUsers()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetAllResponse{
+		Users: users,
+	}, nil
 }

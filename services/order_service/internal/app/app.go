@@ -112,6 +112,8 @@ func (a *App) Run() {
 	users.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
 
 	users.Post("/", a.userControllers.CreateUser)
+	users.Get("/", a.userControllers.GetAllUser)
+	users.Get("/id/:id", a.userControllers.GetUser)
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 

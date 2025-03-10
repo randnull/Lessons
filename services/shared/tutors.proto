@@ -16,10 +16,11 @@ message User {
 //  int64 status = 6;
 }
 
-service PostsService {
+service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateResponse);
 //  rpc DeletePost(DeleteRequest) returns (Response);
   rpc GetUserById(GetById) returns (User);
+  rpc GetUserByTelegramId(GetByTelegramId) returns (User);
 //  rpc UpdatePost(UpdateRequest) returns (Response);
   rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
 }
@@ -33,8 +34,12 @@ message CreateResponse {
   string id = 1;
 }
 
-message GetById {
+message GetByTelegramId {
   int64 id = 1;
+}
+
+message GetById {
+  string id = 1;
 }
 
 message GetAllRequest {

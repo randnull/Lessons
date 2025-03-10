@@ -30,7 +30,7 @@ func NewResponseService(orderRepo repository.OrderRepository, producerBroker rab
 }
 
 func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, InitData initdata.InitData) (string, error) {
-	TutorInfo, err := s.GRPCClient.GetUser(context.Background(), InitData.User.ID)
+	TutorInfo, err := s.GRPCClient.GetUserByTelegramID(context.Background(), InitData.User.ID)
 
 	if err != nil {
 		return "", custom_errors.ErrorGetUser

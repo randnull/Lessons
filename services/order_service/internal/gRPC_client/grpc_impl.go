@@ -54,14 +54,14 @@ func NewGRPCClient(cfg config.GRPCConfig) *GRPCClient {
 	}
 }
 
-func (g GRPCClient) Close() {
+func (g *GRPCClient) Close() {
 	err := g.conn.Close()
 	if err != nil {
 		log.Printf("error with close connection")
 	}
 }
 
-func (g GRPCClient) GetUser(ctx context.Context, userID int64) (*models.User, error) {
+func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
@@ -77,7 +77,23 @@ func (g GRPCClient) GetUser(ctx context.Context, userID int64) (*models.User, er
 	}, nil
 }
 
-func (g GRPCClient) CreateUser(ctx context.Context, user *models.CreateUser) (string, error) {
+func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	userPB, err := g.client.GetUserByTelegramId(ctx, &pb.GetByTelegramId{Id: telegramID})
+
+	if err != nil {
+		return nil, custom_errors.ErrorGetUser
+	}
+
+	return &models.User{
+		Id:   userPB.Id,
+		Name: userPB.Name,
+	}, nil
+}
+
+func (g *GRPCClient) CreateUser(ctx context.Context, user *models.CreateUser) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
@@ -88,4 +104,17 @@ func (g GRPCClient) CreateUser(ctx context.Context, user *models.CreateUser) (st
 	}
 
 	return userID.Id, nil
+}
+
+func (g *GRPCClient) GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	usersPB, err := g.client.GetAllUsers(ctx, &pb.GetAllRequest{})
+
+	if err != nil {
+		return nil, custom_errors.ErrorGetUser
+	}
+
+	return usersPB, nil
 }

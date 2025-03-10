@@ -9,6 +9,7 @@ import (
 	_ "github.com/lib/pq"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/custom_errors"
+	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
 	"log"
 	"time"
@@ -53,7 +54,7 @@ func NewRepository(cfg config.DBConfig) *Repository {
 }
 
 func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
-	ExistedUser, err := r.GetUserInfoById(user.TelegramId)
+	ExistedUser, err := r.GetUserByTelegramId(user.TelegramId)
 	if err == nil {
 		return ExistedUser.Id, nil
 	}
@@ -77,7 +78,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 	return UserId, nil
 }
 
-func (r *Repository) GetUserInfoById(telegramID int64) (*models.UserDB, error) {
+func (r *Repository) GetUserByTelegramId(telegramID int64) (*models.UserDB, error) {
 	user := &models.UserDB{}
 
 	query := `SELECT id, telegram_id, name, created_at FROM users WHERE telegram_id = $1`
@@ -97,4 +98,58 @@ func (r *Repository) GetUserInfoById(telegramID int64) (*models.UserDB, error) {
 	}
 
 	return user, nil
+}
+func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
+	user := &models.UserDB{}
+
+	query := `SELECT id, telegram_id, name, created_at FROM users WHERE id = $1`
+
+	err := r.db.QueryRow(query, userID).Scan(
+		&user.Id,
+		&user.TelegramID,
+		&user.Name,
+		&user.CreatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, custom_errors.UserNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r *Repository) GetAllUsers() ([]*pb.User, error) {
+	query := `SELECT id, name FROM users`
+
+	rows, err := r.db.Query(query)
+	defer rows.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var Users []*pb.User
+
+	for rows.Next() {
+		var user pb.User
+
+		err := rows.Scan(
+			&user.Id,
+			&user.Name,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		Users = append(Users, &user)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return Users, nil
 }
