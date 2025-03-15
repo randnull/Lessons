@@ -7,6 +7,7 @@ import (
 
 type UserRepository interface {
 	CreateUser(user *models.CreateUser) (string, error)
+	GetStudentById(userID string) (*models.UserDB, error)
 	GetUserById(userID string) (*models.UserDB, error)
 	GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error)
 	GetAllUsers() ([]*pb.User, error)

@@ -78,6 +78,23 @@ func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, 
 	}, nil
 }
 
+func (g *GRPCClient) GetStudent(ctx context.Context, userID string) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	userPB, err := g.client.GetStudentById(ctx, &pb.GetById{Id: userID})
+
+	if err != nil {
+		return nil, custom_errors.ErrorGetUser
+	}
+
+	return &models.User{
+		Id:         userPB.Id,
+		TelegramID: userPB.TelegramId,
+		Name:       userPB.Name,
+	}, nil
+}
+
 func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()

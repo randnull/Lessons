@@ -8,6 +8,7 @@ import (
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
+	"log"
 )
 
 type ResponseServiceInt interface {
@@ -43,13 +44,18 @@ func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, Use
 	//if UserData.Role ==
 
 	TutorInfo, err := s.GRPCClient.GetUser(context.Background(), UserData.UserID)
-
+	log.Println("ok")
 	studentID, err := s.orderRepository.GetUserByOrder(Response.OrderId)
-	StudentInfo, err := s.GRPCClient.GetUser(context.Background(), studentID)
+	log.Println(studentID)
+	log.Println(err)
+	StudentInfo, err := s.GRPCClient.GetStudent(context.Background(), studentID)
+	log.Println(err)
 
 	if err != nil {
 		return "", custom_errors.ErrorGetUser
 	}
+
+	log.Println(StudentInfo)
 
 	//StudentID, err := s.orderRepository.GetUserByOrder(Response.OrderId)
 	//// тут ошибка

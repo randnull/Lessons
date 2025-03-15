@@ -20,6 +20,7 @@ service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateResponse);
 //  rpc DeletePost(DeleteRequest) returns (Response);
   rpc GetUserById(GetById) returns (User);
+  rpc GetStudentById(GetById) returns (User);
   rpc GetUserByTelegramId(GetByTelegramId) returns (User);
 //  rpc UpdatePost(UpdateRequest) returns (Response);
   rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
@@ -40,6 +41,10 @@ message GetByTelegramId {
 }
 
 message GetById {
+  string id = 1;
+}
+
+message GetStudentById {
   string id = 1;
 }
 

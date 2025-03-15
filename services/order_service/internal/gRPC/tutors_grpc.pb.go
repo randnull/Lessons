@@ -21,6 +21,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	UserService_CreateUser_FullMethodName          = "/users.UserService/CreateUser"
 	UserService_GetUserById_FullMethodName         = "/users.UserService/GetUserById"
+	UserService_GetStudentById_FullMethodName      = "/users.UserService/GetStudentById"
 	UserService_GetUserByTelegramId_FullMethodName = "/users.UserService/GetUserByTelegramId"
 	UserService_GetAllUsers_FullMethodName         = "/users.UserService/GetAllUsers"
 )
@@ -32,6 +33,7 @@ type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 	// rpc DeletePost(DeleteRequest) returns (Response);
 	GetUserById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error)
+	GetStudentById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error)
 	GetUserByTelegramId(ctx context.Context, in *GetByTelegramId, opts ...grpc.CallOption) (*User, error)
 	// rpc UpdatePost(UpdateRequest) returns (Response);
 	GetAllUsers(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
@@ -65,6 +67,16 @@ func (c *userServiceClient) GetUserById(ctx context.Context, in *GetById, opts .
 	return out, nil
 }
 
+func (c *userServiceClient) GetStudentById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(User)
+	err := c.cc.Invoke(ctx, UserService_GetStudentById_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) GetUserByTelegramId(ctx context.Context, in *GetByTelegramId, opts ...grpc.CallOption) (*User, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(User)
@@ -92,6 +104,7 @@ type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateResponse, error)
 	// rpc DeletePost(DeleteRequest) returns (Response);
 	GetUserById(context.Context, *GetById) (*User, error)
+	GetStudentById(context.Context, *GetById) (*User, error)
 	GetUserByTelegramId(context.Context, *GetByTelegramId) (*User, error)
 	// rpc UpdatePost(UpdateRequest) returns (Response);
 	GetAllUsers(context.Context, *GetAllRequest) (*GetAllResponse, error)
@@ -110,6 +123,9 @@ func (UnimplementedUserServiceServer) CreateUser(context.Context, *CreateUserReq
 }
 func (UnimplementedUserServiceServer) GetUserById(context.Context, *GetById) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserById not implemented")
+}
+func (UnimplementedUserServiceServer) GetStudentById(context.Context, *GetById) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetStudentById not implemented")
 }
 func (UnimplementedUserServiceServer) GetUserByTelegramId(context.Context, *GetByTelegramId) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByTelegramId not implemented")
@@ -174,6 +190,24 @@ func _UserService_GetUserById_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetStudentById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetById)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetStudentById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetStudentById_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetStudentById(ctx, req.(*GetById))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_GetUserByTelegramId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetByTelegramId)
 	if err := dec(in); err != nil {
@@ -224,6 +258,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserById",
 			Handler:    _UserService_GetUserById_Handler,
+		},
+		{
+			MethodName: "GetStudentById",
+			Handler:    _UserService_GetStudentById_Handler,
 		},
 		{
 			MethodName: "GetUserByTelegramId",

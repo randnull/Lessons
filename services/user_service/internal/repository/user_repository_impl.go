@@ -60,7 +60,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 
 	ExistedUser, err := r.GetUserByTelegramId(user.TelegramId, user.Role)
 	if err == nil {
-		fmt.Println("exist")
+		log.Println("exist")
 		return ExistedUser.Id, nil
 	}
 
@@ -68,7 +68,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 	defer tx.Rollback()
 
 	if err != nil {
-		fmt.Println("err:", err)
+		log.Println("err:", err)
 		tx.Rollback()
 		return "", err
 	}
@@ -86,9 +86,9 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 		currentTime,
 	).Scan(&UserId)
 
-	fmt.Println(err)
+	log.Println(err)
 	if err != nil {
-		fmt.Println("err 2:", err)
+		log.Println("err 2:", err)
 		tx.Rollback()
 		return "", custom_errors.ErrorWithCreate
 	}
@@ -98,7 +98,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 		_, err = tx.Exec(queryInsertTutor, UserId, currentTime)
 
 		if err != nil {
-			fmt.Println("err 3:", err)
+			log.Println("err 3:", err)
 
 			tx.Rollback()
 			return "", custom_errors.ErrorWithCreate
@@ -107,7 +107,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 
 	err = tx.Commit()
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 
 		return "", err
 	}
@@ -129,7 +129,7 @@ func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*mo
 	)
 
 	if err != nil {
-		fmt.Println('0', err)
+		log.Println('0', err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, custom_errors.UserNotFound
 		}
@@ -138,6 +138,30 @@ func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*mo
 
 	return user, nil
 }
+
+func (r *Repository) GetStudentById(userID string) (*models.UserDB, error) {
+	user := &models.UserDB{}
+
+	query := `SELECT id, telegram_id, name, role, created_at FROM users WHERE id = $1 AND role = $2`
+
+	err := r.db.QueryRow(query, userID, "Student").Scan(
+		&user.Id,
+		&user.TelegramID,
+		&user.Name,
+		&user.Role,
+		&user.CreatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, custom_errors.UserNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
 	user := &models.UserDB{}
 

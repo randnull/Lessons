@@ -20,6 +20,7 @@ import (
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
+	"log"
 )
 
 type AuthServiceInt interface {
@@ -62,7 +63,7 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 	//}
 	// create user создает или возвращает пользователя
 
-	fmt.Println(AuthData.Role)
+	log.Println(AuthData.Role)
 	userID, err := authserv.GRPCClient.CreateUser(context.Background(), &models.NewUser{
 		TelegramID: userData.User.ID,
 		Name:       userData.User.FirstName,
@@ -78,7 +79,7 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 		return "", err
 	}
 	x, _ := auth.ParseJWTToken(jwtToken, authserv.cfg.JWTsecret)
-	fmt.Println("decoded", x)
+	log.Println("decoded", x)
 
 	return jwtToken, nil
 }
