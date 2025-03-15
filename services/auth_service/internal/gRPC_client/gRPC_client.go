@@ -61,22 +61,6 @@ func (g *GRPCClient) Close() {
 	}
 }
 
-func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
-	defer cancel()
-
-	userPB, err := g.client.GetUserById(ctx, &pb.GetById{Id: userID})
-
-	if err != nil {
-		return nil, custom_errors.ErrorGetUser
-	}
-
-	return &models.User{
-		Id:   userPB.Id,
-		Name: userPB.Name,
-	}, nil
-}
-
 func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
@@ -93,28 +77,16 @@ func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) 
 	}, nil
 }
 
-//func (g *GRPCClient) CreateUser(ctx context.Context, user *models.CreateUser) (string, error) {
-//	ctx, cancel := context.WithTimeout(ctx, time.Second)
-//	defer cancel()
-//
-//	userID, err := g.client.CreateUser(ctx, &pb.CreateUserRequest{Name: user.Name, TelegramId: user.TelegramId})
-//	fmt.Println(err)
-//	if err != nil {
-//		return "", custom_errors.ErrorCreateUser
-//	}
-//
-//	return userID.Id, nil
-//}
-
-func (g *GRPCClient) GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error) {
+func (g *GRPCClient) CreateUser(ctx context.Context, user *models.NewUser) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	usersPB, err := g.client.GetAllUsers(ctx, &pb.GetAllRequest{})
-
+	fmt.Println("1", string(user.Role))
+	UserRPC, err := g.client.CreateUser(ctx, &pb.CreateUserRequest{Name: user.Name, TelegramId: user.TelegramID, Role: string(user.Role)})
+	fmt.Println(err)
 	if err != nil {
-		return nil, custom_errors.ErrorGetUser
+		return "", custom_errors.ErrorCreateUser
 	}
 
-	return usersPB, nil
+	return UserRPC.Id, nil
 }

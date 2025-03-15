@@ -3,7 +3,6 @@ package controllers
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
 	//"github.com/golang-jwt/jwt/v5"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
@@ -36,13 +35,13 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 
 	log.Printf("Create Order %+v", order)
 
-	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	orderID, err := c.OrderService.CreateOrder(&order, InitData) // userData
+	orderID, err := c.OrderService.CreateOrder(&order, UserData) // userData
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create order"})
 	}
@@ -55,13 +54,13 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 func (c *OrderController) GetOrderByIdTutor(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
-	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	order, err := c.OrderService.GetOrderByIdTutor(id, InitData)
+	order, err := c.OrderService.GetOrderByIdTutor(id, UserData)
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
 	}
@@ -73,13 +72,13 @@ func (c *OrderController) GetOrderByIdTutor(ctx *fiber.Ctx) error {
 func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
-	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	order, err := c.OrderService.GetOrderById(id, InitData)
+	order, err := c.OrderService.GetOrderById(id, UserData)
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
 	}
@@ -89,7 +88,7 @@ func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {
 
 // Get all exist orders
 func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
-	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
@@ -97,7 +96,7 @@ func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
 
 	//log.Printf("Controller: GetAllOrders")
 
-	orders, err := c.OrderService.GetAllOrders(InitData)
+	orders, err := c.OrderService.GetAllOrders(UserData)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
@@ -108,13 +107,15 @@ func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
 
 // Get all order by user_id
 func (c *OrderController) GetAllUsersOrders(ctx *fiber.Ctx) error {
-	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	fmt.Println(UserData, ok)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	orders, err := c.OrderService.GetAllUsersOrders(InitData)
+	orders, err := c.OrderService.GetAllUsersOrders(UserData)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
@@ -127,13 +128,13 @@ func (c *OrderController) GetAllUsersOrders(ctx *fiber.Ctx) error {
 func (c *OrderController) DeleteOrderByID(ctx *fiber.Ctx) error {
 	orderID := ctx.Params("id")
 
-	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	err := c.OrderService.DeleteOrder(orderID, InitData)
+	err := c.OrderService.DeleteOrder(orderID, UserData)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
@@ -161,13 +162,13 @@ func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
 
 	log.Printf("Update Order %+v", order)
 
-	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	err := c.OrderService.UpdateOrder(orderID, &order, InitData)
+	err := c.OrderService.UpdateOrder(orderID, &order, UserData)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}

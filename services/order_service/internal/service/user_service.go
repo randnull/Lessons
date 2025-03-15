@@ -2,14 +2,12 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
 )
 
 type UserServiceInt interface {
-	CreateUser(InitData initdata.InitData) (string, error)
+	//CreateUser(UserData models.UserData) (string, error)
 	GetUser(UserID string) (*models.User, error)
 	GetAllUsers() ([]*models.User, error)
 }
@@ -28,20 +26,19 @@ func (u *UserService) GetUser(UserID string) (*models.User, error) {
 	return u.GRPCClient.GetUser(context.Background(), UserID)
 }
 
-func (u *UserService) CreateUser(InitData initdata.InitData) (string, error) {
-	fmt.Println(InitData)
-	NewUser := &models.CreateUser{
-		Name:       InitData.User.FirstName,
-		TelegramId: InitData.User.ID,
-	}
-
-	userID, err := u.GRPCClient.CreateUser(context.Background(), NewUser)
-	if err != nil {
-		return "", err
-	}
-
-	return userID, nil
-}
+//func (u *UserService) CreateUser(UserData models.UserData) (string, error) {
+//	NewUser := &models.CreateUser{
+//		Name:       UserData.FirstName,
+//		TelegramId: UserData.TelegramID,
+//	}
+//
+//	userID, err := u.GRPCClient.CreateUser(context.Background(), NewUser)
+//	if err != nil {
+//		return "", err
+//	}
+//
+//	return userID, nil
+//}
 
 func (u *UserService) GetAllUsers() ([]*models.User, error) {
 	usersRPC, err := u.GRPCClient.GetAllUsers(context.Background())

@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
 )
 
 type UserController struct {
@@ -16,27 +16,27 @@ func NewUserController(UserServ service.UserServiceInt) *UserController {
 	}
 }
 
-func (u *UserController) CreateUser(ctx *fiber.Ctx) error {
-	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
-
-	if !ok {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
-	}
-
-	UserID, err := u.UserService.CreateUser(InitData)
-	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Error with create user"})
-	}
-
-	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"userID": UserID,
-	})
-}
+//func (u *UserController) CreateUser(ctx *fiber.Ctx) error {
+//	UserData, ok := ctx.Locals("user_data").(models.UserData)
+//
+//	if !ok {
+//		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+//	}
+//
+//	UserID, err := u.UserService.CreateUser(UserData)
+//	if err != nil {
+//		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Error with create user"})
+//	}
+//
+//	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
+//		"userID": UserID,
+//	})
+//}
 
 func (u *UserController) GetUser(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
 
-	_, ok := ctx.Locals("user_data").(initdata.InitData)
+	_, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
@@ -52,7 +52,7 @@ func (u *UserController) GetUser(ctx *fiber.Ctx) error {
 }
 
 func (u *UserController) GetAllUser(ctx *fiber.Ctx) error {
-	_, ok := ctx.Locals("user_data").(initdata.InitData)
+	_, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})

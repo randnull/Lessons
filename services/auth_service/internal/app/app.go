@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/controllers"
+	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/service"
 	"log"
 )
@@ -18,14 +19,15 @@ type App struct {
 }
 
 func NewApp(cfg *config.Config) *App {
+	gRPCClient := gRPC_client.NewGRPCClient(cfg.GRPCConfig)
 
-	auth_service := service.NewAuthService(cfg)
-	auth_controllers := controllers.NewUserHandler(auth_service, cfg)
+	authService := service.NewAuthService(&cfg.JWTConfig, gRPCClient)
+	authControllers := controllers.NewUserHandler(authService, cfg)
 
 	auth_app := &App{
 		cfg:         cfg,
-		service:     auth_service,
-		controllers: auth_controllers,
+		service:     authService,
+		controllers: authControllers,
 	}
 
 	return auth_app
@@ -41,10 +43,6 @@ func (a *App) Run() {
 		AllowMethods: "GET,POST,PUT,DELETE",
 		AllowHeaders: "*",
 	}))
-	//router.Use(cors.New(cors.Config{
-	//	AllowOrigins: "http://localhost:5173", // Укажите адрес фронтенда
-	//	AllowHeaders: "Content-Type, Authorization",
-	//}))
 
 	router.Use(logger.New(logger.Config{
 		Format: "[${ip}]:${port} ${status} - ${method} ${path}\n",

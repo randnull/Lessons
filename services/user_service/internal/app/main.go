@@ -38,7 +38,7 @@ func (a *App) Run() {
 	}
 
 	s := grpc.NewServer()
-	pb.RegisterPostsServiceServer(s, a.userControllers)
+	pb.RegisterUserServiceServer(s, a.userControllers)
 
 	log.Printf("server listening : %s", "2000")
 

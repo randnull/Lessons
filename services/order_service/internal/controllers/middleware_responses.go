@@ -3,12 +3,13 @@ package controllers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/config"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
+	auth "github.com/randnull/Lessons/internal/jwt"
+	"github.com/randnull/Lessons/internal/models"
 )
 
 func TokenAuthMiddlewareResponses(cfg config.BotConfig) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		token := c.Get("token")
+		token := c.Get("Authorization")
 
 		if token == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -17,25 +18,28 @@ func TokenAuthMiddlewareResponses(cfg config.BotConfig) fiber.Handler {
 			})
 		}
 
-		userData, err := initdata.Parse(token)
+		UserClaims, err := auth.ParseJWTToken(token, cfg.JWTSecret)
 
 		if err != nil {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,
-				"msg":   "Bad init data provided. Error in Parse",
+				"msg":   "Bad auth data provided. Error in Parse",
 			})
 		}
 		//
-		//err = initdata.Validate(token, cfg.BotToken, cfg.AliveTime)
-		//
-		//if err != nil {
+		//if UserClaims.Role != "Tutor" {
 		//	return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 		//		"error": true,
-		//		"msg":   "Bad init data provided. Error in Validate" + err.Error(),
+		//		"msg":   "Not tutor",
 		//	})
 		//}
 
-		c.Locals("user_data", userData)
+		c.Locals("user_data",
+			models.UserData{
+				TelegramID: UserClaims.TelegramID,
+				UserID:     UserClaims.UserID,
+				Role:       UserClaims.Role,
+			})
 
 		return c.Next()
 	}

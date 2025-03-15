@@ -5,18 +5,17 @@ import (
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"log"
 )
 
 type OrderServiceInt interface {
-	CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error)
-	GetOrderById(id string, InitData initdata.InitData) (*models.OrderDetails, error)
-	GetOrderByIdTutor(id string, InitData initdata.InitData) (*models.OrderDetailsTutor, error)
-	GetAllOrders(InitData initdata.InitData) ([]*models.Order, error)
-	GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error)
-	UpdateOrder(orderID string, order *models.UpdateOrder, InitData initdata.InitData) error
-	DeleteOrder(orderID string, InitData initdata.InitData) error
+	CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error)
+	GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error)
+	GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error)
+	GetAllOrders(UserData models.UserData) ([]*models.Order, error)
+	GetAllUsersOrders(UserData models.UserData) ([]*models.Order, error)
+	UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error
+	DeleteOrder(orderID string, UserData models.UserData) error
 }
 
 type OrderService struct {
@@ -33,8 +32,14 @@ func NewOrderService(orderRepo repository.OrderRepository, producerBroker rabbit
 	}
 }
 
-func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData initdata.InitData) (string, error) {
-	createdOrder, err := orderServ.orderRepository.CreateOrder(order, InitData)
+func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error) {
+	//UserInfo, err := orderServ.GRPCClient.GetUserByTelegramID(context.Background(), UserData.TelegramID)
+
+	//if err != nil {
+	//	return "", err
+	//}
+
+	createdOrder, err := orderServ.orderRepository.CreateOrder(order, UserData.UserID, UserData.TelegramID)
 
 	if err != nil {
 		log.Printf("Error creating order: %v", err)
@@ -51,26 +56,62 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, InitData init
 	return createdOrder.ID, nil
 }
 
-func (orderServ *OrderService) GetOrderById(id string, InitData initdata.InitData) (*models.OrderDetails, error) {
-	return orderServ.orderRepository.GetByID(id, InitData)
+func (orderServ *OrderService) GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error) {
+	//UserInfo, err := orderServ.GRPCClient.GetUserByTelegramID(context.Background(), UserData.TelegramID)
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	return orderServ.orderRepository.GetByID(id, UserData.UserID)
 }
 
-func (orderServ *OrderService) GetOrderByIdTutor(id string, InitData initdata.InitData) (*models.OrderDetailsTutor, error) {
-	return orderServ.orderRepository.GetOrderByIdTutor(id, InitData)
+func (orderServ *OrderService) GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error) {
+	//UserInfo, err := orderServ.GRPCClient.GetUserByTelegramID(context.Background(), UserData.TelegramID)
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	return orderServ.orderRepository.GetOrderByIdTutor(id, UserData.UserID)
 }
 
-func (orderServ *OrderService) GetAllOrders(InitData initdata.InitData) ([]*models.Order, error) {
-	return orderServ.orderRepository.GetAllOrders(InitData)
+func (orderServ *OrderService) GetAllOrders(UserData models.UserData) ([]*models.Order, error) {
+	//UserInfo, err := orderServ.GRPCClient.GetUserByTelegramID(context.Background(), UserData.TelegramID)
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	return orderServ.orderRepository.GetAllOrders(UserData.UserID)
 }
 
-func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateOrder, InitData initdata.InitData) error {
-	return orderServ.orderRepository.UpdateOrder(orderID, order, InitData)
+func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error {
+	//UserInfo, err := orderServ.GRPCClient.GetUserByTelegramID(context.Background(), UserData.TelegramID)
+	//
+	//if err != nil {
+	//	return err
+	//}
+
+	return orderServ.orderRepository.UpdateOrder(orderID, order, UserData.UserID)
 }
 
-func (orderServ *OrderService) DeleteOrder(orderID string, InitData initdata.InitData) error {
-	return orderServ.orderRepository.DeleteOrder(orderID, InitData)
+func (orderServ *OrderService) DeleteOrder(orderID string, UserData models.UserData) error {
+	//UserInfo, err := orderServ.GRPCClient.GetUserByTelegramID(context.Background(), UserData.TelegramID)
+	//
+	//if err != nil {
+	//	return err
+	//}
+
+	return orderServ.orderRepository.DeleteOrder(orderID, UserData.UserID)
 }
 
-func (orderServ *OrderService) GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error) {
-	return orderServ.orderRepository.GetAllUsersOrders(InitData)
+func (orderServ *OrderService) GetAllUsersOrders(UserData models.UserData) ([]*models.Order, error) {
+	//UserInfo, err := orderServ.GRPCClient.GetUserByTelegramID(context.Background(), UserData.TelegramID)
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	return orderServ.orderRepository.GetAllUsersOrders(UserData.UserID)
 }

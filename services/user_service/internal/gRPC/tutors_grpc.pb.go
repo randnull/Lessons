@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: tutors.proto
 
-package __
+package gRPC
 
 import (
 	context "context"
@@ -19,16 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	PostsService_CreateUser_FullMethodName          = "/users.PostsService/CreateUser"
-	PostsService_GetUserById_FullMethodName         = "/users.PostsService/GetUserById"
-	PostsService_GetUserByTelegramId_FullMethodName = "/users.PostsService/GetUserByTelegramId"
-	PostsService_GetAllUsers_FullMethodName         = "/users.PostsService/GetAllUsers"
+	UserService_CreateUser_FullMethodName          = "/users.UserService/CreateUser"
+	UserService_GetUserById_FullMethodName         = "/users.UserService/GetUserById"
+	UserService_GetUserByTelegramId_FullMethodName = "/users.UserService/GetUserByTelegramId"
+	UserService_GetAllUsers_FullMethodName         = "/users.UserService/GetAllUsers"
 )
 
-// PostsServiceClient is the client API for PostsService service.
+// UserServiceClient is the client API for UserService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type PostsServiceClient interface {
+type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 	// rpc DeletePost(DeleteRequest) returns (Response);
 	GetUserById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error)
@@ -37,201 +37,201 @@ type PostsServiceClient interface {
 	GetAllUsers(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
 }
 
-type postsServiceClient struct {
+type userServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewPostsServiceClient(cc grpc.ClientConnInterface) PostsServiceClient {
-	return &postsServiceClient{cc}
+func NewUserServiceClient(cc grpc.ClientConnInterface) UserServiceClient {
+	return &userServiceClient{cc}
 }
 
-func (c *postsServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
+func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateResponse)
-	err := c.cc.Invoke(ctx, PostsService_CreateUser_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, UserService_CreateUser_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *postsServiceClient) GetUserById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error) {
+func (c *userServiceClient) GetUserById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(User)
-	err := c.cc.Invoke(ctx, PostsService_GetUserById_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, UserService_GetUserById_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *postsServiceClient) GetUserByTelegramId(ctx context.Context, in *GetByTelegramId, opts ...grpc.CallOption) (*User, error) {
+func (c *userServiceClient) GetUserByTelegramId(ctx context.Context, in *GetByTelegramId, opts ...grpc.CallOption) (*User, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(User)
-	err := c.cc.Invoke(ctx, PostsService_GetUserByTelegramId_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, UserService_GetUserByTelegramId_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *postsServiceClient) GetAllUsers(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error) {
+func (c *userServiceClient) GetAllUsers(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(GetAllResponse)
-	err := c.cc.Invoke(ctx, PostsService_GetAllUsers_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, UserService_GetAllUsers_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// PostsServiceServer is the server API for PostsService service.
-// All implementations must embed UnimplementedPostsServiceServer
+// UserServiceServer is the server API for UserService service.
+// All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
-type PostsServiceServer interface {
+type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateResponse, error)
 	// rpc DeletePost(DeleteRequest) returns (Response);
 	GetUserById(context.Context, *GetById) (*User, error)
 	GetUserByTelegramId(context.Context, *GetByTelegramId) (*User, error)
 	// rpc UpdatePost(UpdateRequest) returns (Response);
 	GetAllUsers(context.Context, *GetAllRequest) (*GetAllResponse, error)
-	mustEmbedUnimplementedPostsServiceServer()
+	mustEmbedUnimplementedUserServiceServer()
 }
 
-// UnimplementedPostsServiceServer must be embedded to have
+// UnimplementedUserServiceServer must be embedded to have
 // forward compatible implementations.
 //
 // NOTE: this should be embedded by value instead of pointer to avoid a nil
 // pointer dereference when methods are called.
-type UnimplementedPostsServiceServer struct{}
+type UnimplementedUserServiceServer struct{}
 
-func (UnimplementedPostsServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateResponse, error) {
+func (UnimplementedUserServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
 }
-func (UnimplementedPostsServiceServer) GetUserById(context.Context, *GetById) (*User, error) {
+func (UnimplementedUserServiceServer) GetUserById(context.Context, *GetById) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserById not implemented")
 }
-func (UnimplementedPostsServiceServer) GetUserByTelegramId(context.Context, *GetByTelegramId) (*User, error) {
+func (UnimplementedUserServiceServer) GetUserByTelegramId(context.Context, *GetByTelegramId) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserByTelegramId not implemented")
 }
-func (UnimplementedPostsServiceServer) GetAllUsers(context.Context, *GetAllRequest) (*GetAllResponse, error) {
+func (UnimplementedUserServiceServer) GetAllUsers(context.Context, *GetAllRequest) (*GetAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllUsers not implemented")
 }
-func (UnimplementedPostsServiceServer) mustEmbedUnimplementedPostsServiceServer() {}
-func (UnimplementedPostsServiceServer) testEmbeddedByValue()                      {}
+func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
+func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
 
-// UnsafePostsServiceServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to PostsServiceServer will
+// UnsafeUserServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to UserServiceServer will
 // result in compilation errors.
-type UnsafePostsServiceServer interface {
-	mustEmbedUnimplementedPostsServiceServer()
+type UnsafeUserServiceServer interface {
+	mustEmbedUnimplementedUserServiceServer()
 }
 
-func RegisterPostsServiceServer(s grpc.ServiceRegistrar, srv PostsServiceServer) {
-	// If the following call pancis, it indicates UnimplementedPostsServiceServer was
+func RegisterUserServiceServer(s grpc.ServiceRegistrar, srv UserServiceServer) {
+	// If the following call pancis, it indicates UnimplementedUserServiceServer was
 	// embedded by pointer and is nil.  This will cause panics if an
 	// unimplemented method is ever invoked, so we test this at initialization
 	// time to prevent it from happening at runtime later due to I/O.
 	if t, ok := srv.(interface{ testEmbeddedByValue() }); ok {
 		t.testEmbeddedByValue()
 	}
-	s.RegisterService(&PostsService_ServiceDesc, srv)
+	s.RegisterService(&UserService_ServiceDesc, srv)
 }
 
-func _PostsService_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserService_CreateUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(CreateUserRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PostsServiceServer).CreateUser(ctx, in)
+		return srv.(UserServiceServer).CreateUser(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PostsService_CreateUser_FullMethodName,
+		FullMethod: UserService_CreateUser_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PostsServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
+		return srv.(UserServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PostsService_GetUserById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserService_GetUserById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetById)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PostsServiceServer).GetUserById(ctx, in)
+		return srv.(UserServiceServer).GetUserById(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PostsService_GetUserById_FullMethodName,
+		FullMethod: UserService_GetUserById_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PostsServiceServer).GetUserById(ctx, req.(*GetById))
+		return srv.(UserServiceServer).GetUserById(ctx, req.(*GetById))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PostsService_GetUserByTelegramId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserService_GetUserByTelegramId_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetByTelegramId)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PostsServiceServer).GetUserByTelegramId(ctx, in)
+		return srv.(UserServiceServer).GetUserByTelegramId(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PostsService_GetUserByTelegramId_FullMethodName,
+		FullMethod: UserService_GetUserByTelegramId_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PostsServiceServer).GetUserByTelegramId(ctx, req.(*GetByTelegramId))
+		return srv.(UserServiceServer).GetUserByTelegramId(ctx, req.(*GetByTelegramId))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _PostsService_GetAllUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserService_GetAllUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetAllRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(PostsServiceServer).GetAllUsers(ctx, in)
+		return srv.(UserServiceServer).GetAllUsers(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: PostsService_GetAllUsers_FullMethodName,
+		FullMethod: UserService_GetAllUsers_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(PostsServiceServer).GetAllUsers(ctx, req.(*GetAllRequest))
+		return srv.(UserServiceServer).GetAllUsers(ctx, req.(*GetAllRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// PostsService_ServiceDesc is the grpc.ServiceDesc for PostsService service.
+// UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var PostsService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "users.PostsService",
-	HandlerType: (*PostsServiceServer)(nil),
+var UserService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "users.UserService",
+	HandlerType: (*UserServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "CreateUser",
-			Handler:    _PostsService_CreateUser_Handler,
+			Handler:    _UserService_CreateUser_Handler,
 		},
 		{
 			MethodName: "GetUserById",
-			Handler:    _PostsService_GetUserById_Handler,
+			Handler:    _UserService_GetUserById_Handler,
 		},
 		{
 			MethodName: "GetUserByTelegramId",
-			Handler:    _PostsService_GetUserByTelegramId_Handler,
+			Handler:    _UserService_GetUserByTelegramId_Handler,
 		},
 		{
 			MethodName: "GetAllUsers",
-			Handler:    _PostsService_GetAllUsers_Handler,
+			Handler:    _UserService_GetAllUsers_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

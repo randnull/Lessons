@@ -8,11 +8,11 @@ import (
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
 )
 
 type ResponseServiceInt interface {
-	ResponseToOrder(model *models.NewResponseModel, InitData initdata.InitData) (string, error)
+	ResponseToOrder(model *models.NewResponseModel, UserData models.UserData) (string, error)
+	GetResponseById(ResponseID string, UserData models.UserData) (*models.ResponseDB, error)
 }
 
 type ResponseService struct {
@@ -29,18 +29,30 @@ func NewResponseService(orderRepo repository.OrderRepository, producerBroker rab
 	}
 }
 
-func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, InitData initdata.InitData) (string, error) {
-	TutorInfo, err := s.GRPCClient.GetUserByTelegramID(context.Background(), InitData.User.ID)
+func (s *ResponseService) GetResponseById(ResponseID string, UserData models.UserData) (*models.ResponseDB, error) {
+	//UserInfo, err := s.GRPCClient.GetUserByTelegramID(context.Background(), UserData.TelegramID)
+
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	return s.orderRepository.GetResponseById(ResponseID, UserData.UserID)
+}
+
+func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, UserData models.UserData) (string, error) {
+	//if UserData.Role ==
+
+	TutorInfo, err := s.GRPCClient.GetUser(context.Background(), UserData.UserID)
 
 	if err != nil {
 		return "", custom_errors.ErrorGetUser
 	}
 
-	StudentID, err := s.orderRepository.GetUserByOrder(Response.OrderId)
-
-	if err != nil || StudentID == nil {
-		return "", custom_errors.ErrStudentByOrderNotFound
-	}
+	//StudentID, err := s.orderRepository.GetUserByOrder(Response.OrderId)
+	//// тут ошибка
+	//if err != nil || StudentID == nil {
+	//	return "", custom_errors.ErrStudentByOrderNotFound
+	//}
 
 	responseID, err := s.orderRepository.CreateResponse(Response, TutorInfo)
 
@@ -54,9 +66,9 @@ func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, Ini
 	var ResponseToBroker models.ResponseToBrokerModel
 
 	ResponseToBroker = models.ResponseToBrokerModel{
-		UserId:  *StudentID,
+		UserId:  UserData.TelegramID,
 		OrderId: Response.OrderId,
-		ChatId:  InitData.Chat.ID,
+		ChatId:  UserData.TelegramID, // тут типо chatID
 	}
 
 	err = s.ProducerBroker.Publish("order_response", ResponseToBroker)

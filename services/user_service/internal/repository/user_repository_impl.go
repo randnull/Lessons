@@ -54,43 +54,82 @@ func NewRepository(cfg config.DBConfig) *Repository {
 }
 
 func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
-	ExistedUser, err := r.GetUserByTelegramId(user.TelegramId)
+	if (user.Role != models.RoleStudent) && (user.Role != models.RoleTutor) {
+		return "", custom_errors.ErrorIncorrectRole
+	}
+
+	ExistedUser, err := r.GetUserByTelegramId(user.TelegramId, user.Role)
 	if err == nil {
+		fmt.Println("exist")
 		return ExistedUser.Id, nil
 	}
 
-	query := `INSERT INTO users (telegram_id, name, created_at) VALUES ($1, $2, $3) RETURNING id`
+	tx, err := r.db.Begin()
+	defer tx.Rollback()
+
+	if err != nil {
+		fmt.Println("err:", err)
+		tx.Rollback()
+		return "", err
+	}
+
+	query := `INSERT INTO users (telegram_id, name, role, created_at) VALUES ($1, $2, $3, $4) RETURNING id`
 
 	var UserId string
 
 	currentTime := time.Now()
 
-	err = r.db.QueryRow(query,
+	err = tx.QueryRow(query,
 		user.TelegramId,
 		user.Name,
+		user.Role,
 		currentTime,
 	).Scan(&UserId)
+
 	fmt.Println(err)
 	if err != nil {
+		fmt.Println("err 2:", err)
+		tx.Rollback()
 		return "", custom_errors.ErrorWithCreate
+	}
+
+	if user.Role == models.RoleTutor {
+		queryInsertTutor := `INSERT INTO tutors (id, created_at) VALUES ($1, $2)`
+		_, err = tx.Exec(queryInsertTutor, UserId, currentTime)
+
+		if err != nil {
+			fmt.Println("err 3:", err)
+
+			tx.Rollback()
+			return "", custom_errors.ErrorWithCreate
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		fmt.Println(err)
+
+		return "", err
 	}
 
 	return UserId, nil
 }
 
-func (r *Repository) GetUserByTelegramId(telegramID int64) (*models.UserDB, error) {
+func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error) {
 	user := &models.UserDB{}
 
-	query := `SELECT id, telegram_id, name, created_at FROM users WHERE telegram_id = $1`
+	query := `SELECT id, telegram_id, name, role, created_at FROM users WHERE telegram_id = $1 AND role = $2`
 
-	err := r.db.QueryRow(query, telegramID).Scan(
+	err := r.db.QueryRow(query, telegramID, userRole).Scan(
 		&user.Id,
 		&user.TelegramID,
 		&user.Name,
+		&user.Role,
 		&user.CreatedAt,
 	)
 
 	if err != nil {
+		fmt.Println('0', err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, custom_errors.UserNotFound
 		}
@@ -102,12 +141,13 @@ func (r *Repository) GetUserByTelegramId(telegramID int64) (*models.UserDB, erro
 func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
 	user := &models.UserDB{}
 
-	query := `SELECT id, telegram_id, name, created_at FROM users WHERE id = $1`
+	query := `SELECT id, telegram_id, name, role, created_at FROM users WHERE id = $1 AND role = $2`
 
-	err := r.db.QueryRow(query, userID).Scan(
+	err := r.db.QueryRow(query, userID, "Tutor").Scan(
 		&user.Id,
 		&user.TelegramID,
 		&user.Name,
+		&user.Role,
 		&user.CreatedAt,
 	)
 
@@ -122,9 +162,9 @@ func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
 }
 
 func (r *Repository) GetAllUsers() ([]*pb.User, error) {
-	query := `SELECT id, name FROM users`
+	query := `SELECT id, name FROM users WHERE role = $1 ORDER BY created_at DESC`
 
-	rows, err := r.db.Query(query)
+	rows, err := r.db.Query(query, "Tutor")
 	defer rows.Close()
 
 	if err != nil {

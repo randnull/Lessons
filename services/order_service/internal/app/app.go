@@ -107,11 +107,12 @@ func (a *App) Run() {
 	responses.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
 
 	responses.Post("/id/:id", a.responseControllers.ResponseToOrder)
+	responses.Get("/id/:id", a.responseControllers.GetResponseById)
 
 	users := router.Group("/api/users")
 	users.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
 
-	users.Post("/", a.userControllers.CreateUser)
+	//users.Post("/", a.userControllers.CreateUser)
 	users.Get("/", a.userControllers.GetAllUser)
 	users.Get("/id/:id", a.userControllers.GetUser)
 

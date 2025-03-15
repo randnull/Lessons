@@ -5,10 +5,23 @@ import (
 )
 
 type Config struct {
-	ServerPort string `env:"PORT" env-default:"6050"`
+	JWTConfig
+	GRPCConfig
+	ServerConfig
+}
 
-	JWTsecret string `env:"JWT_SECRET" env-default:"secret"`
-	BotToken  string `env:"BOT_TOKEN" env-default:"7629903300:AAFwHNldwaNDI8cqv7FneC6DtYetbhe0DP0"`
+type JWTConfig struct {
+	JWTsecret       string `env:"JWT_SECRET" env-default:"secret"`
+	BotTokenStudent string `env:"BOT_TOKEN_STUDENT" env-default:"7629903300:AAFwHNldwaNDI8cqv7FneC6DtYetbhe0DP0"`
+	BotTokenTutor   string `env:"BOT_TOKEN_TUTOR" env-default:"7629903300:AAFwHNldwaNDI8cqv7FneC6DtYetbhe0DP0"`
+}
+type GRPCConfig struct {
+	Host string `env:"GRPCUSERHOST" env-default:"127.0.0.1"`
+	Port string `env:"GRPCUSERPORT" env-default:"2000"`
+}
+
+type ServerConfig struct {
+	ServerPort string `env:"SERVER_PORT" env-default:"8050"`
 }
 
 func NewConfig() (*Config, error) {

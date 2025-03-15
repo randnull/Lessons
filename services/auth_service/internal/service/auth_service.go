@@ -13,7 +13,10 @@
 package service
 
 import (
+	"context"
 	"fmt"
+	"github.com/randnull/Lessons/internal/gRPC_client"
+	"github.com/randnull/Lessons/internal/models"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"time"
 
@@ -22,44 +25,63 @@ import (
 )
 
 type AuthServiceInt interface {
-	Login(initdata string) (string, error)
+	Login(AuthData *models.AuthData) (string, error)
 }
 
 type AuthService struct {
-	cfg *config.Config
+	cfg        *config.JWTConfig
+	GRPCClient gRPC_client.GRPCClientInt
 }
 
-func NewAuthService(cfg *config.Config) AuthServiceInt {
+func NewAuthService(cfg *config.JWTConfig, grpcClient gRPC_client.GRPCClientInt) AuthServiceInt {
 	return &AuthService{
-		cfg: cfg,
+		cfg:        cfg,
+		GRPCClient: grpcClient,
 	}
 }
 
-func (authserv *AuthService) Login(initdata_from_user string) (string, error) {
-	user_data, err := initdata.Parse(initdata_from_user)
+func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
+	userData, err := initdata.Parse(AuthData.InitData)
 
-	fmt.Println(user_data)
-
-	if err != nil {
-		return "", err
-	}
-
-	// REQ TO USER SERV user_id
-
-	fmt.Println(initdata.Validate(initdata_from_user, authserv.cfg.BotToken, time.Hour))
-
-	err = initdata.Validate(initdata_from_user, authserv.cfg.BotToken, time.Hour) // конфиг
+	fmt.Println(userData)
 
 	if err != nil {
 		return "", err
 	}
 
-	jwt_token, err := auth.CreateJWTToken(user_data.User.ID, authserv.cfg.JWTsecret)
+	//fmt.Println(initdata.Validate(initdata_from_user, authserv.cfg.BotToken, time.Hour))
+
+	var errValidate error
+
+	switch AuthData.Role {
+	case models.RoleTutor:
+		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenTutor, time.Hour*30000) // конфиг
+	case models.RoleStudent:
+		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenStudent, time.Hour*30000) // конфиг
+	}
+
+	if errValidate != nil {
+		return "", errValidate
+	}
+	// create user создает или возвращает пользователя
+
+	fmt.Println(AuthData.Role)
+	userID, err := authserv.GRPCClient.CreateUser(context.Background(), &models.NewUser{
+		TelegramID: userData.User.ID,
+		Name:       userData.User.FirstName,
+		Role:       AuthData.Role,
+	})
+
 	if err != nil {
 		return "", err
 	}
 
-	fmt.Println(jwt_token)
+	jwtToken, err := auth.CreateJWTToken(userID, userData.User.ID, AuthData.Role, authserv.cfg.JWTsecret)
+	if err != nil {
+		return "", err
+	}
+	x, _ := auth.ParseJWTToken(jwtToken, authserv.cfg.JWTsecret)
+	fmt.Println("decoded", x)
 
-	return jwt_token, nil
+	return jwtToken, nil
 }

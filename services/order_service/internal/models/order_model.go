@@ -25,7 +25,7 @@ type UpdateOrder struct {
 
 type Order struct {
 	ID            string         `json:"id"`
-	StudentID     int            `json:"student_id"`
+	StudentID     string         `json:"student_id"`
 	Title         string         `json:"title"`
 	Description   string         `json:"description"`
 	Grade         string         `json:"grade"`
@@ -53,7 +53,7 @@ type OrderDetailsTutor struct {
 
 type OrderDetails struct {
 	ID            string         `json:"id"`
-	StudentID     int            `json:"student_id"`
+	StudentID     string         `json:"student_id"`
 	Title         string         `json:"title"`
 	Description   string         `json:"description"`
 	Grade         string         `json:"grade"`
@@ -69,7 +69,7 @@ type OrderDetails struct {
 
 type OrderToBrokerWithID struct {
 	ID          string   `json:"id"`
-	StudentID   int      `json:"student_id"`
+	StudentID   int64    `json:"student_id"`
 	Title       string   `json:"title"`
 	Description string   `json:"description"`
 	MinPrice    int      `json:"min_price"`

@@ -11,7 +11,6 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/models"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"log"
 	"strconv"
 	"time"
@@ -55,7 +54,7 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	}
 }
 
-func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData initdata.InitData) (*models.OrderToBrokerWithID, error) {
+func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID string, telegramID int64) (*models.OrderToBrokerWithID, error) {
 	timestamp := time.Now()
 
 	query := `INSERT INTO orders (student_id, title, description, grade, tags, min_price, max_price, status, response_count, created_at, updated_at)
@@ -70,7 +69,7 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData ini
 	log.Println(tags)
 
 	err := orderStorage.db.QueryRow(query,
-		InitData.User.ID,
+		studentID,
 		order.Title,
 		order.Description,
 		order.Grade,
@@ -90,23 +89,21 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, InitData ini
 
 	CreatedOrder := models.OrderToBrokerWithID{
 		ID:          orderID,
-		StudentID:   int(InitData.User.ID),
+		StudentID:   telegramID,
 		Title:       order.Title,
 		Description: order.Description,
 		Tags:        order.Tags,
 		MinPrice:    order.MinPrice,
 		MaxPrice:    order.MaxPrice,
-		ChatID:      InitData.Chat.ID,
+		ChatID:      telegramID,
 	}
 
 	return &CreatedOrder, nil
 }
 
-func (orderStorage *Repository) GetByID(id string, InitData initdata.InitData) (*models.OrderDetails, error) {
+func (orderStorage *Repository) GetByID(id string, studentID string) (*models.OrderDetails, error) {
 	order := &models.OrderDetails{}
 	responses := []models.Response{}
-
-	fmt.Println(id, InitData.User.ID)
 
 	query := `
 		SELECT 
@@ -130,7 +127,7 @@ func (orderStorage *Repository) GetByID(id string, InitData initdata.InitData) (
 		LEFT JOIN responses r ON o.id = r.order_id
 		WHERE o.id = $1 AND o.student_id = $2`
 
-	rows, err := orderStorage.db.Query(query, id, InitData.User.ID)
+	rows, err := orderStorage.db.Query(query, id, studentID)
 
 	fmt.Println(err)
 	if err != nil {
@@ -204,7 +201,7 @@ func (orderStorage *Repository) GetUserByOrder(orderID string) (*int64, error) {
 	return &UserID, nil
 }
 
-func (orderStorage *Repository) GetAllOrders(InitData initdata.InitData) ([]*models.Order, error) {
+func (orderStorage *Repository) GetAllOrders(studentID string) ([]*models.Order, error) {
 	var orders []*models.Order
 
 	query := `SELECT 
@@ -257,7 +254,7 @@ func (orderStorage *Repository) GetAllOrders(InitData initdata.InitData) ([]*mod
 	return orders, nil
 }
 
-func (orderStorage *Repository) GetOrderByIdTutor(id string, InitData initdata.InitData) (*models.OrderDetailsTutor, error) {
+func (orderStorage *Repository) GetOrderByIdTutor(id string, studentID string) (*models.OrderDetailsTutor, error) {
 	var order models.OrderDetailsTutor
 
 	query := `
@@ -283,7 +280,7 @@ func (orderStorage *Repository) GetOrderByIdTutor(id string, InitData initdata.I
 	return &order, nil
 }
 
-func (orderStorage *Repository) GetAllUsersOrders(InitData initdata.InitData) ([]*models.Order, error) {
+func (orderStorage *Repository) GetAllUsersOrders(studentID string) ([]*models.Order, error) {
 	var orders []*models.Order
 
 	query := `SELECT 
@@ -301,8 +298,9 @@ func (orderStorage *Repository) GetAllUsersOrders(InitData initdata.InitData) ([
     			updated_at 
 			FROM orders WHERE student_id = $1 ORDER BY created_at DESC`
 
-	rows, err := orderStorage.db.Query(query, InitData.User.ID)
+	rows, err := orderStorage.db.Query(query, studentID)
 	if err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 	defer rows.Close()
@@ -324,19 +322,21 @@ func (orderStorage *Repository) GetAllUsersOrders(InitData initdata.InitData) ([
 			&order.UpdatedAt,
 		)
 		if err != nil {
+			fmt.Println(err)
 			return nil, err
 		}
 		orders = append(orders, &order)
 	}
 
 	if err = rows.Err(); err != nil {
+		fmt.Println(err)
 		return nil, err
 	}
 
 	return orders, nil
 }
 
-func (orderStorage *Repository) UpdateOrder(orderID string, order *models.UpdateOrder, InitData initdata.InitData) error {
+func (orderStorage *Repository) UpdateOrder(orderID string, order *models.UpdateOrder, studentID string) error {
 	query := `UPDATE orders SET `
 	values := []interface{}{}
 
@@ -388,10 +388,10 @@ func (orderStorage *Repository) UpdateOrder(orderID string, order *models.Update
 	return nil
 }
 
-func (orderStorage *Repository) DeleteOrder(id string, InitData initdata.InitData) error {
+func (orderStorage *Repository) DeleteOrder(id string, studentID string) error {
 	query := `DELETE FROM orders WHERE id = $1 AND student_id = $2`
 
-	_, err := orderStorage.db.Exec(query, id, InitData.User.ID)
+	_, err := orderStorage.db.Exec(query, id, studentID)
 
 	if err != nil {
 		return err
@@ -452,4 +452,55 @@ func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel
 	}
 
 	return ResponseID, nil
+}
+
+func (orderStorage *Repository) CheckOrderByStudentID(orderID string, studentID string) (bool, error) {
+	var isExist bool
+
+	query := `
+        SELECT EXISTS (
+            SELECT 1 FROM orders WHERE id = $1 AND student_id = $2
+        )
+    `
+
+	err := orderStorage.db.QueryRow(query, orderID, studentID).Scan(&isExist)
+	if err != nil {
+		return false, err
+	}
+
+	return isExist, nil
+}
+
+func (orderStorage *Repository) GetResponseById(ResponseID string, studentID string) (*models.ResponseDB, error) {
+	var response models.ResponseDB
+
+	query := `
+		SELECT 
+			id,
+			order_id,
+			tutor_id,
+			name,
+			created_at
+		FROM responses WHERE id = $1`
+
+	err := orderStorage.db.QueryRowx(query, ResponseID).StructScan(&response)
+
+	if err != nil {
+		fmt.Println(err)
+		return nil, custom_errors.ErrGetResponse
+	}
+
+	fmt.Println(response.OrderID, studentID)
+
+	isExist, err := orderStorage.CheckOrderByStudentID(response.OrderID, studentID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !isExist {
+		return nil, custom_errors.ErrNotAllowed
+	}
+
+	return &response, nil
 }

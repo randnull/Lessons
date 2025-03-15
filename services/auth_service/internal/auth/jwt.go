@@ -1,17 +1,30 @@
 package auth
 
 import (
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/randnull/Lessons/internal/errors"
+	"github.com/randnull/Lessons/internal/custom_errors"
+	"github.com/randnull/Lessons/internal/models"
 	"log"
+	"time"
 )
 
-func CreateJWTToken(user_id int64, jwt_secret string) (string, error) {
-	secret_key := []byte(jwt_secret)
+func CreateJWTToken(userID string, telegramID int64, role models.RoleType, jwtSecret string) (string, error) {
+	secretKey := []byte(jwtSecret)
+	//
+	//claims := jwt.MapClaims{
+	//	"user_id":     userID,
+	//	"telegram_id": telegramID,
+	//	"role":        role,
+	//}
+	//claims := jwt.MapClaims{}
 
-	claims := jwt.MapClaims{
-		"user_id": user_id,
+	claims := models.Claims{
+		UserID:     userID,
+		TelegramID: telegramID,
+		Role:       role,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(30000 * time.Hour)),
+		},
 	}
 
 	token := jwt.NewWithClaims(
@@ -19,33 +32,31 @@ func CreateJWTToken(user_id int64, jwt_secret string) (string, error) {
 		claims,
 	)
 
-	token_str, err := token.SignedString(secret_key)
+	tokenStr, err := token.SignedString(secretKey)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	return token_str, nil
+	return tokenStr, nil
 }
 
-func ParseJWTToken(token_str string, jwt_secret string) (string, error) {
-	token, err := jwt.Parse(token_str, func(token *jwt.Token) (interface{}, error) {
-		return []byte(jwt_secret), nil
+func ParseJWTToken(tokenStr string, jwtSecret string) (*models.Claims, error) {
+	secretKey := []byte(jwtSecret)
+
+	claims := &models.Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return secretKey, nil
 	})
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if !token.Valid {
-		return "", errors.InvalidToken
+		return nil, custom_errors.ErrorInvalidToken
 	}
 
-	claims, _ := token.Claims.(jwt.MapClaims)
-
-	str := fmt.Sprintf("%v", claims["user_id"])
-
-	user_id := str
-
-	return user_id, nil
+	return claims, nil
 }

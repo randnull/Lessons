@@ -8,7 +8,7 @@ import (
 type UserRepository interface {
 	CreateUser(user *models.CreateUser) (string, error)
 	GetUserById(userID string) (*models.UserDB, error)
-	GetUserByTelegramId(telegramID int64) (*models.UserDB, error)
+	GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error)
 	GetAllUsers() ([]*pb.User, error)
 	//CheckExistUser(user_id string) bool
 }

@@ -1,10 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
-	initdata "github.com/telegram-mini-apps/init-data-golang"
 )
 
 type ResponseController struct {
@@ -15,6 +15,25 @@ func NewResponseController(ResponseServ service.ResponseServiceInt) *ResponseCon
 	return &ResponseController{
 		ResponseService: ResponseServ,
 	}
+}
+
+func (r *ResponseController) GetResponseById(ctx *fiber.Ctx) error {
+	ResponseID := ctx.Params("id")
+
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	response, err := r.ResponseService.GetResponseById(ResponseID, UserData)
+
+	if err != nil {
+		fmt.Println(err)
+		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return ctx.JSON(response)
 }
 
 func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
@@ -28,16 +47,16 @@ func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
 
 	NewResponse.OrderId = orderID
 
-	InitData, ok := ctx.Locals("user_data").(initdata.InitData)
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	responseID, err := r.ResponseService.ResponseToOrder(&NewResponse, InitData)
+	responseID, err := r.ResponseService.ResponseToOrder(&NewResponse, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": err.Error()})
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{

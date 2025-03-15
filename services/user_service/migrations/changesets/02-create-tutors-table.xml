@@ -11,22 +11,14 @@
     <property name="uuid_type" value="uuid" dbms="postgresql"/>
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
 
-    <changeSet author="k.goryunov" id="create-users-table">
-        <createTable tableName="users" remarks="table with users">
-            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
-                <constraints nullable="false" unique="true" />
+    <changeSet author="k.goryunov" id="create-tutors-table">
+        <createTable tableName="tutors" remarks="table with tutors">
+            <column name="id" type="${uuid_type}" remarks="primery key uuid">
+                <constraints primaryKey="true" nullable="false" foreignKeyName="fk_tutors_users" references="users(id)"/>
             </column>
 
-            <column name="telegram_id" type="BIGINT" remarks="">
-                <constraints nullable="false"/>
-            </column>
-
-            <column name="name" type="VARCHAR" remarks="">
-                <constraints nullable="false"/>
-            </column>
-
-            <column name="role" type="VARCHAR" remarks="">
-                <constraints nullable="false" checkConstraint="role IN ('Tutor', 'Student')"/>
+            <column name="bio" type="VARCHAR(500)" remarks="">
+<!--                <constraints nullable="false"/> INDEX на role + telegram_id-->
             </column>
 
             <column name="created_at" type="TIMESTAMP" remarks="">

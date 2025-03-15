@@ -21,23 +21,25 @@ func NewUserHandler(AuthServ service.AuthServiceInt, cfg *config.Config) *AuthHa
 }
 
 func (c *AuthHandlers) Login(ctx *fiber.Ctx) error {
-	var InitDataFromUser models.InitModel
+	var AuthData models.AuthData
 
-	if err := ctx.BodyParser(&InitDataFromUser); err != nil {
+	if err := ctx.BodyParser(&AuthData); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Bad initdata"})
 	}
 
-	if InitDataFromUser.InitData == "" {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Field 'initData' is required"})
+	if AuthData.InitData == "" || AuthData.Role == "" {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Field 'initData' and 'role' is required"})
 	}
 
-	fmt.Println("INIT DATA ON HANDLER:", InitDataFromUser)
+	fmt.Println("INIT DATA ON HANDLER:", AuthData)
 
-	jwt_token, err := c.Service.Login(InitDataFromUser.InitData)
+	jwtToken, err := c.Service.Login(&AuthData)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	return ctx.JSON(models.ResponseToken{Token: jwt_token})
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
+		"token": jwtToken,
+	})
 }

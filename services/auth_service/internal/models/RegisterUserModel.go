@@ -1,5 +1,6 @@
 package models
 
-type InitModel struct {
-	InitData string `json:"initData"`
+type AuthData struct {
+	InitData string   `json:"initData"`
+	Role     RoleType `json:"role"`
 }

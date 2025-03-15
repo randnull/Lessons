@@ -7,10 +7,18 @@ type NewResponseModel struct {
 }
 
 type Response struct {
-	ID        string    `json:"id"`
-	TutorID   string    `json:"tutor_id"`
-	Name      string    `json:"name"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        string    `json:"id" db:"id"`
+	TutorID   string    `json:"tutor_id" db:"tutor_id"`
+	Name      string    `json:"name" db:"name"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+}
+
+type ResponseDB struct {
+	ID        string    `json:"id" db:"id"`
+	OrderID   string    `json:"order_id" db:"order_id"`
+	TutorID   string    `json:"tutor_id" db:"tutor_id"`
+	Name      string    `json:"name" db:"name"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
 type ResponseToBrokerModel struct {
