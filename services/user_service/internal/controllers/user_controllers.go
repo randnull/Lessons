@@ -55,8 +55,9 @@ func (s *UserControllers) GetUserById(ctx context.Context, in *pb.GetById) (*pb.
 	}
 
 	userPB := &pb.User{
-		Id:   user.Id,
-		Name: user.Name,
+		Id:         user.Id,
+		TelegramId: user.TelegramID,
+		Name:       user.Name,
 	}
 	return userPB, nil
 }

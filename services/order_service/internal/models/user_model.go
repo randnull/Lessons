@@ -6,8 +6,8 @@ type CreateUser struct {
 }
 
 type User struct {
-	Id string `json:"id"`
-	//TelegramID int64     `json:"telegram_id"`
-	Name string `json:"name"`
+	Id         string `json:"id"`
+	TelegramID int64  `json:"telegram_id"`
+	Name       string `json:"name"`
 	//CreatedAt  time.Time `json:"created_at"`
 }

@@ -185,9 +185,8 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 	return order, nil
 }
 
-func (orderStorage *Repository) GetUserByOrder(orderID string) (*int64, error) {
-	var UserID int64
-	fmt.Println(orderID)
+func (orderStorage *Repository) GetUserByOrder(orderID string) (string, error) {
+	var UserID string
 
 	query := `SELECT student_id FROM orders WHERE id = $1`
 
@@ -195,10 +194,10 @@ func (orderStorage *Repository) GetUserByOrder(orderID string) (*int64, error) {
 
 	if err != nil {
 		fmt.Println(err)
-		return nil, err
+		return "", err
 	}
 
-	return &UserID, nil
+	return UserID, nil
 }
 
 func (orderStorage *Repository) GetAllOrders(studentID string) ([]*models.Order, error) {

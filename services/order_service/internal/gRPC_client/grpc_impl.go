@@ -72,8 +72,9 @@ func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, 
 	}
 
 	return &models.User{
-		Id:   userPB.Id,
-		Name: userPB.Name,
+		Id:         userPB.Id,
+		TelegramID: userPB.TelegramId,
+		Name:       userPB.Name,
 	}, nil
 }
 
@@ -88,8 +89,9 @@ func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) 
 	}
 
 	return &models.User{
-		Id:   userPB.Id,
-		Name: userPB.Name,
+		Id:         userPB.Id,
+		TelegramID: userPB.TelegramId,
+		Name:       userPB.Name,
 	}, nil
 }
 

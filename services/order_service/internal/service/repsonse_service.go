@@ -44,6 +44,9 @@ func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, Use
 
 	TutorInfo, err := s.GRPCClient.GetUser(context.Background(), UserData.UserID)
 
+	studentID, err := s.orderRepository.GetUserByOrder(Response.OrderId)
+	StudentInfo, err := s.GRPCClient.GetUser(context.Background(), studentID)
+
 	if err != nil {
 		return "", custom_errors.ErrorGetUser
 	}
@@ -66,9 +69,9 @@ func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, Use
 	var ResponseToBroker models.ResponseToBrokerModel
 
 	ResponseToBroker = models.ResponseToBrokerModel{
-		UserId:  UserData.TelegramID,
+		UserId:  StudentInfo.TelegramID,
 		OrderId: Response.OrderId,
-		ChatId:  UserData.TelegramID, // тут типо chatID
+		ChatId:  StudentInfo.TelegramID, // тут типо chatID
 	}
 
 	err = s.ProducerBroker.Publish("order_response", ResponseToBroker)

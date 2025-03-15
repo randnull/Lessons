@@ -10,7 +10,7 @@ type OrderRepository interface {
 	GetOrderByIdTutor(id string, studentID string) (*models.OrderDetailsTutor, error)
 	GetAllOrders(studentID string) ([]*models.Order, error)
 	UpdateOrder(orderID string, order *models.UpdateOrder, studentID string) error
-	GetUserByOrder(orderID string) (*int64, error)
+	GetUserByOrder(orderID string) (string, error)
 	GetAllUsersOrders(studentID string) ([]*models.Order, error)
 	DeleteOrder(id string, studentID string) error
 	CreateResponse(response *models.NewResponseModel, Tutor *models.User) (string, error)
