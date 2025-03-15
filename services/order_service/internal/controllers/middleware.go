@@ -1,11 +1,11 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/config"
 	auth "github.com/randnull/Lessons/internal/jwt"
 	"github.com/randnull/Lessons/internal/models"
+	"log"
 )
 
 func TokenAuthMiddleware(cfg config.BotConfig) fiber.Handler {
@@ -18,7 +18,7 @@ func TokenAuthMiddleware(cfg config.BotConfig) fiber.Handler {
 				"msg":   "No token provided",
 			})
 		}
-		fmt.Println(token, cfg.JWTSecret)
+		log.Printf(token, cfg.JWTSecret)
 		UserClaims, err := auth.ParseJWTToken(token, cfg.JWTSecret)
 
 		if err != nil {

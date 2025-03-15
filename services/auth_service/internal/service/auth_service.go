@@ -15,13 +15,11 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/randnull/Lessons/internal/auth"
+	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
-	"time"
-
-	"github.com/randnull/Lessons/internal/auth"
-	"github.com/randnull/Lessons/internal/config"
 )
 
 type AuthServiceInt interface {
@@ -49,20 +47,19 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 		return "", err
 	}
 
-	//fmt.Println(initdata.Validate(initdata_from_user, authserv.cfg.BotToken, time.Hour))
+	// ВАЛИДАЦИЮ ОБЯЗАТЕЛЬНО ВКЛЮЧИТЬ КОГДА ОПРЕДЕЛИМСЯ С ТОКЕНАМИ
+	//var errValidate error
 
-	var errValidate error
+	//switch AuthData.Role {
+	//case models.RoleTutor:
+	//	errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenTutor, time.Hour*30000) // конфиг
+	//case models.RoleStudent:
+	//	errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenStudent, time.Hour*30000) // конфиг
+	//}
 
-	switch AuthData.Role {
-	case models.RoleTutor:
-		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenTutor, time.Hour*30000) // конфиг
-	case models.RoleStudent:
-		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenStudent, time.Hour*30000) // конфиг
-	}
-
-	if errValidate != nil {
-		return "", errValidate
-	}
+	//if errValidate != nil {
+	//	return "", errValidate
+	//}
 	// create user создает или возвращает пользователя
 
 	fmt.Println(AuthData.Role)
