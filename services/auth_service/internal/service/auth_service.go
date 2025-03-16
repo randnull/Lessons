@@ -64,8 +64,12 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 	// create user создает или возвращает пользователя
 
 	log.Println(AuthData.Role)
+
+	//if userData.User.Username not exist -> error
+	
 	userID, err := authserv.GRPCClient.CreateUser(context.Background(), &models.NewUser{
 		TelegramID: userData.User.ID,
+		Username:   userData.User.Username,
 		Name:       userData.User.FirstName,
 		Role:       AuthData.Role,
 	})

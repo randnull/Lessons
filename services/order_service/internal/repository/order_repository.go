@@ -13,7 +13,7 @@ type OrderRepository interface {
 	GetUserByOrder(orderID string) (string, error)
 	GetAllUsersOrders(studentID string) ([]*models.Order, error)
 	DeleteOrder(id string, studentID string) error
-	CreateResponse(response *models.NewResponseModel, Tutor *models.User) (string, error)
+	CreateResponse(response *models.NewResponseModel, Tutor *models.User, username string) (string, error)
 	GetResponseById(ResponseID string, studentID string) (*models.ResponseDB, error)
 	CheckOrderByStudentID(orderID string, studentID string) (bool, error)
 }

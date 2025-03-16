@@ -29,6 +29,10 @@
                 <constraints nullable="false"/>
             </column>
 
+            <column name="tutor_username" type="VARCHAR" remarks="">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="created_at" type="TIMESTAMPTZ" remarks="">
                 <constraints nullable="false"/>
             </column>

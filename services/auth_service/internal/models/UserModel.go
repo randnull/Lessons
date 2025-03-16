@@ -9,6 +9,7 @@ type User struct {
 
 type NewUser struct {
 	TelegramID int64    `json:"telegram_id"`
+	Username   string   `json:"username"`
 	Name       string   `json:"name"`
 	Role       RoleType `json:"role"`
 }

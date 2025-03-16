@@ -401,7 +401,7 @@ func (orderStorage *Repository) DeleteOrder(id string, studentID string) error {
 
 //func (orderStorage *Repository) VerifyUserOrder(studentID string) ([]*models.Order, error) {}
 
-func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel, Tutor *models.User) (string, error) {
+func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel, Tutor *models.User, username string) (string, error) {
 	var ResponseID string
 
 	queryCheck := `SELECT id FROM responses WHERE order_id = $1 AND tutor_id = $2`
@@ -425,10 +425,10 @@ func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel
 
 	timestamp := time.Now()
 	// SELECT WHERE order_id = ... без UPDATE
-	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, created_at)
-					VALUES ($1, $2, $3, $4) RETURNING id`
+	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, tutor_username, created_at)
+					VALUES ($1, $2, $3, $4, $5) RETURNING id`
 
-	err = tx.QueryRow(queryInsert, response.OrderId, Tutor.Name, Tutor.Id, timestamp).Scan(&ResponseID)
+	err = tx.QueryRow(queryInsert, response.OrderId, Tutor.Name, Tutor.Id, username, timestamp).Scan(&ResponseID)
 	if err != nil {
 		fmt.Println(err)
 		tx.Rollback()
@@ -478,6 +478,7 @@ func (orderStorage *Repository) GetResponseById(ResponseID string, studentID str
 			id,
 			order_id,
 			tutor_id,
+			tutor_username,
 			name,
 			created_at
 		FROM responses WHERE id = $1`

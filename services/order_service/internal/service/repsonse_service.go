@@ -63,7 +63,7 @@ func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, Use
 	//	return "", custom_errors.ErrStudentByOrderNotFound
 	//}
 
-	responseID, err := s.orderRepository.CreateResponse(Response, TutorInfo)
+	responseID, err := s.orderRepository.CreateResponse(Response, TutorInfo, UserData.Username)
 
 	if err != nil {
 		if errors.Is(custom_errors.ErrResponseAlredyExist, err) {
