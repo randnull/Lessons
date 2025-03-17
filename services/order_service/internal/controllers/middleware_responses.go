@@ -37,6 +37,7 @@ func TokenAuthMiddlewareResponses(cfg config.BotConfig) fiber.Handler {
 		c.Locals("user_data",
 			models.UserData{
 				TelegramID: UserClaims.TelegramID,
+				Username:   UserClaims.Username,
 				UserID:     UserClaims.UserID,
 				Role:       UserClaims.Role,
 			})

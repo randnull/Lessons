@@ -48,6 +48,8 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 		return "", err
 	}
 
+	fmt.Println("username:", userData.User.Username, userData.User)
+
 	// ВАЛИДАЦИЮ ОБЯЗАТЕЛЬНО ВКЛЮЧИТЬ КОГДА ОПРЕДЕЛИМСЯ С ТОКЕНАМИ
 	//var errValidate error
 
@@ -66,10 +68,9 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 	log.Println(AuthData.Role)
 
 	//if userData.User.Username not exist -> error
-	
+
 	userID, err := authserv.GRPCClient.CreateUser(context.Background(), &models.NewUser{
 		TelegramID: userData.User.ID,
-		Username:   userData.User.Username,
 		Name:       userData.User.FirstName,
 		Role:       AuthData.Role,
 	})
@@ -78,7 +79,7 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 		return "", err
 	}
 
-	jwtToken, err := auth.CreateJWTToken(userID, userData.User.ID, AuthData.Role, authserv.cfg.JWTsecret)
+	jwtToken, err := auth.CreateJWTToken(userID, userData.User.ID, userData.User.Username, AuthData.Role, authserv.cfg.JWTsecret)
 	if err != nil {
 		return "", err
 	}

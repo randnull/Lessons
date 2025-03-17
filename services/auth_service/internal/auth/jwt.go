@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func CreateJWTToken(userID string, telegramID int64, role models.RoleType, jwtSecret string) (string, error) {
+func CreateJWTToken(userID string, telegramID int64, username string, role models.RoleType, jwtSecret string) (string, error) {
 	secretKey := []byte(jwtSecret)
 	//
 	//claims := jwt.MapClaims{
@@ -20,6 +20,7 @@ func CreateJWTToken(userID string, telegramID int64, role models.RoleType, jwtSe
 
 	claims := models.Claims{
 		UserID:     userID,
+		Username:   username,
 		TelegramID: telegramID,
 		Role:       role,
 		RegisteredClaims: jwt.RegisteredClaims{
