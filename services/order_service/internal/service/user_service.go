@@ -1,7 +1,6 @@
 package service
 
 import (
-	"context"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
 )
@@ -23,7 +22,7 @@ func NewUSerService(grpcClient gRPC_client.GRPCClientInt) UserServiceInt {
 }
 
 func (u *UserService) GetUser(UserID string) (*models.User, error) {
-	return u.GRPCClient.GetUser(context.Background(), UserID)
+	return u.GRPCClient.GetUser(UserID)
 }
 
 //func (u *UserService) CreateUser(UserData models.UserData) (string, error) {
@@ -41,7 +40,7 @@ func (u *UserService) GetUser(UserID string) (*models.User, error) {
 //}
 
 func (u *UserService) GetAllUsers() ([]*models.User, error) {
-	usersRPC, err := u.GRPCClient.GetAllUsers(context.Background())
+	usersRPC, err := u.GRPCClient.GetAllUsers()
 
 	if err != nil {
 		return nil, err

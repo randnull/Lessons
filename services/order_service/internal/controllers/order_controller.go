@@ -46,7 +46,6 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create order"})
 	}
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "Order created successfully",
 		"orderID": orderID,
 	})
 }

@@ -5,8 +5,8 @@ import (
 )
 
 type OrderRepository interface {
-	CreateOrder(order *models.NewOrder, studentID string, telegramID int64) (*models.OrderToBrokerWithID, error)
-	GetByID(id string, studentID string) (*models.OrderDetails, error)
+	CreateOrder(order *models.NewOrder, studentID string, telegramID int64) (*models.Order, error)
+	GetByID(id string) (*models.OrderDetails, error)
 	GetOrderByIdTutor(id string, studentID string) (*models.OrderDetailsTutor, error)
 	GetAllOrders(studentID string) ([]*models.Order, error)
 	UpdateOrder(orderID string, order *models.UpdateOrder, studentID string) error

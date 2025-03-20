@@ -54,7 +54,7 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	}
 }
 
-func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID string, telegramID int64) (*models.OrderToBrokerWithID, error) {
+func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID string, telegramID int64) (*models.Order, error) {
 	timestamp := time.Now()
 
 	query := `INSERT INTO orders (student_id, title, description, grade, tags, min_price, max_price, status, response_count, created_at, updated_at)
@@ -87,21 +87,36 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID st
 		return nil, err
 	} // Норм проверку TODO
 
-	CreatedOrder := models.OrderToBrokerWithID{
-		ID:          orderID,
-		StudentID:   telegramID,
-		Title:       order.Title,
-		Description: order.Description,
-		Tags:        order.Tags,
-		MinPrice:    order.MinPrice,
-		MaxPrice:    order.MaxPrice,
-		ChatID:      telegramID,
+	CreatedOrder := models.Order{
+		ID:            orderID,
+		StudentID:     studentID,
+		Title:         order.Title,
+		Grade:         order.Grade,
+		Description:   order.Description,
+		MinPrice:      order.MinPrice,
+		MaxPrice:      order.MaxPrice,
+		Tags:          order.Tags,
+		Status:        "New",
+		ResponseCount: 0,
+		CreatedAt:     timestamp,
+		UpdatedAt:     timestamp,
 	}
+
+	//CreatedOrder := models.OrderToBrokerWithID{
+	//	ID:          orderID,
+	//	StudentID:   telegramID,
+	//	Title:       order.Title,
+	//	Description: order.Description,
+	//	Tags:        order.Tags,
+	//	MinPrice:    order.MinPrice,
+	//	MaxPrice:    order.MaxPrice,
+	//	ChatID:      telegramID,
+	//}
 
 	return &CreatedOrder, nil
 }
 
-func (orderStorage *Repository) GetByID(id string, studentID string) (*models.OrderDetails, error) {
+func (orderStorage *Repository) GetByID(id string) (*models.OrderDetails, error) {
 	order := &models.OrderDetails{}
 	responses := []models.Response{}
 
@@ -125,9 +140,9 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 			r.created_at
 		FROM orders o
 		LEFT JOIN responses r ON o.id = r.order_id
-		WHERE o.id = $1 AND o.student_id = $2`
+		WHERE o.id = $1` //  AND o.student_id = $2
 
-	rows, err := orderStorage.db.Query(query, id, studentID)
+	rows, err := orderStorage.db.Query(query, id) // studentID
 
 	fmt.Println(err)
 	if err != nil {
@@ -139,8 +154,9 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 			return nil, err
 		}
 	}
+
 	for rows.Next() {
-		var responseID sql.NullString //переписать !!!
+		var responseID sql.NullString
 		var tutorID sql.NullString
 		var responseCreatedAt sql.NullTime
 		var tutorName sql.NullString
@@ -170,13 +186,14 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 		}
 
 		if responseID.Valid {
-			valid_response := models.Response{
-				ID:        responseID.String,
+			validResponse := models.Response{
+				ID: responseID.String,
+				//OrderID:   order.ID,
 				Name:      tutorName.String,
 				TutorID:   tutorID.String,
 				CreatedAt: responseCreatedAt.Time,
 			}
-			responses = append(responses, valid_response)
+			responses = append(responses, validResponse)
 		}
 	}
 

@@ -11,6 +11,7 @@ type Config struct {
 	BotConfig
 	MQConfig
 	GRPCConfig
+	RedisConfig
 }
 
 type DBConfig struct {
@@ -41,6 +42,17 @@ type MQConfig struct {
 type GRPCConfig struct {
 	Host string `env:"GRPCUSERHOST" env-default:"127.0.0.1"`
 	Port string `env:"GRPCUSERPORT" env-default:"2000"`
+}
+
+type RedisConfig struct {
+	Host       string `env:"REDIS_HOST" env-default:"127.0.0.1"`
+	Port       string `env:"REDIS_PORT" env-default:"6379"`
+	Password   string `env:"REDIS_PASSWORD" env-default:"redis_pass"`
+	User       string `env:"REDIS_USER" env-default:"admin"`
+	DB         int    `env:"REDIS_DB" env-default:"0"`
+	MaxRetries int    `env:"REDIS_MAX_RETRIES" env-default:"5"`
+	//DialTimeout time.Duration
+	//Timeout     time.Duration
 }
 
 func NewConfig() (*Config, error) {

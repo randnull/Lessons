@@ -8,6 +8,7 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/rabbitmq"
+	"github.com/randnull/Lessons/internal/redis"
 	"log"
 	"strings"
 
@@ -28,17 +29,21 @@ type App struct {
 
 	userService     service.UserServiceInt
 	userControllers *controllers.UserController
+
+	redis redis.RedisInterface
 }
 
 func NewApp(cfg *config.Config) *App {
 	ordergRPC := gRPC_client.NewGRPCClient(cfg.GRPCConfig)
+	redisInstance := redis.NewRedis(cfg.RedisConfig)
+
 	orderRepo := repository.NewRepository(cfg.DBConfig)
 	orderBrokerProducer := rabbitmq.NewRabbitMQ(cfg.MQConfig)
 
-	orderService := service.NewOrderService(orderRepo, orderBrokerProducer, ordergRPC)
+	orderService := service.NewOrderService(orderRepo, orderBrokerProducer, ordergRPC, redisInstance)
 	orderController := controllers.NewOrderController(orderService)
 
-	responsesService := service.NewResponseService(orderRepo, orderBrokerProducer, ordergRPC)
+	responsesService := service.NewResponseService(orderRepo, orderBrokerProducer, ordergRPC, redisInstance)
 	responseControllers := controllers.NewResponseController(responsesService)
 
 	usersService := service.NewUSerService(ordergRPC)
@@ -57,6 +62,8 @@ func NewApp(cfg *config.Config) *App {
 		userControllers: usersControllers,
 
 		cfg: cfg,
+
+		redis: redisInstance,
 	}
 }
 

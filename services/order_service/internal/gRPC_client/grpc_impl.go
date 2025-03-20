@@ -61,8 +61,8 @@ func (g *GRPCClient) Close() {
 	}
 }
 
-func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+func (g *GRPCClient) GetUser(userID string) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	userPB, err := g.client.GetUserById(ctx, &pb.GetById{Id: userID})
@@ -78,8 +78,8 @@ func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, 
 	}, nil
 }
 
-func (g *GRPCClient) GetStudent(ctx context.Context, userID string) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+func (g *GRPCClient) GetStudent(userID string) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	userPB, err := g.client.GetStudentById(ctx, &pb.GetById{Id: userID})
@@ -95,8 +95,8 @@ func (g *GRPCClient) GetStudent(ctx context.Context, userID string) (*models.Use
 	}, nil
 }
 
-func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+func (g *GRPCClient) GetUserByTelegramID(telegramID int64) (*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	userPB, err := g.client.GetUserByTelegramId(ctx, &pb.GetByTelegramId{Id: telegramID})
@@ -112,21 +112,8 @@ func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) 
 	}, nil
 }
 
-//func (g *GRPCClient) CreateUser(ctx context.Context, user *models.CreateUser) (string, error) {
-//	ctx, cancel := context.WithTimeout(ctx, time.Second)
-//	defer cancel()
-//
-//	userID, err := g.client.CreateUser(ctx, &pb.CreateUserRequest{Name: user.Name, TelegramId: user.TelegramId})
-//	fmt.Println(err)
-//	if err != nil {
-//		return "", custom_errors.ErrorCreateUser
-//	}
-//
-//	return userID.Id, nil
-//}
-
-func (g *GRPCClient) GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+func (g *GRPCClient) GetAllUsers() (*pb.GetAllResponse, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	usersPB, err := g.client.GetAllUsers(ctx, &pb.GetAllRequest{})

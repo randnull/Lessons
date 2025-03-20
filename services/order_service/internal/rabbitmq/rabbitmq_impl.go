@@ -54,10 +54,6 @@ func NewRabbitMQ(cfg config.MQConfig) *RabbitMQ {
 }
 
 func (r *RabbitMQ) Publish(queueName string, messageData interface{}) error {
-	//if reflect.TypeOf(messageData).Kind() != reflect.Struct {
-	//	return errors.New("message must be a struct")
-	//}
-
 	message, err := json.Marshal(messageData)
 	if err != nil {
 		log.Fatalf("failed to marshal order info: %v", err)
