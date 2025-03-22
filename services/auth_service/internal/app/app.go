@@ -24,13 +24,13 @@ func NewApp(cfg *config.Config) *App {
 	authService := service.NewAuthService(&cfg.JWTConfig, gRPCClient)
 	authControllers := controllers.NewUserHandler(authService, cfg)
 
-	auth_app := &App{
+	authApp := &App{
 		cfg:         cfg,
 		service:     authService,
 		controllers: authControllers,
 	}
 
-	return auth_app
+	return authApp
 }
 
 func (a *App) Run() {

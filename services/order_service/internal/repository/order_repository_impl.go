@@ -428,12 +428,12 @@ func (orderStorage *Repository) DeleteOrder(id string, studentID string) error {
 
 //func (orderStorage *Repository) VerifyUserOrder(studentID string) ([]*models.Order, error) {}
 
-func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel, Tutor *models.User, username string) (string, error) {
+func (orderStorage *Repository) CreateResponse(orderID string, response *models.NewResponseModel, Tutor *models.User, username string) (string, error) {
 	var ResponseID string
 
 	queryCheck := `SELECT id FROM responses WHERE order_id = $1 AND tutor_id = $2`
 
-	err := orderStorage.db.QueryRow(queryCheck, response.OrderId, Tutor.Id).Scan(&ResponseID)
+	err := orderStorage.db.QueryRow(queryCheck, orderID, Tutor.Id).Scan(&ResponseID)
 
 	if err == nil || !errors.Is(err, sql.ErrNoRows) {
 		if err == nil {
@@ -452,10 +452,17 @@ func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel
 
 	timestamp := time.Now()
 	// SELECT WHERE order_id = ... без UPDATE
-	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, tutor_username, is_final, created_at)
-					VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, tutor_username, greetings, is_final, created_at)
+					VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
-	err = tx.QueryRow(queryInsert, response.OrderId, Tutor.Name, Tutor.Id, username, false, timestamp).Scan(&ResponseID)
+	//
+	//if response == nil {
+	//
+	//}
+	fmt.Println(response, response.Greetings)
+	greetingsMessage := response.Greetings
+
+	err = tx.QueryRow(queryInsert, orderID, Tutor.Name, Tutor.Id, username, greetingsMessage, false, timestamp).Scan(&ResponseID)
 	if err != nil {
 		fmt.Println(err)
 		tx.Rollback()
@@ -465,7 +472,7 @@ func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel
 	// response_count = response_count + 1
 	queryUpdate := `UPDATE orders SET response_count = response_count + 1 WHERE id = $1`
 
-	_, err = tx.Exec(queryUpdate, response.OrderId)
+	_, err = tx.Exec(queryUpdate, orderID)
 
 	if err != nil {
 		tx.Rollback()
@@ -507,6 +514,7 @@ func (orderStorage *Repository) GetResponseById(ResponseID string, studentID str
 			tutor_id,
 			tutor_username,
 			name,
+			greetings,
 			is_final,
 			created_at
 		FROM responses WHERE id = $1`
@@ -534,6 +542,7 @@ func (orderStorage *Repository) GetResponseById(ResponseID string, studentID str
 }
 
 func (orderStorage *Repository) SetTutorToOrder(responseID string, UserData models.UserData) error {
+	// перенести в сервис
 	response, err := orderStorage.GetResponseById(responseID, UserData.UserID)
 
 	log.Println(response, err)
@@ -601,5 +610,9 @@ func (orderStorage *Repository) SetTutorToOrder(responseID string, UserData mode
 		return err
 	}
 
+	return nil
+}
+
+func (orderStorage *Repository) SetBioTutor(bio string, UserData models.UserData) error {
 	return nil
 }

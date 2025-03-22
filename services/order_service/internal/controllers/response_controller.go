@@ -41,11 +41,9 @@ func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
 
 	var NewResponse models.NewResponseModel
 
-	//if err := ctx.BodyParser(&NewResponse); err != nil {
-	//	return fiber.NewError(fiber.StatusBadRequest, err.Error())
-	//}
-
-	NewResponse.OrderId = orderID
+	if err := ctx.BodyParser(&NewResponse); err != nil {
+		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+	}
 
 	UserData, ok := ctx.Locals("user_data").(models.UserData)
 
@@ -53,7 +51,7 @@ func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	responseID, err := r.ResponseService.ResponseToOrder(&NewResponse, UserData)
+	responseID, err := r.ResponseService.ResponseToOrder(orderID, &NewResponse, UserData)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})

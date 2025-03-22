@@ -3,7 +3,7 @@ package models
 import "time"
 
 type NewResponseModel struct {
-	OrderId string `json:"order_id"`
+	Greetings string `json:"greetings"`
 }
 
 type Response struct {
@@ -20,6 +20,7 @@ type ResponseDB struct {
 	TutorID       string    `json:"tutor_id" db:"tutor_id"`
 	TutorUsername string    `json:"tutor_username" db:"tutor_username"`
 	Name          string    `json:"name" db:"name"`
+	Greetings     string    `json:"greetings" db:"greetings"`
 	IsFinal       bool      `json:"is_final" db:"is_final"`
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 }

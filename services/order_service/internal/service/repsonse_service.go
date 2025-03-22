@@ -12,7 +12,7 @@ import (
 )
 
 type ResponseServiceInt interface {
-	ResponseToOrder(model *models.NewResponseModel, UserData models.UserData) (string, error)
+	ResponseToOrder(orderID string, newResponse *models.NewResponseModel, UserData models.UserData) (string, error)
 	GetResponseById(ResponseID string, UserData models.UserData) (*models.ResponseDB, error)
 }
 
@@ -40,12 +40,14 @@ func (s *ResponseService) GetResponseById(ResponseID string, UserData models.Use
 	return s.orderRepository.GetResponseById(ResponseID, UserData.UserID)
 }
 
-func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, UserData models.UserData) (string, error) {
-	//if UserData.Role ==
+func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.NewResponseModel, UserData models.UserData) (string, error) {
+	if UserData.Role != "Tutor" {
+		return "", custom_errors.ErrNotAllowed
+	}
 
 	TutorInfo, err := s.GRPCClient.GetUser(context.Background(), UserData.UserID)
 	log.Println("ok")
-	studentID, err := s.orderRepository.GetUserByOrder(Response.OrderId)
+	studentID, err := s.orderRepository.GetUserByOrder(orderID)
 	log.Println(studentID)
 	log.Println(err)
 	StudentInfo, err := s.GRPCClient.GetStudent(context.Background(), studentID)
@@ -57,7 +59,7 @@ func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, Use
 
 	log.Println(StudentInfo)
 
-	responseID, err := s.orderRepository.CreateResponse(Response, TutorInfo, UserData.Username)
+	responseID, err := s.orderRepository.CreateResponse(orderID, newResponse, TutorInfo, UserData.Username)
 
 	if err != nil {
 		if errors.Is(custom_errors.ErrResponseAlredyExist, err) {
@@ -70,7 +72,7 @@ func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, Use
 
 	ResponseToBroker = models.ResponseToBrokerModel{
 		UserId:  StudentInfo.TelegramID,
-		OrderId: Response.OrderId,
+		OrderId: orderID,
 		ChatId:  StudentInfo.TelegramID, // тут типо chatID
 	}
 

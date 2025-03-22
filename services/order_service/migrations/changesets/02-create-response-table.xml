@@ -33,6 +33,10 @@
                 <constraints nullable="false"/>
             </column>
 
+            <column name="greetings" type="VARCHAR(300)" remarks="">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="is_final" type="BOOLEAN" defaultValueBoolean="false" remarks="">
                 <constraints nullable="false"/>
             </column>
