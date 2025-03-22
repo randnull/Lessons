@@ -574,9 +574,9 @@ func (orderStorage *Repository) SetTutorToOrder(responseID string, UserData mode
 	}
 	fmt.Println("Selected", response.ID, response.OrderID)
 
-	querySetStatus := `UPDATE orders SET status = $1, final_response = $2 WHERE id = $3` // status = $1,
+	querySetStatus := `UPDATE orders SET status = $1 WHERE id = $2` // status = $1,
 
-	_, err = tx.Exec(querySetStatus, "Selected", response.ID, response.OrderID) // "Selected",
+	_, err = tx.Exec(querySetStatus, "Selected", response.OrderID) // "Selected",
 
 	log.Println(err)
 	if err != nil {
