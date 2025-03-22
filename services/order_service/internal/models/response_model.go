@@ -10,6 +10,7 @@ type Response struct {
 	ID        string    `json:"id" db:"id"`
 	TutorID   string    `json:"tutor_id" db:"tutor_id"`
 	Name      string    `json:"name" db:"name"`
+	IsFinal   bool      `json:"is_final" db:"is_final"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
@@ -19,6 +20,7 @@ type ResponseDB struct {
 	TutorID       string    `json:"tutor_id" db:"tutor_id"`
 	TutorUsername string    `json:"tutor_username" db:"tutor_username"`
 	Name          string    `json:"name" db:"name"`
+	IsFinal       bool      `json:"is_final" db:"is_final"`
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 }
 

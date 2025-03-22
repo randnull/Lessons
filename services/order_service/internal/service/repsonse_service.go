@@ -57,12 +57,6 @@ func (s *ResponseService) ResponseToOrder(Response *models.NewResponseModel, Use
 
 	log.Println(StudentInfo)
 
-	//StudentID, err := s.orderRepository.GetUserByOrder(Response.OrderId)
-	//// тут ошибка
-	//if err != nil || StudentID == nil {
-	//	return "", custom_errors.ErrStudentByOrderNotFound
-	//}
-
 	responseID, err := s.orderRepository.CreateResponse(Response, TutorInfo, UserData.Username)
 
 	if err != nil {

@@ -122,6 +122,7 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 			r.id,
 			r.name,
 			r.tutor_id,
+			r.is_final,
 			r.created_at
 		FROM orders o
 		LEFT JOIN responses r ON o.id = r.order_id
@@ -129,7 +130,7 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 
 	rows, err := orderStorage.db.Query(query, id, studentID)
 
-	fmt.Println(err)
+	fmt.Println(rows, err)
 	if err != nil {
 		fmt.Println(err)
 		if errors.Is(err, sql.ErrNoRows) {
@@ -139,11 +140,14 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 			return nil, err
 		}
 	}
+
 	for rows.Next() {
-		var responseID sql.NullString //переписать !!!
+		var responseID sql.NullString
 		var tutorID sql.NullString
 		var responseCreatedAt sql.NullTime
 		var tutorName sql.NullString
+		var isFinal sql.NullBool
+
 		err := rows.Scan(
 			&order.ID,
 			&order.StudentID,
@@ -160,6 +164,7 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 			&responseID,
 			&tutorName,
 			&tutorID,
+			&isFinal,
 			&responseCreatedAt,
 		)
 
@@ -170,13 +175,14 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 		}
 
 		if responseID.Valid {
-			valid_response := models.Response{
+			validResponse := models.Response{
 				ID:        responseID.String,
 				Name:      tutorName.String,
 				TutorID:   tutorID.String,
+				IsFinal:   isFinal.Bool,
 				CreatedAt: responseCreatedAt.Time,
 			}
-			responses = append(responses, valid_response)
+			responses = append(responses, validResponse)
 		}
 	}
 
@@ -216,9 +222,9 @@ func (orderStorage *Repository) GetAllOrders(studentID string) ([]*models.Order,
     			response_count,
     			created_at, 
     			updated_at 
-			FROM orders ORDER BY created_at DESC`
+			FROM orders WHERE status = $1 ORDER BY created_at DESC`
 
-	rows, err := orderStorage.db.Query(query)
+	rows, err := orderStorage.db.Query(query, "New")
 	if err != nil {
 		return nil, err
 	}
@@ -253,7 +259,7 @@ func (orderStorage *Repository) GetAllOrders(studentID string) ([]*models.Order,
 	return orders, nil
 }
 
-func (orderStorage *Repository) GetOrderByIdTutor(id string, studentID string) (*models.OrderDetailsTutor, error) {
+func (orderStorage *Repository) GetOrderByIdTutor(id string, tutorID string) (*models.OrderDetailsTutor, error) {
 	var order models.OrderDetailsTutor
 
 	query := `
@@ -271,6 +277,27 @@ func (orderStorage *Repository) GetOrderByIdTutor(id string, studentID string) (
 		FROM orders WHERE id = $1`
 
 	err := orderStorage.db.QueryRowx(query, id).StructScan(&order)
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
+
+	query = `
+        SELECT EXISTS (
+            SELECT 1 FROM responses WHERE order_id = $1 AND tutor_id = $2
+        )
+    `
+
+	var isExist = false
+
+	err = orderStorage.db.QueryRow(query, id, tutorID).Scan(&isExist)
+
+	if err != nil {
+		isExist = false
+	}
+
+	order.IsResponsed = isExist
 
 	if err != nil {
 		return nil, custom_errors.ErrGetOrder
@@ -425,10 +452,10 @@ func (orderStorage *Repository) CreateResponse(response *models.NewResponseModel
 
 	timestamp := time.Now()
 	// SELECT WHERE order_id = ... без UPDATE
-	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, tutor_username, created_at)
-					VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, tutor_username, is_final, created_at)
+					VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
 
-	err = tx.QueryRow(queryInsert, response.OrderId, Tutor.Name, Tutor.Id, username, timestamp).Scan(&ResponseID)
+	err = tx.QueryRow(queryInsert, response.OrderId, Tutor.Name, Tutor.Id, username, false, timestamp).Scan(&ResponseID)
 	if err != nil {
 		fmt.Println(err)
 		tx.Rollback()
@@ -480,6 +507,7 @@ func (orderStorage *Repository) GetResponseById(ResponseID string, studentID str
 			tutor_id,
 			tutor_username,
 			name,
+			is_final,
 			created_at
 		FROM responses WHERE id = $1`
 
@@ -503,4 +531,75 @@ func (orderStorage *Repository) GetResponseById(ResponseID string, studentID str
 	}
 
 	return &response, nil
+}
+
+func (orderStorage *Repository) SetTutorToOrder(responseID string, UserData models.UserData) error {
+	response, err := orderStorage.GetResponseById(responseID, UserData.UserID)
+
+	log.Println(response, err)
+
+	if err != nil || response == nil {
+		return custom_errors.ErrNotAllowed
+	}
+
+	isExist, err := orderStorage.CheckOrderByStudentID(response.OrderID, UserData.UserID)
+
+	log.Println(isExist, err)
+
+	if err != nil || !isExist {
+		return custom_errors.ErrNotAllowed
+	}
+
+	queryCheckStatus := `SELECT status FROM orders WHERE id = $1`
+
+	log.Println(queryCheckStatus)
+
+	var status string
+
+	err = orderStorage.db.QueryRow(queryCheckStatus, response.OrderID).Scan(&status)
+
+	log.Println(err, status)
+
+	if status != "New" {
+		return custom_errors.ErrorAlreadySetTutor
+	}
+
+	tx, err := orderStorage.db.Begin()
+	defer tx.Rollback()
+	log.Println(err)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	fmt.Println("Selected", response.ID, response.OrderID)
+
+	querySetStatus := `UPDATE orders SET status = $1, final_response = $2 WHERE id = $3` // status = $1,
+
+	_, err = tx.Exec(querySetStatus, "Selected", response.ID, response.OrderID) // "Selected",
+
+	log.Println(err)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	queryUpdateResponses := `UPDATE responses SET is_final = $1 WHERE id = $2`
+
+	_, err = tx.Exec(queryUpdateResponses, true, response.ID)
+	log.Println(err)
+
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	err = tx.Commit()
+	log.Println(err)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

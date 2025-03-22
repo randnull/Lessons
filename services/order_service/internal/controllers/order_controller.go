@@ -46,7 +46,6 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create order"})
 	}
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "Order created successfully",
 		"orderID": orderID,
 	})
 }
@@ -171,6 +170,24 @@ func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
 	err := c.OrderService.UpdateOrder(orderID, &order, UserData)
 	if err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{})
+}
+
+func (c *OrderController) SelectTutorToOrder(ctx *fiber.Ctx) error {
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	responseID := ctx.Params("id")
+
+	err := c.OrderService.SelectTutor(responseID, UserData)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to get orders"})
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{})

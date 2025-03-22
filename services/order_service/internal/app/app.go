@@ -95,13 +95,14 @@ func (a *App) Run() {
 	orders := router.Group("api/orders")
 	orders.Use(controllers.TokenAuthMiddleware(a.cfg.BotConfig))
 
-	orders.Post("/", a.orderControllers.CreateOrder)                  // StudentOnly
-	orders.Get("/id/:id", a.orderControllers.GetOrderByID)            // All
-	orders.Get("/", a.orderControllers.GetAllUsersOrders)             // All
-	orders.Delete("/id/:id", a.orderControllers.DeleteOrderByID)      // StudentOnly
-	orders.Get("/all", a.orderControllers.GetAllOrders)               // TutorOnly
-	orders.Put("/id/:id", a.orderControllers.UpdateOrderByID)         // StudentOnly
-	orders.Get("/mini/id/:id/", a.orderControllers.GetOrderByIdTutor) // Tutor Only
+	orders.Post("/", a.orderControllers.CreateOrder)                      // StudentOnly
+	orders.Get("/id/:id", a.orderControllers.GetOrderByID)                // All
+	orders.Get("/", a.orderControllers.GetAllUsersOrders)                 // All
+	orders.Delete("/id/:id", a.orderControllers.DeleteOrderByID)          // StudentOnly
+	orders.Get("/all", a.orderControllers.GetAllOrders)                   // TutorOnly
+	orders.Put("/id/:id", a.orderControllers.UpdateOrderByID)             // StudentOnly
+	orders.Get("/mini/id/:id/", a.orderControllers.GetOrderByIdTutor)     // Tutor Only
+	orders.Post("/select/id/:id/", a.orderControllers.SelectTutorToOrder) // Student Only
 
 	responses := router.Group("api/responses")
 	responses.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config

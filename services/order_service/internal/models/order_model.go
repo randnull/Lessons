@@ -47,6 +47,7 @@ type OrderDetailsTutor struct {
 	MaxPrice      int            `json:"max_price" db:"max_price"`
 	Tags          pq.StringArray `json:"tags" db:"tags"`
 	Status        string         `json:"status" db:"status"`
+	IsResponsed   bool           `json:"is_responsed"`
 	ResponseCount int            `json:"response_count" db:"response_count"`
 	CreatedAt     time.Time      `json:"created_at" db:"created_at"`
 }
