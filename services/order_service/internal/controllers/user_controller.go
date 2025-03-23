@@ -34,6 +34,7 @@ func NewUserController(UserServ service.UserServiceInt) *UserController {
 //}
 
 func (u *UserController) GetUser(ctx *fiber.Ctx) error {
+	// ЗАКРЫТЬ ЭТО ДЛЯ ВНЕШКИ
 	id := ctx.Params("id")
 
 	_, ok := ctx.Locals("user_data").(models.UserData)
@@ -46,6 +47,25 @@ func (u *UserController) GetUser(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "user not found"})
+	}
+
+	return ctx.JSON(user)
+}
+
+func (u *UserController) GetTutor(ctx *fiber.Ctx) error {
+	// ЗАКРЫТЬ ЭТО ДЛЯ ВНЕШКИ
+	id := ctx.Params("id")
+
+	_, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	user, err := u.UserService.GetTutor(id)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "tutor not found"})
 	}
 
 	return ctx.JSON(user)
@@ -65,4 +85,26 @@ func (u *UserController) GetAllUser(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(users)
+}
+
+func (u *UserController) UpdateBioTutor(ctx *fiber.Ctx) error {
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	var UpdateBioModel models.UpdateBioTutor
+
+	if err := ctx.BodyParser(&UpdateBioModel); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	err := u.UserService.UpdateBioTutor(UpdateBioModel, UserData)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

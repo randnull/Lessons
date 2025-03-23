@@ -116,6 +116,8 @@ func (a *App) Run() {
 	//users.Post("/", a.userControllers.CreateUser)
 	users.Get("/", a.userControllers.GetAllUser)
 	users.Get("/id/:id", a.userControllers.GetUser)
+	users.Get("/tutor/id/:id", a.userControllers.GetTutor)
+	users.Post("/tutor/bio/id/:id", a.userControllers.UpdateBioTutor)
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 

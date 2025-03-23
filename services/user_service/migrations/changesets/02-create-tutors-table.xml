@@ -17,8 +17,15 @@
                 <constraints primaryKey="true" nullable="false" foreignKeyName="fk_tutors_users" references="users(id)"/>
             </column>
 
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="false" remarks="">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="bio" type="VARCHAR(500)" remarks="">
 <!--                <constraints nullable="false"/> INDEX на role + telegram_id-->
+            </column>
+
+            <column name="tags" type="VARCHAR(500)" remarks="">
             </column>
 
             <column name="created_at" type="TIMESTAMP" remarks="">

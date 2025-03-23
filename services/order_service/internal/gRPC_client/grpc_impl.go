@@ -137,3 +137,42 @@ func (g *GRPCClient) GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error
 
 	return usersPB, nil
 }
+
+func (g *GRPCClient) UpdateBioTutor(ctx context.Context, bio string, TutorID string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	fmt.Println(bio, TutorID)
+
+	status, err := g.client.UpdateBioTutor(ctx, &pb.UpdateBioRequest{
+		Id:  TutorID,
+		Bio: bio,
+	})
+
+	fmt.Println(status, err)
+
+	if err != nil {
+		return false, err
+	}
+
+	return status.Success, err
+}
+
+func (g *GRPCClient) GetTutor(ctx context.Context, TutorID string) (*models.Tutor, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	tutor, err := g.client.GetTutorById(ctx, &pb.GetById{
+		Id: TutorID,
+	})
+
+	if err != nil || tutor == nil {
+		return nil, err
+	}
+
+	return &models.Tutor{
+		Id:   tutor.User.Id,
+		Name: tutor.User.Name,
+		Bio:  tutor.Bio,
+	}, nil
+}

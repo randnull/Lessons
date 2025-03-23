@@ -17,6 +17,15 @@ type UserDB struct {
 	CreatedAt  time.Time `json:"created_at"`
 }
 
+type TutorDB struct {
+	Id         string    `json:"id"`
+	TelegramID int64     `json:"telegram_id"`
+	Name       string    `json:"name"`
+	Role       string    `json:"role"`
+	Bio        string    `json:"bio"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
 type CreateUser struct {
 	Name       string `json:"name"`
 	TelegramId int64  `json:"telegram_id"`

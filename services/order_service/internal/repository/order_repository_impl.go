@@ -612,7 +612,3 @@ func (orderStorage *Repository) SetTutorToOrder(responseID string, UserData mode
 
 	return nil
 }
-
-func (orderStorage *Repository) SetBioTutor(bio string, UserData models.UserData) error {
-	return nil
-}

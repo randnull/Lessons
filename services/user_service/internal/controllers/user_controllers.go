@@ -88,3 +88,32 @@ func (s *UserControllers) GetAllUsers(ctx context.Context, in *pb.GetAllRequest)
 		Users: users,
 	}, nil
 }
+
+func (s *UserControllers) UpdateBioTutor(ctx context.Context, in *pb.UpdateBioRequest) (*pb.UpdateBioResponse, error) {
+	err := s.UserService.UpdateBioTutor(in.Id, in.Bio)
+
+	if err != nil {
+		return &pb.UpdateBioResponse{Success: false}, err
+	}
+
+	return &pb.UpdateBioResponse{Success: true}, nil
+}
+
+func (s *UserControllers) GetTutorById(ctx context.Context, in *pb.GetById) (*pb.Tutor, error) {
+	tutor, err := s.UserService.GetTutorById(in.Id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	userPB := &pb.User{
+		Id:         tutor.Id,
+		TelegramId: tutor.TelegramID,
+		Name:       tutor.Name,
+	}
+
+	return &pb.Tutor{
+		Bio:  tutor.Bio,
+		User: userPB,
+	}, nil
+}

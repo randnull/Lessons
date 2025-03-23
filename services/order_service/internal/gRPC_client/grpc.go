@@ -9,7 +9,9 @@ import (
 type GRPCClientInt interface {
 	GetUser(ctx context.Context, userID string) (*models.User, error)
 	GetStudent(ctx context.Context, userID string) (*models.User, error)
+	GetTutor(ctx context.Context, TutorID string) (*models.Tutor, error)
 	GetUserByTelegramID(ctx context.Context, telegramID int64) (*models.User, error)
 	GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error)
+	UpdateBioTutor(ctx context.Context, bio string, TutorID string) (bool, error)
 	Close()
 }

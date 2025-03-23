@@ -17,5 +17,4 @@ type OrderRepository interface {
 	GetResponseById(ResponseID string, studentID string) (*models.ResponseDB, error)
 	CheckOrderByStudentID(orderID string, studentID string) (bool, error)
 	SetTutorToOrder(responseID string, UserData models.UserData) error
-	SetBioTutor(bio string, UserData models.UserData) error
 }

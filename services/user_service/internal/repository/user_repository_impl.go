@@ -162,6 +162,50 @@ func (r *Repository) GetStudentById(userID string) (*models.UserDB, error) {
 	return user, nil
 }
 
+func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
+	log.Println("come here 3")
+
+	user := &models.TutorDB{}
+
+	query := `SELECT 
+    			u.id, 
+    			u.telegram_id, 
+    			u.name, 
+    			u.role, 
+    			u.created_at,
+    			t.bio
+			FROM users u 
+			LEFT JOIN tutors t ON u.id = t.id
+			WHERE u.id = $1 AND u.role = $2`
+
+	log.Println("come here 5")
+
+	var bio sql.NullString
+
+	err := r.db.QueryRow(query, userID, "Tutor").Scan(
+		&user.Id,
+		&user.TelegramID,
+		&user.Name,
+		&user.Role,
+		&user.CreatedAt,
+		&bio,
+	)
+	if bio.Valid {
+		user.Bio = bio.String
+	}
+
+	log.Println(err)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, custom_errors.UserNotFound
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
 func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
 	user := &models.UserDB{}
 
@@ -216,4 +260,17 @@ func (r *Repository) GetAllUsers() ([]*pb.User, error) {
 	}
 
 	return Users, nil
+}
+
+func (r *Repository) UpdateTutorBio(userID string, bio string) error {
+	queryUpdateBioTutor := `UPDATE tutors SET bio = $1 WHERE id = $2`
+
+	_, err := r.db.Exec(queryUpdateBioTutor, bio, userID)
+
+	if err != nil {
+		log.Println(err)
+		return custom_errors.ErrorUpdateBio
+	}
+
+	return nil
 }

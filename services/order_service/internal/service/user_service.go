@@ -7,9 +7,11 @@ import (
 )
 
 type UserServiceInt interface {
-	//CreateUser(UserData models.UserData) (string, error)
 	GetUser(UserID string) (*models.User, error)
+	GetTutor(TutorID string) (*models.Tutor, error)
+
 	GetAllUsers() ([]*models.User, error)
+	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
 }
 
 type UserService struct {
@@ -22,23 +24,13 @@ func NewUSerService(grpcClient gRPC_client.GRPCClientInt) UserServiceInt {
 	}
 }
 
+func (u *UserService) GetTutor(TutorID string) (*models.Tutor, error) {
+	return u.GRPCClient.GetTutor(context.Background(), TutorID)
+}
+
 func (u *UserService) GetUser(UserID string) (*models.User, error) {
 	return u.GRPCClient.GetUser(context.Background(), UserID)
 }
-
-//func (u *UserService) CreateUser(UserData models.UserData) (string, error) {
-//	NewUser := &models.CreateUser{
-//		Name:       UserData.FirstName,
-//		TelegramId: UserData.TelegramID,
-//	}
-//
-//	userID, err := u.GRPCClient.CreateUser(context.Background(), NewUser)
-//	if err != nil {
-//		return "", err
-//	}
-//
-//	return userID, nil
-//}
 
 func (u *UserService) GetAllUsers() ([]*models.User, error) {
 	usersRPC, err := u.GRPCClient.GetAllUsers(context.Background())
@@ -57,4 +49,14 @@ func (u *UserService) GetAllUsers() ([]*models.User, error) {
 	}
 
 	return users, nil
+}
+
+func (u *UserService) UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error {
+	success, err := u.GRPCClient.UpdateBioTutor(context.Background(), BioModel.Bio, UserData.UserID)
+
+	if !success {
+		return err
+	}
+
+	return nil
 }

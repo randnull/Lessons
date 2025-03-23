@@ -10,9 +10,11 @@ import (
 type UserServiceInt interface {
 	GetUserById(UserId string) (*models.UserDB, error)
 	GetStudentById(UserId string) (*models.UserDB, error)
+	GetTutorById(TutorID string) (*models.TutorDB, error)
 	//GetUserByTelegramId(TelegramId int64) (*models.UserDB, error)
 	CreateUser(user models.CreateUser) (string, error)
 	GetAllUsers() ([]*pb.User, error)
+	UpdateBioTutor(userID string, bio string) error
 }
 
 type UserService struct {
@@ -45,4 +47,12 @@ func (s *UserService) CreateUser(user models.CreateUser) (string, error) {
 
 func (s *UserService) GetAllUsers() ([]*pb.User, error) {
 	return s.userRepository.GetAllUsers()
+}
+
+func (s *UserService) UpdateBioTutor(userID string, bio string) error {
+	return s.userRepository.UpdateTutorBio(userID, bio)
+}
+
+func (s *UserService) GetTutorById(TutorID string) (*models.TutorDB, error) {
+	return s.userRepository.GetTutorByID(TutorID)
 }

@@ -11,3 +11,15 @@ type User struct {
 	Name       string `json:"name"`
 	//CreatedAt  time.Time `json:"created_at"`
 }
+
+type Tutor struct {
+	Id string `json:"id"`
+	//TelegramID int64  `json:"telegram_id"`
+	Bio  string `json:"bio"`
+	Name string `json:"name"`
+	//CreatedAt  time.Time `json:"created_at"`
+}
+
+type UpdateBioTutor struct {
+	Bio string `json:"bio"`
+}

@@ -16,14 +16,24 @@ message User {
 //  int64 status = 6;
 }
 
+message Tutor {
+  User user = 1;
+  string bio = 2;
+}
+
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateResponse);
-//  rpc DeletePost(DeleteRequest) returns (Response);
   rpc GetUserById(GetById) returns (User);
+  rpc GetTutorById(GetById) returns (Tutor);
   rpc GetStudentById(GetById) returns (User);
   rpc GetUserByTelegramId(GetByTelegramId) returns (User);
-//  rpc UpdatePost(UpdateRequest) returns (Response);
   rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
+  rpc UpdateBioTutor(UpdateBioRequest) returns (UpdateBioResponse);
+}
+
+message UpdateBioRequest {
+  string id = 1;
+  string bio = 2;
 }
 
 message CreateUserRequest {
@@ -54,4 +64,8 @@ message GetAllRequest {
 
 message GetAllResponse {
   repeated User users = 1;
+}
+
+message UpdateBioResponse {
+  bool success = 1;
 }
