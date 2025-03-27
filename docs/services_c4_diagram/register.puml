@@ -1,0 +1,12 @@
+@startuml
+actor User
+entity "Auth Service" as AuthService
+entity "User Service" as UserService
+
+User -> AuthService: InitData
+AuthService -> UserService: Send user data
+UserService -> UserService: Create user if not exist
+UserService -> AuthService: Return user info
+AuthService -> User: Return token
+
+@enduml

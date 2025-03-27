@@ -14,7 +14,7 @@
     <changeSet author="k.goryunov" id="create-order-table">
         <createTable tableName="orders" remarks="table with clients orders">
             <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
-                <constraints nullable="false" unique="true" />
+                <constraints nullable="false" unique="true" primaryKey="true"/>
             </column>
 
             <column name="student_id" type="${uuid_type}" remarks="">

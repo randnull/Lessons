@@ -3,6 +3,8 @@ package controllers
 import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"strconv"
+
 	//"github.com/golang-jwt/jwt/v5"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
@@ -96,6 +98,69 @@ func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
 	//log.Printf("Controller: GetAllOrders")
 
 	orders, err := c.OrderService.GetAllOrders(UserData)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
+	}
+
+	return ctx.JSON(orders)
+}
+
+func (c *OrderController) GetOrdersPagination(ctx *fiber.Ctx) error {
+	page, err := strconv.Atoi(ctx.Query("page"))
+
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Page param not correct"})
+
+	}
+
+	size, err := strconv.Atoi(ctx.Query("size"))
+
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "size param not correct"})
+
+	}
+
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	orders, err := c.OrderService.GetOrdersWithPagination(page, size, UserData)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
+	}
+
+	return ctx.JSON(orders)
+}
+
+func (c *OrderController) GetStudentOrdersPagination(ctx *fiber.Ctx) error {
+	page, err := strconv.Atoi(ctx.Query("page"))
+
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Page param not correct"})
+
+	}
+
+	size, err := strconv.Atoi(ctx.Query("size"))
+
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "size param not correct"})
+	}
+
+	if size > 100 {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "size param more than maximum"})
+	}
+
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	orders, err := c.OrderService.GetStudentOrdersWithPagination(page, size, UserData)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})

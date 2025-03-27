@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
@@ -11,6 +13,8 @@ import (
 type OrderServiceInt interface {
 	CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error)
 	GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error)
+	GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) ([]*models.Order, error)
+	GetOrdersWithPagination(page int, size int, UserData models.UserData) ([]*models.Order, error)
 	GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error)
 	GetAllOrders(UserData models.UserData) ([]*models.Order, error)
 	GetAllUsersOrders(UserData models.UserData) ([]*models.Order, error)
@@ -34,6 +38,12 @@ func NewOrderService(orderRepo repository.OrderRepository, producerBroker rabbit
 }
 
 func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error) {
+	_, err := orderServ.GRPCClient.GetStudent(context.Background(), UserData.UserID)
+
+	if err != nil {
+		return "", custom_errors.ErrorGetUser
+	}
+
 	createdOrder, err := orderServ.orderRepository.CreateOrder(order, UserData.UserID, UserData.TelegramID)
 
 	if err != nil {
@@ -52,15 +62,39 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 }
 
 func (orderServ *OrderService) GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error) {
-	return orderServ.orderRepository.GetByID(id, UserData.UserID)
+	return orderServ.orderRepository.GetOrderByID(id)
 }
 
 func (orderServ *OrderService) GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error) {
 	return orderServ.orderRepository.GetOrderByIdTutor(id, UserData.UserID)
 }
 
+func (orderServ *OrderService) GetOrdersWithPagination(page int, size int, UserData models.UserData) ([]*models.Order, error) {
+	limit := size
+	offset := (page - 1) * size
+
+	orders, err := orderServ.orderRepository.GetOrdersPagination(limit, offset)
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (orderServ *OrderService) GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) ([]*models.Order, error) {
+	limit := size
+	offset := (page - 1) * size
+
+	orders, err := orderServ.orderRepository.GetStudentOrdersPagination(limit, offset, UserData.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
 func (orderServ *OrderService) GetAllOrders(UserData models.UserData) ([]*models.Order, error) {
-	return orderServ.orderRepository.GetAllOrders(UserData.UserID)
+	return orderServ.orderRepository.GetOrders()
 }
 
 func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error {
@@ -68,13 +102,35 @@ func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateO
 }
 
 func (orderServ *OrderService) DeleteOrder(orderID string, UserData models.UserData) error {
-	return orderServ.orderRepository.DeleteOrder(orderID, UserData.UserID)
+	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(orderID, UserData.UserID)
+
+	if !isExist || err != nil {
+		return custom_errors.ErrNotAllowed
+	}
+
+	return orderServ.orderRepository.DeleteOrder(orderID)
 }
 
 func (orderServ *OrderService) GetAllUsersOrders(UserData models.UserData) ([]*models.Order, error) {
-	return orderServ.orderRepository.GetAllUsersOrders(UserData.UserID)
+	return orderServ.orderRepository.GetStudentOrders(UserData.UserID)
 }
 
 func (orderServ *OrderService) SelectTutor(responseID string, UserData models.UserData) error {
-	return orderServ.orderRepository.SetTutorToOrder(responseID, UserData)
+	response, err := orderServ.orderRepository.GetResponseById(responseID, UserData.UserID)
+
+	log.Println(response, err)
+
+	if err != nil || response == nil {
+		return custom_errors.ErrNotAllowed
+	}
+
+	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(response.OrderID, UserData.UserID)
+
+	log.Println(isExist, err)
+
+	if err != nil || !isExist {
+		return custom_errors.ErrNotAllowed
+	}
+
+	return orderServ.orderRepository.SetTutorToOrder(response, UserData)
 }

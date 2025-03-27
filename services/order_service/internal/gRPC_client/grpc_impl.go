@@ -112,19 +112,6 @@ func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) 
 	}, nil
 }
 
-//func (g *GRPCClient) CreateUser(ctx context.Context, user *models.CreateUser) (string, error) {
-//	ctx, cancel := context.WithTimeout(ctx, time.Second)
-//	defer cancel()
-//
-//	userID, err := g.client.CreateUser(ctx, &pb.CreateUserRequest{Name: user.Name, TelegramId: user.TelegramId})
-//	fmt.Println(err)
-//	if err != nil {
-//		return "", custom_errors.ErrorCreateUser
-//	}
-//
-//	return userID.Id, nil
-//}
-
 func (g *GRPCClient) GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()

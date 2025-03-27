@@ -1,0 +1,14 @@
+@startuml
+actor Student
+entity "Order Service" as OrderService
+entity "RabbitMQ" as RabbitMQ
+entity "Response Service" as ResponseService
+actor "Tutor" as Tutor
+
+Student -> OrderService: Create order
+OrderService -> RabbitMQ: Send order data
+RabbitMQ -> ResponseService: Read order data
+ResponseService -> Tutor: Send notification about new order
+ResponseService -> Student: Send notification about new order
+
+@enduml

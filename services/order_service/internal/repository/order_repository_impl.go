@@ -57,12 +57,22 @@ func NewRepository(cfg config.DBConfig) *Repository {
 func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID string, telegramID int64) (*models.OrderToBrokerWithID, error) {
 	timestamp := time.Now()
 
-	query := `INSERT INTO orders (student_id, title, description, grade, tags, min_price, max_price, status, response_count, created_at, updated_at)
+	query := `INSERT INTO orders (
+                    student_id, 
+                    title, 
+                    description, 
+                    grade, 
+                    tags, 
+                    min_price, 
+                    max_price, 
+                    status, 
+                    response_count, 
+                    created_at, 
+                    updated_at
+            )
               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)  RETURNING id`
 
 	var orderID string
-
-	// conver []string -> pq.stringArray
 
 	tags := pq.Array(order.Tags)
 
@@ -101,7 +111,7 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID st
 	return &CreatedOrder, nil
 }
 
-func (orderStorage *Repository) GetByID(id string, studentID string) (*models.OrderDetails, error) {
+func (orderStorage *Repository) GetOrderByID(id string) (*models.OrderDetails, error) {
 	order := &models.OrderDetails{}
 	responses := []models.Response{}
 
@@ -126,9 +136,9 @@ func (orderStorage *Repository) GetByID(id string, studentID string) (*models.Or
 			r.created_at
 		FROM orders o
 		LEFT JOIN responses r ON o.id = r.order_id
-		WHERE o.id = $1 AND o.student_id = $2`
+		WHERE o.id = $1`
 
-	rows, err := orderStorage.db.Query(query, id, studentID)
+	rows, err := orderStorage.db.Query(query, id)
 
 	fmt.Println(rows, err)
 	if err != nil {
@@ -206,7 +216,7 @@ func (orderStorage *Repository) GetUserByOrder(orderID string) (string, error) {
 	return UserID, nil
 }
 
-func (orderStorage *Repository) GetAllOrders(studentID string) ([]*models.Order, error) {
+func (orderStorage *Repository) GetOrders() ([]*models.Order, error) {
 	var orders []*models.Order
 
 	query := `SELECT 
@@ -225,6 +235,112 @@ func (orderStorage *Repository) GetAllOrders(studentID string) ([]*models.Order,
 			FROM orders WHERE status = $1 ORDER BY created_at DESC`
 
 	rows, err := orderStorage.db.Query(query, "New")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var order models.Order
+		err := rows.Scan(
+			&order.ID,
+			&order.StudentID,
+			&order.Title,
+			&order.Description,
+			&order.Grade,
+			&order.Tags,
+			&order.MinPrice,
+			&order.MaxPrice,
+			&order.Status,
+			&order.ResponseCount,
+			&order.CreatedAt,
+			&order.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, &order)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (orderStorage *Repository) GetOrdersPagination(limit int, offset int) ([]*models.Order, error) {
+	var orders []*models.Order
+
+	query := `SELECT 
+    			id, 
+    			student_id, 
+    			title, 
+    			description,
+    			grade,
+    			tags, 
+    			min_price, 
+    			max_price, 
+    			status,
+    			response_count,
+    			created_at, 
+    			updated_at 
+			FROM orders WHERE status = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+
+	rows, err := orderStorage.db.Query(query, "New", limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var order models.Order
+		err := rows.Scan(
+			&order.ID,
+			&order.StudentID,
+			&order.Title,
+			&order.Description,
+			&order.Grade,
+			&order.Tags,
+			&order.MinPrice,
+			&order.MaxPrice,
+			&order.Status,
+			&order.ResponseCount,
+			&order.CreatedAt,
+			&order.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		orders = append(orders, &order)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
+}
+
+func (orderStorage *Repository) GetStudentOrdersPagination(limit int, offset int, studentID string) ([]*models.Order, error) {
+	var orders []*models.Order
+
+	query := `SELECT 
+    			id, 
+    			student_id, 
+    			title, 
+    			description,
+    			grade,
+    			tags, 
+    			min_price, 
+    			max_price, 
+    			status,
+    			response_count,
+    			created_at, 
+    			updated_at 
+			FROM orders WHERE status = $1 AND student_id = $2 ORDER BY created_at DESC LIMIT $3 OFFSET $4`
+
+	rows, err := orderStorage.db.Query(query, "New", studentID, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -306,7 +422,7 @@ func (orderStorage *Repository) GetOrderByIdTutor(id string, tutorID string) (*m
 	return &order, nil
 }
 
-func (orderStorage *Repository) GetAllUsersOrders(studentID string) ([]*models.Order, error) {
+func (orderStorage *Repository) GetStudentOrders(studentID string) ([]*models.Order, error) {
 	var orders []*models.Order
 
 	query := `SELECT 
@@ -386,18 +502,6 @@ func (orderStorage *Repository) UpdateOrder(orderID string, order *models.Update
 		index += 1
 	}
 
-	//if order.MinPrice != 0 {
-	//	query += fmt.Sprintf(`min_price = $%v, `, strconv.Itoa(index))
-	//	values = append(values, order.MinPrice)
-	//	index += 1
-	//}
-	//
-	//if order.MaxPrice != 0 {
-	//	query += fmt.Sprintf(`max_price = $%v, `, strconv.Itoa(index))
-	//	values = append(values, order.MaxPrice)
-	//	index += 1
-	//}
-
 	if index == 1 {
 		return nil
 	}
@@ -414,10 +518,10 @@ func (orderStorage *Repository) UpdateOrder(orderID string, order *models.Update
 	return nil
 }
 
-func (orderStorage *Repository) DeleteOrder(id string, studentID string) error {
-	query := `DELETE FROM orders WHERE id = $1 AND student_id = $2`
+func (orderStorage *Repository) DeleteOrder(id string) error {
+	query := `DELETE FROM orders WHERE id = $1`
 
-	_, err := orderStorage.db.Exec(query, id, studentID)
+	_, err := orderStorage.db.Exec(query, id)
 
 	if err != nil {
 		return err
@@ -425,8 +529,6 @@ func (orderStorage *Repository) DeleteOrder(id string, studentID string) error {
 
 	return nil
 }
-
-//func (orderStorage *Repository) VerifyUserOrder(studentID string) ([]*models.Order, error) {}
 
 func (orderStorage *Repository) CreateResponse(orderID string, response *models.NewResponseModel, Tutor *models.User, username string) (string, error) {
 	var ResponseID string
@@ -541,31 +643,14 @@ func (orderStorage *Repository) GetResponseById(ResponseID string, studentID str
 	return &response, nil
 }
 
-func (orderStorage *Repository) SetTutorToOrder(responseID string, UserData models.UserData) error {
-	// перенести в сервис
-	response, err := orderStorage.GetResponseById(responseID, UserData.UserID)
-
-	log.Println(response, err)
-
-	if err != nil || response == nil {
-		return custom_errors.ErrNotAllowed
-	}
-
-	isExist, err := orderStorage.CheckOrderByStudentID(response.OrderID, UserData.UserID)
-
-	log.Println(isExist, err)
-
-	if err != nil || !isExist {
-		return custom_errors.ErrNotAllowed
-	}
-
+func (orderStorage *Repository) SetTutorToOrder(response *models.ResponseDB, UserData models.UserData) error {
 	queryCheckStatus := `SELECT status FROM orders WHERE id = $1`
 
 	log.Println(queryCheckStatus)
 
 	var status string
 
-	err = orderStorage.db.QueryRow(queryCheckStatus, response.OrderID).Scan(&status)
+	err := orderStorage.db.QueryRow(queryCheckStatus, response.OrderID).Scan(&status)
 
 	log.Println(err, status)
 

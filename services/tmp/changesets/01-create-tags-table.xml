@@ -1,0 +1,25 @@
+<databaseChangeLog
+xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
+
+<property name="uuid_type" value="uuid" dbms="postgresql"/>
+<property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
+
+<changeSet author="k.goryunov" id="create-tags-table">
+    <createTable tableName="tags">
+        <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
+            <constraints nullable="false" unique="true" primaryKey="true"/>
+        </column>
+        <column name="tag_name" type="VARCHAR(255)">
+            <constraints unique="true" nullable="false"/>
+        </column>
+    </createTable>
+</changeSet>
+
+</databaseChangeLog>

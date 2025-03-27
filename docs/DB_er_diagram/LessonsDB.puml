@@ -21,33 +21,32 @@ entity "tutors" as tutors_table {
   --
   *tutor_telegram_id: INTEGER
   university: VARCHAR
-  about_me: VARCHAR
-  review_id:  UUID <<FK>>
+  bio: VARCHAR
   *count_orders: INTEGER
   rating: INTEGER
 }
 
-entity "answer_engine" as answer_engine_table {
+entity "response" as answer_engine_table {
   *id : UUID <<PK>>
   --
-  *status: VARCHAR
   *order_id: UUID <<FK>>
-  *tutors_id_pool: UUID[] <<FK>>
-  tutor_id: UUID <<FK>>
+  *tutor_id: UUID <<FK>>
+  *created_at: TIMESTAMPZ
   *status: VARCHAR
 }
 
 entity "review" as review_table {
   *id : UUID <<PK>>
   --
+  *order_id: UUID <<FK>>
   *tutor_id: INTEGER
   review: VARCHAR
   *rating: INTEGER
 }
 
 ' Relationships
-orders_table::id --> answer_engine_table::order_id
-tutors_table::id --> answer_engine_table::tutor_id
-tutors_table::id --> answer_engine_table::tutors_id_pool
-tutors_table::id --> review_table::tutor_id
+'orders_table::id --> answer_engine_table::order_id
+'tutors_table::id --> answer_engine_table::tutor_id
+'tutors_table::id --> answer_engine_table::tutors_id_pool
+'tutors_table::id --> review_table::tutor_id
 @enduml
