@@ -13,8 +13,8 @@ import (
 type OrderServiceInt interface {
 	CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error)
 	GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error)
-	GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) ([]*models.Order, error)
-	GetOrdersWithPagination(page int, size int, UserData models.UserData) ([]*models.Order, error)
+	GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error)
+	GetOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error)
 	GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error)
 	GetAllOrders(UserData models.UserData) ([]*models.Order, error)
 	GetAllUsersOrders(UserData models.UserData) ([]*models.Order, error)
@@ -69,28 +69,41 @@ func (orderServ *OrderService) GetOrderByIdTutor(id string, UserData models.User
 	return orderServ.orderRepository.GetOrderByIdTutor(id, UserData.UserID)
 }
 
-func (orderServ *OrderService) GetOrdersWithPagination(page int, size int, UserData models.UserData) ([]*models.Order, error) {
+func (orderServ *OrderService) GetOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error) {
 	limit := size
 	offset := (page - 1) * size
 
-	orders, err := orderServ.orderRepository.GetOrdersPagination(limit, offset)
+	orders, count, err := orderServ.orderRepository.GetOrdersPagination(limit, offset)
 	if err != nil {
 		return nil, err
 	}
 
-	return orders, nil
+	return &models.OrderPagination{
+		Orders: orders,
+		Pages:  count,
+	}, nil
 }
 
-func (orderServ *OrderService) GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) ([]*models.Order, error) {
+func (orderServ *OrderService) GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error) {
 	limit := size
 	offset := (page - 1) * size
 
-	orders, err := orderServ.orderRepository.GetStudentOrdersPagination(limit, offset, UserData.UserID)
+	orders, count, err := orderServ.orderRepository.GetStudentOrdersPagination(limit, offset, UserData.UserID)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return orders, nil
+	addPage := 0
+
+	if count%size != 0 {
+		addPage += 1
+	}
+
+	return &models.OrderPagination{
+		Orders: orders,
+		Pages:  count/size + addPage,
+	}, nil
 }
 
 func (orderServ *OrderService) GetAllOrders(UserData models.UserData) ([]*models.Order, error) {

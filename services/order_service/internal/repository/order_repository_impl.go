@@ -269,7 +269,27 @@ func (orderStorage *Repository) GetOrders() ([]*models.Order, error) {
 	return orders, nil
 }
 
-func (orderStorage *Repository) GetOrdersPagination(limit int, offset int) ([]*models.Order, error) {
+func (orderStorage *Repository) GetOrdersPagination(limit int, offset int) ([]*models.Order, int, error) {
+	tx, err := orderStorage.db.Begin()
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	defer tx.Rollback()
+
+	var total int
+
+	queryCount := `SELECT 
+    					COUNT(*) 
+					FROM orders WHERE status = $1`
+
+	err = tx.QueryRow(queryCount, "New").Scan(&total)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
 	var orders []*models.Order
 
 	query := `SELECT 
@@ -287,9 +307,9 @@ func (orderStorage *Repository) GetOrdersPagination(limit int, offset int) ([]*m
     			updated_at 
 			FROM orders WHERE status = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
-	rows, err := orderStorage.db.Query(query, "New", limit, offset)
+	rows, err := tx.Query(query, "New", limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -310,19 +330,43 @@ func (orderStorage *Repository) GetOrdersPagination(limit int, offset int) ([]*m
 			&order.UpdatedAt,
 		)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		orders = append(orders, &order)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return orders, nil
+	if err = tx.Commit(); err != nil {
+		return nil, 0, err
+	}
+
+	return orders, total, nil
 }
 
-func (orderStorage *Repository) GetStudentOrdersPagination(limit int, offset int, studentID string) ([]*models.Order, error) {
+func (orderStorage *Repository) GetStudentOrdersPagination(limit int, offset int, studentID string) ([]*models.Order, int, error) {
+	tx, err := orderStorage.db.Begin()
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	defer tx.Rollback()
+
+	var total int
+
+	queryCount := `SELECT 
+    					COUNT(*) 
+					FROM orders WHERE status = $1`
+
+	err = tx.QueryRow(queryCount, "New").Scan(&total)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
 	var orders []*models.Order
 
 	query := `SELECT 
@@ -340,9 +384,9 @@ func (orderStorage *Repository) GetStudentOrdersPagination(limit int, offset int
     			updated_at 
 			FROM orders WHERE status = $1 AND student_id = $2 ORDER BY created_at DESC LIMIT $3 OFFSET $4`
 
-	rows, err := orderStorage.db.Query(query, "New", studentID, limit, offset)
+	rows, err := tx.Query(query, "New", studentID, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -363,16 +407,20 @@ func (orderStorage *Repository) GetStudentOrdersPagination(limit int, offset int
 			&order.UpdatedAt,
 		)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		orders = append(orders, &order)
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return orders, nil
+	if err = tx.Commit(); err != nil {
+		return nil, 0, err
+	}
+
+	return orders, total, nil
 }
 
 func (orderStorage *Repository) GetOrderByIdTutor(id string, tutorID string) (*models.OrderDetailsTutor, error) {

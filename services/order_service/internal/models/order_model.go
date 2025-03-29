@@ -38,6 +38,11 @@ type Order struct {
 	UpdatedAt     time.Time      `json:"updated_at"`
 }
 
+type OrderPagination struct {
+	Orders []*Order
+	Pages  int
+}
+
 type OrderDetailsTutor struct {
 	ID            string         `json:"id" db:"id"`
 	Title         string         `json:"title" db:"title"`
