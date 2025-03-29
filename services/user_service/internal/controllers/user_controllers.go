@@ -78,7 +78,31 @@ func (s *UserControllers) GetStudentById(ctx context.Context, in *pb.GetById) (*
 }
 
 func (s *UserControllers) GetAllUsers(ctx context.Context, in *pb.GetAllRequest) (*pb.GetAllResponse, error) {
-	users, err := s.UserService.GetAllUsers()
+	users, err := s.UserService.GetTutors()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetAllResponse{
+		Users: users,
+	}, nil
+}
+
+func (s *UserControllers) GetAllTutorsPagination(ctx context.Context, in *pb.GetAllTutorsPaginationRequest) (*pb.GetAllResponse, error) {
+	//page, err := strconv.Atoi(in.Page)
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//size, err := strconv.Atoi(in.Size)
+	//
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	users, err := s.UserService.GetTutorsPagination(int(in.Page), int(in.Size))
 
 	if err != nil {
 		return nil, err

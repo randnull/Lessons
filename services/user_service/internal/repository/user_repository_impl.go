@@ -229,7 +229,7 @@ func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
 	return user, nil
 }
 
-func (r *Repository) GetAllUsers() ([]*pb.User, error) {
+func (r *Repository) GetAllTutors() ([]*pb.User, error) {
 	query := `SELECT id, name FROM users WHERE role = $1 ORDER BY created_at DESC`
 
 	rows, err := r.db.Query(query, "Tutor")
@@ -273,4 +273,40 @@ func (r *Repository) UpdateTutorBio(userID string, bio string) error {
 	}
 
 	return nil
+}
+
+func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.User, error) {
+	queryGetAllPagination := `SELECT
+    							id, 
+    							name 
+							FROM users WHERE role = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+
+	rows, err := r.db.Query(queryGetAllPagination, "Tutor", limit, offset)
+	defer rows.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var Users []*pb.User
+
+	for rows.Next() {
+		var user pb.User
+
+		err := rows.Scan(
+			&user.Id,
+			&user.Name,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		Users = append(Users, &user)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return Users, nil
 }

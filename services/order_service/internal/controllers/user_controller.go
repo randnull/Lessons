@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
+	"strconv"
 )
 
 type UserController struct {
@@ -15,23 +16,6 @@ func NewUserController(UserServ service.UserServiceInt) *UserController {
 		UserService: UserServ,
 	}
 }
-
-//func (u *UserController) CreateUser(ctx *fiber.Ctx) error {
-//	UserData, ok := ctx.Locals("user_data").(models.UserData)
-//
-//	if !ok {
-//		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
-//	}
-//
-//	UserID, err := u.UserService.CreateUser(UserData)
-//	if err != nil {
-//		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Error with create user"})
-//	}
-//
-//	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{
-//		"userID": UserID,
-//	})
-//}
 
 func (u *UserController) GetUser(ctx *fiber.Ctx) error {
 	// ЗАКРЫТЬ ЭТО ДЛЯ ВНЕШКИ
@@ -107,4 +91,34 @@ func (u *UserController) UpdateBioTutor(ctx *fiber.Ctx) error {
 	}
 
 	return nil
+}
+
+func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
+	page, err := strconv.Atoi(ctx.Query("page"))
+
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Page param not correct"})
+
+	}
+
+	size, err := strconv.Atoi(ctx.Query("size"))
+
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "size param not correct"})
+
+	}
+
+	_, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	users, err := u.UserService.GetAllTutorsPagination(page, size)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "users not found"})
+	}
+
+	return ctx.JSON(users)
 }

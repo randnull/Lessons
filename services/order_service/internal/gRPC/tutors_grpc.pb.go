@@ -4,7 +4,7 @@
 // - protoc             v5.29.3
 // source: tutors.proto
 
-package gRPC
+package __
 
 import (
 	context "context"
@@ -19,13 +19,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	UserService_CreateUser_FullMethodName          = "/users.UserService/CreateUser"
-	UserService_GetUserById_FullMethodName         = "/users.UserService/GetUserById"
-	UserService_GetTutorById_FullMethodName        = "/users.UserService/GetTutorById"
-	UserService_GetStudentById_FullMethodName      = "/users.UserService/GetStudentById"
-	UserService_GetUserByTelegramId_FullMethodName = "/users.UserService/GetUserByTelegramId"
-	UserService_GetAllUsers_FullMethodName         = "/users.UserService/GetAllUsers"
-	UserService_UpdateBioTutor_FullMethodName      = "/users.UserService/UpdateBioTutor"
+	UserService_CreateUser_FullMethodName             = "/users.UserService/CreateUser"
+	UserService_GetUserById_FullMethodName            = "/users.UserService/GetUserById"
+	UserService_GetTutorById_FullMethodName           = "/users.UserService/GetTutorById"
+	UserService_GetStudentById_FullMethodName         = "/users.UserService/GetStudentById"
+	UserService_GetUserByTelegramId_FullMethodName    = "/users.UserService/GetUserByTelegramId"
+	UserService_GetAllUsers_FullMethodName            = "/users.UserService/GetAllUsers"
+	UserService_GetAllTutorsPagination_FullMethodName = "/users.UserService/GetAllTutorsPagination"
+	UserService_UpdateBioTutor_FullMethodName         = "/users.UserService/UpdateBioTutor"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -33,13 +34,12 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateResponse, error)
-	// rpc DeletePost(DeleteRequest) returns (Response);
 	GetUserById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error)
 	GetTutorById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*Tutor, error)
 	GetStudentById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error)
 	GetUserByTelegramId(ctx context.Context, in *GetByTelegramId, opts ...grpc.CallOption) (*User, error)
-	// rpc UpdatePost(UpdateRequest) returns (Response);
 	GetAllUsers(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
+	GetAllTutorsPagination(ctx context.Context, in *GetAllTutorsPaginationRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
 	UpdateBioTutor(ctx context.Context, in *UpdateBioRequest, opts ...grpc.CallOption) (*UpdateBioResponse, error)
 }
 
@@ -111,6 +111,16 @@ func (c *userServiceClient) GetAllUsers(ctx context.Context, in *GetAllRequest, 
 	return out, nil
 }
 
+func (c *userServiceClient) GetAllTutorsPagination(ctx context.Context, in *GetAllTutorsPaginationRequest, opts ...grpc.CallOption) (*GetAllResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetAllResponse)
+	err := c.cc.Invoke(ctx, UserService_GetAllTutorsPagination_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *userServiceClient) UpdateBioTutor(ctx context.Context, in *UpdateBioRequest, opts ...grpc.CallOption) (*UpdateBioResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(UpdateBioResponse)
@@ -126,13 +136,12 @@ func (c *userServiceClient) UpdateBioTutor(ctx context.Context, in *UpdateBioReq
 // for forward compatibility.
 type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateResponse, error)
-	// rpc DeletePost(DeleteRequest) returns (Response);
 	GetUserById(context.Context, *GetById) (*User, error)
 	GetTutorById(context.Context, *GetById) (*Tutor, error)
 	GetStudentById(context.Context, *GetById) (*User, error)
 	GetUserByTelegramId(context.Context, *GetByTelegramId) (*User, error)
-	// rpc UpdatePost(UpdateRequest) returns (Response);
 	GetAllUsers(context.Context, *GetAllRequest) (*GetAllResponse, error)
+	GetAllTutorsPagination(context.Context, *GetAllTutorsPaginationRequest) (*GetAllResponse, error)
 	UpdateBioTutor(context.Context, *UpdateBioRequest) (*UpdateBioResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
@@ -161,6 +170,9 @@ func (UnimplementedUserServiceServer) GetUserByTelegramId(context.Context, *GetB
 }
 func (UnimplementedUserServiceServer) GetAllUsers(context.Context, *GetAllRequest) (*GetAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllUsers not implemented")
+}
+func (UnimplementedUserServiceServer) GetAllTutorsPagination(context.Context, *GetAllTutorsPaginationRequest) (*GetAllResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAllTutorsPagination not implemented")
 }
 func (UnimplementedUserServiceServer) UpdateBioTutor(context.Context, *UpdateBioRequest) (*UpdateBioResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBioTutor not implemented")
@@ -294,6 +306,24 @@ func _UserService_GetAllUsers_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_GetAllTutorsPagination_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAllTutorsPaginationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetAllTutorsPagination(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetAllTutorsPagination_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetAllTutorsPagination(ctx, req.(*GetAllTutorsPaginationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _UserService_UpdateBioTutor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UpdateBioRequest)
 	if err := dec(in); err != nil {
@@ -342,6 +372,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllUsers",
 			Handler:    _UserService_GetAllUsers_Handler,
+		},
+		{
+			MethodName: "GetAllTutorsPagination",
+			Handler:    _UserService_GetAllTutorsPagination_Handler,
 		},
 		{
 			MethodName: "UpdateBioTutor",

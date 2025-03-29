@@ -10,10 +10,6 @@ message User {
   string id = 1;
   string name = 2;
   int64 telegram_id = 3;
-//  string title = 3;
-//  string body = 4;
-//  google.protobuf.Timestamp created_at = 5;
-//  int64 status = 6;
 }
 
 message Tutor {
@@ -28,7 +24,13 @@ service UserService {
   rpc GetStudentById(GetById) returns (User);
   rpc GetUserByTelegramId(GetByTelegramId) returns (User);
   rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
+  rpc GetAllTutorsPagination(GetAllTutorsPaginationRequest) returns (GetAllResponse);
   rpc UpdateBioTutor(UpdateBioRequest) returns (UpdateBioResponse);
+}
+
+message GetAllTutorsPaginationRequest {
+  int32 page = 1;
+  int32 size = 2;
 }
 
 message UpdateBioRequest {

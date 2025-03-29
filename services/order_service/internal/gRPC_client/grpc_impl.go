@@ -163,3 +163,19 @@ func (g *GRPCClient) GetTutor(ctx context.Context, TutorID string) (*models.Tuto
 		Bio:  tutor.Bio,
 	}, nil
 }
+
+func (g *GRPCClient) GetTutorsPagination(ctx context.Context, page int, size int) (*pb.GetAllResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	usersPB, err := g.client.GetAllTutorsPagination(ctx, &pb.GetAllTutorsPaginationRequest{
+		Page: int32(page),
+		Size: int32(size),
+	})
+
+	if err != nil {
+		return nil, custom_errors.ErrorGetUser
+	}
+
+	return usersPB, nil
+}
