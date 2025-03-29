@@ -39,7 +39,7 @@ type UserServiceClient interface {
 	GetStudentById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error)
 	GetUserByTelegramId(ctx context.Context, in *GetByTelegramId, opts ...grpc.CallOption) (*User, error)
 	GetAllUsers(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
-	GetAllTutorsPagination(ctx context.Context, in *GetAllTutorsPaginationRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
+	GetAllTutorsPagination(ctx context.Context, in *GetAllTutorsPaginationRequest, opts ...grpc.CallOption) (*GetTutorsPaginationResponse, error)
 	UpdateBioTutor(ctx context.Context, in *UpdateBioRequest, opts ...grpc.CallOption) (*UpdateBioResponse, error)
 }
 
@@ -111,9 +111,9 @@ func (c *userServiceClient) GetAllUsers(ctx context.Context, in *GetAllRequest, 
 	return out, nil
 }
 
-func (c *userServiceClient) GetAllTutorsPagination(ctx context.Context, in *GetAllTutorsPaginationRequest, opts ...grpc.CallOption) (*GetAllResponse, error) {
+func (c *userServiceClient) GetAllTutorsPagination(ctx context.Context, in *GetAllTutorsPaginationRequest, opts ...grpc.CallOption) (*GetTutorsPaginationResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GetAllResponse)
+	out := new(GetTutorsPaginationResponse)
 	err := c.cc.Invoke(ctx, UserService_GetAllTutorsPagination_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -141,7 +141,7 @@ type UserServiceServer interface {
 	GetStudentById(context.Context, *GetById) (*User, error)
 	GetUserByTelegramId(context.Context, *GetByTelegramId) (*User, error)
 	GetAllUsers(context.Context, *GetAllRequest) (*GetAllResponse, error)
-	GetAllTutorsPagination(context.Context, *GetAllTutorsPaginationRequest) (*GetAllResponse, error)
+	GetAllTutorsPagination(context.Context, *GetAllTutorsPaginationRequest) (*GetTutorsPaginationResponse, error)
 	UpdateBioTutor(context.Context, *UpdateBioRequest) (*UpdateBioResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
@@ -171,7 +171,7 @@ func (UnimplementedUserServiceServer) GetUserByTelegramId(context.Context, *GetB
 func (UnimplementedUserServiceServer) GetAllUsers(context.Context, *GetAllRequest) (*GetAllResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllUsers not implemented")
 }
-func (UnimplementedUserServiceServer) GetAllTutorsPagination(context.Context, *GetAllTutorsPaginationRequest) (*GetAllResponse, error) {
+func (UnimplementedUserServiceServer) GetAllTutorsPagination(context.Context, *GetAllTutorsPaginationRequest) (*GetTutorsPaginationResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllTutorsPagination not implemented")
 }
 func (UnimplementedUserServiceServer) UpdateBioTutor(context.Context, *UpdateBioRequest) (*UpdateBioResponse, error) {

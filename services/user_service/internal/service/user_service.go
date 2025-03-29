@@ -14,7 +14,7 @@ type UserServiceInt interface {
 	//GetUserByTelegramId(TelegramId int64) (*models.UserDB, error)
 	CreateUser(user models.CreateUser) (string, error)
 	GetTutors() ([]*pb.User, error)
-	GetTutorsPagination(page int, size int) ([]*pb.User, error)
+	GetTutorsPagination(page int, size int) (*pb.GetTutorsPaginationResponse, error)
 	UpdateBioTutor(userID string, bio string) error
 }
 
@@ -58,9 +58,18 @@ func (s *UserService) GetTutorById(TutorID string) (*models.TutorDB, error) {
 	return s.userRepository.GetTutorByID(TutorID)
 }
 
-func (s *UserService) GetTutorsPagination(page int, size int) ([]*pb.User, error) {
+func (s *UserService) GetTutorsPagination(page int, size int) (*pb.GetTutorsPaginationResponse, error) {
 	limit := size
 	offset := (page - 1) * size
 
-	return s.userRepository.GetAllTutorsPagination(limit, offset)
+	tutors, count, err := s.userRepository.GetAllTutorsPagination(limit, offset)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetTutorsPaginationResponse{
+		Count: int64(count),
+		Users: tutors,
+	}, nil
 }

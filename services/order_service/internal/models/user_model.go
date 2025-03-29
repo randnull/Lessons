@@ -5,6 +5,11 @@ type CreateUser struct {
 	TelegramId int64  `json:"telegram_id"`
 }
 
+type TutorsPagination struct {
+	User  []*User
+	Pages int
+}
+
 type User struct {
 	Id         string `json:"id"`
 	TelegramID int64  `json:"telegram_id"`

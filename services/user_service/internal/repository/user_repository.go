@@ -12,7 +12,7 @@ type UserRepository interface {
 	GetTutorByID(userID string) (*models.TutorDB, error)
 	GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error)
 	GetAllTutors() ([]*pb.User, error)
-	GetAllTutorsPagination(limit int, offset int) ([]*pb.User, error)
+	GetAllTutorsPagination(limit int, offset int) ([]*pb.User, int, error)
 	UpdateTutorBio(userID string, bio string) error
 	//CheckExistUser(user_id string) bool
 }

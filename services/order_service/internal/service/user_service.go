@@ -11,7 +11,7 @@ type UserServiceInt interface {
 	GetTutor(TutorID string) (*models.Tutor, error)
 
 	GetAllUsers() ([]*models.User, error)
-	GetAllTutorsPagination(page int, size int) ([]*models.User, error)
+	GetAllTutorsPagination(page int, size int) (*models.TutorsPagination, error)
 	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
 }
 
@@ -62,7 +62,7 @@ func (u *UserService) UpdateBioTutor(BioModel models.UpdateBioTutor, UserData mo
 	return nil
 }
 
-func (u *UserService) GetAllTutorsPagination(page int, size int) ([]*models.User, error) {
+func (u *UserService) GetAllTutorsPagination(page int, size int) (*models.TutorsPagination, error) {
 	usersRPC, err := u.GRPCClient.GetTutorsPagination(context.Background(), page, size)
 
 	if err != nil {
@@ -78,5 +78,14 @@ func (u *UserService) GetAllTutorsPagination(page int, size int) ([]*models.User
 		})
 	}
 
-	return users, nil
+	addPage := 0
+
+	if int(usersRPC.Count)%size != 0 {
+		addPage += 1
+	}
+
+	return &models.TutorsPagination{
+		User:  users,
+		Pages: (int(usersRPC.Count) / size) + addPage,
+	}, nil
 }

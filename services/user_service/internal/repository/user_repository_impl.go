@@ -275,17 +275,35 @@ func (r *Repository) UpdateTutorBio(userID string, bio string) error {
 	return nil
 }
 
-func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.User, error) {
+func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.User, int, error) {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, 0, err
+	}
+	defer tx.Rollback()
+
+	var total int
+
+	queryCount := `SELECT 
+    					COUNT(*) 
+					FROM users WHERE role = $1`
+
+	err = tx.QueryRow(queryCount, "Tutor").Scan(&total)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
 	queryGetAllPagination := `SELECT
     							id, 
     							name 
 							FROM users WHERE role = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
-	rows, err := r.db.Query(queryGetAllPagination, "Tutor", limit, offset)
+	rows, err := tx.Query(queryGetAllPagination, "Tutor", limit, offset)
 	defer rows.Close()
 
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
 	var Users []*pb.User
@@ -299,14 +317,18 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.User, 
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 
 		Users = append(Users, &user)
 	}
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return Users, nil
+	if err = tx.Commit(); err != nil {
+		return nil, 0, err
+	}
+
+	return Users, total, nil
 }

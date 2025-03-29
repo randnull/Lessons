@@ -24,7 +24,7 @@ service UserService {
   rpc GetStudentById(GetById) returns (User);
   rpc GetUserByTelegramId(GetByTelegramId) returns (User);
   rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
-  rpc GetAllTutorsPagination(GetAllTutorsPaginationRequest) returns (GetAllResponse);
+  rpc GetAllTutorsPagination(GetAllTutorsPaginationRequest) returns (GetTutorsPaginationResponse);
   rpc UpdateBioTutor(UpdateBioRequest) returns (UpdateBioResponse);
 }
 
@@ -66,6 +66,12 @@ message GetAllRequest {
 
 message GetAllResponse {
   repeated User users = 1;
+}
+
+
+message GetTutorsPaginationResponse {
+  int64 count = 1;
+  repeated User users = 2;
 }
 
 message UpdateBioResponse {

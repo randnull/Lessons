@@ -164,7 +164,7 @@ func (g *GRPCClient) GetTutor(ctx context.Context, TutorID string) (*models.Tuto
 	}, nil
 }
 
-func (g *GRPCClient) GetTutorsPagination(ctx context.Context, page int, size int) (*pb.GetAllResponse, error) {
+func (g *GRPCClient) GetTutorsPagination(ctx context.Context, page int, size int) (*pb.GetTutorsPaginationResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 

@@ -89,28 +89,14 @@ func (s *UserControllers) GetAllUsers(ctx context.Context, in *pb.GetAllRequest)
 	}, nil
 }
 
-func (s *UserControllers) GetAllTutorsPagination(ctx context.Context, in *pb.GetAllTutorsPaginationRequest) (*pb.GetAllResponse, error) {
-	//page, err := strconv.Atoi(in.Page)
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//size, err := strconv.Atoi(in.Size)
-	//
-	//if err != nil {
-	//	return nil, err
-	//}
-
+func (s *UserControllers) GetAllTutorsPagination(ctx context.Context, in *pb.GetAllTutorsPaginationRequest) (*pb.GetTutorsPaginationResponse, error) {
 	users, err := s.UserService.GetTutorsPagination(int(in.Page), int(in.Size))
 
 	if err != nil {
 		return nil, err
 	}
 
-	return &pb.GetAllResponse{
-		Users: users,
-	}, nil
+	return users, nil
 }
 
 func (s *UserControllers) UpdateBioTutor(ctx context.Context, in *pb.UpdateBioRequest) (*pb.UpdateBioResponse, error) {
