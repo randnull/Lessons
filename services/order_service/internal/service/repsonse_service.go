@@ -71,9 +71,11 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 	var ResponseToBroker models.ResponseToBrokerModel
 
 	ResponseToBroker = models.ResponseToBrokerModel{
-		UserId:  StudentInfo.TelegramID,
-		OrderId: orderID,
-		ChatId:  StudentInfo.TelegramID, // тут типо chatID
+		ResponseID: responseID,
+		TutorID:    TutorInfo.TelegramID,
+		StudentID:  StudentInfo.TelegramID,
+		OrderID:    orderID,
+		Title:      "1",
 	}
 
 	err = s.ProducerBroker.Publish("order_response", ResponseToBroker)

@@ -332,3 +332,8 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.User, 
 
 	return Users, total, nil
 }
+
+func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
+	//querySetTags := `UPDATE`
+	return nil
+}

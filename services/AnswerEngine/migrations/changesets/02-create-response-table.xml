@@ -12,20 +12,16 @@
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
 
     <changeSet author="k.goryunov" id="create-response-table">
-        <createTable tableName="responses" remarks="table with clients orders">
-            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
-                <constraints nullable="false" unique="true" />
+        <createTable tableName="responses" remarks="table with responses to orders">
+            <column name="response_id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
+                <constraints nullable="false" unique="true"/>
             </column>
 
-            <column name="order_engine_id" type="${uuid_type}" remarks="">
+            <column name="order_id" type="${uuid_type}" remarks="">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="tutor_id" type="${uuid_type}" remarks="">
-                <constraints nullable="false"/>
-            </column>
-
-            <column name="response_time" type="TIMESTAMPTZ" remarks="">
+            <column name="tutor_id" type="BIGINT" remarks="">
                 <constraints nullable="false"/>
             </column>
         </createTable>

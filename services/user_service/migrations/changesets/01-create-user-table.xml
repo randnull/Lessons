@@ -12,24 +12,24 @@
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
 
     <changeSet author="k.goryunov" id="create-users-table">
-        <createTable tableName="users" remarks="table with users">
-            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
+        <createTable tableName="users" remarks="Table with users">
+            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="pk">
                 <constraints nullable="false" unique="true" primaryKey="true"/>
             </column>
 
-            <column name="telegram_id" type="BIGINT" remarks="">
+            <column name="telegram_id" type="BIGINT" remarks="Telegram ID">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="name" type="VARCHAR" remarks="">
+            <column name="name" type="VARCHAR(255)" remarks="User name">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="role" type="VARCHAR" remarks="">
+            <column name="role" type="VARCHAR(50)" remarks="User role (Tutor or Student)">
                 <constraints nullable="false" checkConstraint="role IN ('Tutor', 'Student')"/>
             </column>
 
-            <column name="created_at" type="TIMESTAMP" remarks="">
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP" remarks="сreation timestamp">
                 <constraints nullable="false"/>
             </column>
         </createTable>

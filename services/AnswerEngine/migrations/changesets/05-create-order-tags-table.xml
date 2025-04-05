@@ -1,0 +1,27 @@
+<databaseChangeLog
+xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
+        http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
+        http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
+
+<property name="uuid_type" value="uuid" dbms="postgresql"/>
+<property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
+
+<changeSet author="k.goryunov" id="create-tags-order-table">
+    <createTable tableName="order_tags">
+        <column name="order_id" type="${uuid_type}">
+            <constraints nullable="false"/>
+        </column>
+        <column name="tag_id" type="${uuid_type}">
+            <constraints nullable="false" foreignKeyName="fk_order_tags_tag"
+                         references="tags(id)" />
+        </column>
+    </createTable>
+    <addPrimaryKey tableName="order_tags" columnNames="order_id, tag_id" constraintName="pk_order_tags"/>
+</changeSet>
+
+</databaseChangeLog>

@@ -11,28 +11,27 @@
     <property name="uuid_type" value="uuid" dbms="postgresql"/>
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
 
-    <changeSet author="k.goryunov" id="create-order-table">
-        <createTable tableName="order_engine" remarks="table with clients orders">
-            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
-                <constraints nullable="false" unique="true" />
+    <changeSet author="k.goryunov" id="create-reviews-table">
+        <createTable tableName="reviews" remarks="Reviews table">
+            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="pk">
+                <constraints primaryKey="true" nullable="false"/>
             </column>
 
-            <column name="status" type="VARCHAR" remarks="">
-                <constraints nullable="false"/>
+            <column name="tutor_id" type="${uuid_type}" remarks="ref to tutor">
+                <constraints nullable="false" foreignKeyName="fk_reviews_tutors" references="tutors(id)"/>
             </column>
 
-            <column name="order_id" type="${uuid_type}" remarks="">
-                <constraints nullable="false"/>
+            <column name="student_id" type="${uuid_type}" remarks="ref to student">
+                <constraints nullable="false" foreignKeyName="fk_reviews_students" references="users(id)"/>
             </column>
 
-            <column name="final_response_id" type="${uuid_type}" remarks="">
+            <column name="rating" type="INT" remarks="rating from 1 to 5">
+                <constraints nullable="false" checkConstraint="rating BETWEEN 1 AND 5"/>
             </column>
 
-            <column name="created_at" type="TIMESTAMPTZ" remarks="">
-                <constraints nullable="false"/>
-            </column>
+            <column name="comment" type="TEXT" remarks="comment"/>
 
-            <column name="updated_at" type="TIMESTAMPTZ" remarks="">
+            <column name="created_at" type="TIMESTAMP" remarks="creation date">
                 <constraints nullable="false"/>
             </column>
         </createTable>

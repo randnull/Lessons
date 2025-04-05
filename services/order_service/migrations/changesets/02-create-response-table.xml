@@ -10,38 +10,38 @@
 
     <property name="uuid_type" value="uuid" dbms="postgresql"/>
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
-    
+
     <changeSet author="k.goryunov" id="create-responses-table">
-        <createTable tableName="responses" remarks="table with responses for orders">
-            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
+        <createTable tableName="responses" remarks="response table">
+            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="pk">
                 <constraints nullable="false" unique="true" primaryKey="true"/>
             </column>
 
-            <column name="order_id" type="${uuid_type}" remarks="">
-                <constraints nullable="false"/>
+            <column name="order_id" type="${uuid_type}" remarks="order id">
+                <constraints nullable="false" foreignKeyName="fk_responses_orders" references="orders(id)"/>
             </column>
 
             <column name="name" type="VARCHAR" remarks="">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="tutor_id" type="${uuid_type}" remarks="">
+            <column name="tutor_id" type="${uuid_type}" remarks="tutor id">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="tutor_username" type="VARCHAR" remarks="">
+            <column name="tutor_username" type="VARCHAR" remarks="username">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="greetings" type="VARCHAR(300)" remarks="">
+            <column name="greetings" type="VARCHAR(300)" remarks="greetings message">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="is_final" type="BOOLEAN" defaultValueBoolean="false" remarks="">
+            <column name="is_final" type="BOOLEAN" defaultValueBoolean="false" remarks="is selected">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="created_at" type="TIMESTAMPTZ" remarks="">
+            <column name="created_at" type="TIMESTAMPTZ" remarks="creation time">
                 <constraints nullable="false"/>
             </column>
         </createTable>

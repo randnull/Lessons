@@ -1,7 +1,7 @@
-from typing import TypeVar, Generic
+from typing import TypeVar, Generic, List, Any, Sequence
 from uuid import UUID
 
-from sqlalchemy import select, and_, update, func
+from sqlalchemy import select, and_, update, func, Row, RowMapping
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import BaseModel
@@ -22,6 +22,21 @@ class Repository(Generic[Model]):
         id = getattr(result_dao, str_id)
         await self.__session.commit()
         return id
+
+    async def create_many(self, models: List[BaseModel]):
+        daos = [self.__model.to_dao(model) for model in models]
+        self.__session.add_all(daos)
+        await self.__session.flush()
+        await self.__session.commit()
+
+
+    async def get_tags_ids_by_name(self, tags: List[str]):
+        resp = await self.__session.execute(select(self.__model).where(self.__model.tag_name.in_(tags)))
+        return resp.scalars().all()
+
+        # stmt = select(self.__model).where(TagDao.tag_name.in_(order_data.tags))
+        # result = await session.execute(stmt)
+        # existing_tags = result.scalars().all()
 
     # async def get_by_code(self, code: str) -> Model:
     #     resp = await self.__session.execute(select(self.__model).where(self.__model.code == code))

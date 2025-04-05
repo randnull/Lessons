@@ -14,5 +14,6 @@ type UserRepository interface {
 	GetAllTutors() ([]*pb.User, error)
 	GetAllTutorsPagination(limit int, offset int) ([]*pb.User, int, error)
 	UpdateTutorBio(userID string, bio string) error
+	UpdateTutorTags(tutorID string, tags []string) error
 	//CheckExistUser(user_id string) bool
 }

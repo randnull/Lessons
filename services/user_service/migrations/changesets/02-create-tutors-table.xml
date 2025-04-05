@@ -12,23 +12,22 @@
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
 
     <changeSet author="k.goryunov" id="create-tutors-table">
-        <createTable tableName="tutors" remarks="table with tutors">
-            <column name="id" type="${uuid_type}" remarks="primery key uuid">
+        <createTable tableName="tutors" remarks="Table with tutors">
+            <column name="id" type="${uuid_type}" remarks="Primary key UUID">
                 <constraints primaryKey="true" nullable="false" foreignKeyName="fk_tutors_users" references="users(id)"/>
             </column>
 
-            <column name="is_active" type="BOOLEAN" defaultValueBoolean="false" remarks="">
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="false" remarks="if the tutor is active">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="bio" type="VARCHAR(500)" remarks="">
-<!--                <constraints nullable="false"/> INDEX на role + telegram_id-->
+            <column name="bio" type="VARCHAR(500)" remarks="Tutor's biography">
             </column>
 
-            <column name="tags" type="VARCHAR(500)" remarks="">
+            <column name="tags" type="TEXT[]" remarks="tutors tags">
             </column>
 
-            <column name="created_at" type="TIMESTAMP" remarks="">
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP" remarks="creation timestamp">
                 <constraints nullable="false"/>
             </column>
         </createTable>

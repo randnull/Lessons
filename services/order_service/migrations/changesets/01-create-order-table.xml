@@ -10,57 +10,57 @@
 
     <property name="uuid_type" value="uuid" dbms="postgresql"/>
     <property name="uuid_function" value="gen_random_uuid()" dbms="postgresql"/>
-    
+
     <changeSet author="k.goryunov" id="create-order-table">
-        <createTable tableName="orders" remarks="table with clients orders">
-            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primery key uuid">
+        <createTable tableName="orders" remarks="orders table">
+            <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="pk">
                 <constraints nullable="false" unique="true" primaryKey="true"/>
             </column>
 
-            <column name="student_id" type="${uuid_type}" remarks="">
-                <constraints nullable="false"/> 
-            </column>
-
-            <column name="title" type="VARCHAR" remarks="">
+            <column name="student_id" type="${uuid_type}" remarks="student id (uuid)">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="description" type="VARCHAR" remarks="">
+            <column name="title" type="VARCHAR(100)" remarks="title of order">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="grade" type="VARCHAR" remarks="">
+            <column name="description" type="TEXT" remarks="order desc">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="tags" type="TEXT[]" remarks="">
+            <column name="grade" type="VARCHAR(50)" remarks="grade level">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="min_price" type="INTEGER" remarks="">
+            <column name="tags" type="TEXT[]" remarks="order's tags">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="max_price" type="INTEGER" remarks="">
+            <column name="min_price" type="INTEGER" remarks="min price">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="status" type="VARCHAR" remarks="">
+            <column name="max_price" type="INTEGER" remarks="max price">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="response_count" type="INTEGER" remarks="">
+            <column name="status" type="VARCHAR" remarks="order status">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="created_at" type="TIMESTAMPTZ" remarks="">
+            <column name="response_count" type="INTEGER" remarks="response count">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="updated_at" type="TIMESTAMPTZ" remarks="">
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="CURRENT_TIMESTAMP" remarks="create date">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="updated_at" type="TIMESTAMPTZ" defaultValueComputed="CURRENT_TIMESTAMP" remarks="last update date">
                 <constraints nullable="false"/>
             </column>
         </createTable>
     </changeSet>
-    
+
 </databaseChangeLog>

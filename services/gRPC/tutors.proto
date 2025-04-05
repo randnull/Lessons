@@ -26,6 +26,9 @@ service UserService {
   rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
   rpc GetAllTutorsPagination(GetAllTutorsPaginationRequest) returns (GetTutorsPaginationResponse);
   rpc UpdateBioTutor(UpdateBioRequest) returns (UpdateBioResponse);
+  rpc CreateReview() returns
+  rpc GetReviews() returns
+  rpc GetReview() returns
 }
 
 message GetAllTutorsPaginationRequest {

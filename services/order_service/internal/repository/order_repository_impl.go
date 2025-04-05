@@ -98,14 +98,11 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID st
 	} // Норм проверку TODO
 
 	CreatedOrder := models.OrderToBrokerWithID{
-		ID:          orderID,
-		StudentID:   telegramID,
-		Title:       order.Title,
-		Description: order.Description,
-		Tags:        order.Tags,
-		MinPrice:    order.MinPrice,
-		MaxPrice:    order.MaxPrice,
-		ChatID:      telegramID,
+		ID:        orderID,
+		StudentID: telegramID,
+		Title:     order.Title,
+		Tags:      order.Tags,
+		Status:    "New",
 	}
 
 	return &CreatedOrder, nil
@@ -359,9 +356,9 @@ func (orderStorage *Repository) GetStudentOrdersPagination(limit int, offset int
 
 	queryCount := `SELECT 
     					COUNT(*) 
-					FROM orders WHERE status = $1`
+					FROM orders WHERE student_id = $1`
 
-	err = tx.QueryRow(queryCount, "New").Scan(&total)
+	err = tx.QueryRow(queryCount, studentID).Scan(&total)
 
 	if err != nil {
 		return nil, 0, err
@@ -382,9 +379,9 @@ func (orderStorage *Repository) GetStudentOrdersPagination(limit int, offset int
     			response_count,
     			created_at, 
     			updated_at 
-			FROM orders WHERE status = $1 AND student_id = $2 ORDER BY created_at DESC LIMIT $3 OFFSET $4`
+			FROM orders WHERE student_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 
-	rows, err := tx.Query(query, "New", studentID, limit, offset)
+	rows, err := tx.Query(query, studentID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
