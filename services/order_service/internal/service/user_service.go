@@ -9,10 +9,14 @@ import (
 type UserServiceInt interface {
 	GetUser(UserID string) (*models.User, error)
 	GetTutor(TutorID string) (*models.Tutor, error)
-
 	GetAllUsers() ([]*models.User, error)
 	GetAllTutorsPagination(page int, size int) (*models.TutorsPagination, error)
 	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
+	UpdateTagsTutor(tags []string, TutorID string) (bool, error)
+	CreateReview(studentID string, tutorID string, comment string, rating int) (string, error)
+	GetReviewsByTutor(tutorID string) ([]models.Review, error)
+	GetReviewsByID(reviewID string) (*models.Review, error)
+	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
 }
 
 type UserService struct {
@@ -88,4 +92,44 @@ func (u *UserService) GetAllTutorsPagination(page int, size int) (*models.Tutors
 		User:  users,
 		Pages: (int(usersRPC.Count) / size) + addPage,
 	}, nil
+}
+
+func (u *UserService) UpdateTagsTutor(tags []string, TutorID string) (bool, error) {
+	success, err := u.GRPCClient.UpdateTagsTutor(context.Background(), tags, TutorID)
+	if err != nil {
+		return false, err
+	}
+	return success, nil
+}
+
+func (u *UserService) CreateReview(studentID string, tutorID string, comment string, rating int) (string, error) {
+	return u.GRPCClient.CreateReview(context.Background(), studentID, tutorID, comment, rating)
+}
+
+func (u *UserService) GetReviewsByTutor(tutorID string) ([]models.Review, error) {
+	reviews, err := u.GRPCClient.GetReviewsByTutor(context.Background(), tutorID)
+	if err != nil {
+		return nil, err
+	}
+
+	return reviews, nil
+}
+
+func (u *UserService) GetReviewsByID(reviewID string) (*models.Review, error) {
+	review, err := u.GRPCClient.GetReviewsByID(context.Background(), reviewID)
+	if err != nil {
+		return nil, err
+	}
+
+	return review, nil
+}
+
+func (u *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, error) {
+	TutorDetails, err := u.GRPCClient.GetTutorInfoById(context.Background(), tutorID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return TutorDetails, nil
 }

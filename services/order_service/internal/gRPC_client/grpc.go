@@ -14,5 +14,10 @@ type GRPCClientInt interface {
 	GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error)
 	GetTutorsPagination(ctx context.Context, page int, size int) (*pb.GetTutorsPaginationResponse, error)
 	UpdateBioTutor(ctx context.Context, bio string, TutorID string) (bool, error)
+	UpdateTagsTutor(ctx context.Context, tags []string, TutorID string) (bool, error)
+	CreateReview(ctx context.Context, studentID string, tutorID string, comment string, rating int) (string, error)
+	GetReviewsByTutor(ctx context.Context, tutorID string) ([]models.Review, error)
+	GetReviewsByID(ctx context.Context, reviewID string) (*models.Review, error)
+	GetTutorInfoById(ctx context.Context, TutorID string) (*models.TutorDetails, error)
 	Close()
 }

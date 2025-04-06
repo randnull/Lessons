@@ -120,8 +120,14 @@ func (a *App) Run() {
 	users.Get("/id/:id", a.userControllers.GetUser)
 
 	users.Get("/tutor/id/:id", a.userControllers.GetTutor)
-	users.Post("/tutor/bio/id/:id", a.userControllers.UpdateBioTutor)
+	users.Post("/tutor/bio", a.userControllers.UpdateBioTutor)
 	users.Get("/pagination", a.userControllers.GetTutorsPagination)
+
+	users.Post("/tutor/tags", a.userControllers.UpdateTagsTutor)
+	users.Post("/review", a.userControllers.CreateReview)
+	users.Get("/review/id/:id", a.userControllers.GetReviewByID)
+	users.Get("/review/tutor/id/:id", a.userControllers.GetReviewsByTutor)
+	users.Get("/tutor/details/id/:id", a.userControllers.GetTutorInfoById)
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 

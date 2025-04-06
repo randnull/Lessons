@@ -15,5 +15,9 @@ type UserRepository interface {
 	GetAllTutorsPagination(limit int, offset int) ([]*pb.User, int, error)
 	UpdateTutorBio(userID string, bio string) error
 	UpdateTutorTags(tutorID string, tags []string) error
-	//CheckExistUser(user_id string) bool
+	CreateReview(tutorID, studentID string, rating int, comment string) (string, error)
+	GetReviews(tutorID string) ([]models.Review, error)
+	GetReviewById(reviewID string) (*models.Review, error)
+	GetTagsByTutorID(tutorID string) ([]string, error)
+	SetNewIsActiveTutor(tutorID string, IsActive bool) error
 }

@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
+	"log"
 	"strconv"
 )
 
@@ -121,4 +122,109 @@ func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
 	}
 
 	return ctx.JSON(users)
+}
+
+func (u *UserController) UpdateTagsTutor(ctx *fiber.Ctx) error {
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad auth data"})
+	}
+
+	log.Println("Запрос на обновление тегов")
+
+	var UpdateTagsTutor models.UpdateTagsTutor
+
+	if err := ctx.BodyParser(&UpdateTagsTutor); err != nil {
+		log.Println(err.Error())
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "bad format"})
+	}
+
+	tutorID := UserData.UserID
+
+	success, err := u.UserService.UpdateTagsTutor(UpdateTagsTutor.Tags, tutorID)
+	if err != nil || !success {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot update tags"})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{"success": true})
+}
+
+func (u *UserController) CreateReview(ctx *fiber.Ctx) error {
+	log.Println("Запрос на создание отзыва")
+
+	var ReviewRequest models.ReviewRequest
+
+	if err := ctx.BodyParser(&ReviewRequest); err != nil {
+		log.Println("Ошибка парсинга:", err)
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "bad format"})
+	}
+
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad auth"})
+	}
+
+	id, err := u.UserService.CreateReview(UserData.UserID, ReviewRequest.TutorID, ReviewRequest.Comment, ReviewRequest.Rating)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "error review" + err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"id": id})
+}
+
+func (u *UserController) GetReviewsByTutor(ctx *fiber.Ctx) error {
+	log.Println("Запрос на получения отзывов")
+	_, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad auth data"})
+	}
+
+	tutorID := ctx.Params("tutor_id")
+
+	reviews, err := u.UserService.GetReviewsByTutor(tutorID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot get auth" + err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(reviews)
+}
+
+func (u *UserController) GetReviewByID(ctx *fiber.Ctx) error {
+	log.Println("Запрос на получения отзыва id")
+
+	_, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad auth data"})
+	}
+
+	reviewID := ctx.Params("id")
+
+	review, err := u.UserService.GetReviewsByID(reviewID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot get review" + err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(review)
+}
+
+func (u *UserController) GetTutorInfoById(ctx *fiber.Ctx) error {
+	log.Println("Запрос на всей инфы от репета")
+
+	_, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad auth data"})
+	}
+
+	tutorID := ctx.Params("id")
+
+	info, err := u.UserService.GetTutorInfoById(tutorID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot get data tutor" + err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(info)
 }

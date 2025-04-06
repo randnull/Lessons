@@ -22,11 +22,17 @@ const (
 	UserService_CreateUser_FullMethodName             = "/users.UserService/CreateUser"
 	UserService_GetUserById_FullMethodName            = "/users.UserService/GetUserById"
 	UserService_GetTutorById_FullMethodName           = "/users.UserService/GetTutorById"
+	UserService_GetTutorInfoById_FullMethodName       = "/users.UserService/GetTutorInfoById"
+	UserService_ChangeTutorActive_FullMethodName      = "/users.UserService/ChangeTutorActive"
 	UserService_GetStudentById_FullMethodName         = "/users.UserService/GetStudentById"
 	UserService_GetUserByTelegramId_FullMethodName    = "/users.UserService/GetUserByTelegramId"
 	UserService_GetAllUsers_FullMethodName            = "/users.UserService/GetAllUsers"
 	UserService_GetAllTutorsPagination_FullMethodName = "/users.UserService/GetAllTutorsPagination"
 	UserService_UpdateBioTutor_FullMethodName         = "/users.UserService/UpdateBioTutor"
+	UserService_UpdateTags_FullMethodName             = "/users.UserService/UpdateTags"
+	UserService_CreateReview_FullMethodName           = "/users.UserService/CreateReview"
+	UserService_GetReview_FullMethodName              = "/users.UserService/GetReview"
+	UserService_GetReviews_FullMethodName             = "/users.UserService/GetReviews"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -36,11 +42,17 @@ type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 	GetUserById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error)
 	GetTutorById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*Tutor, error)
+	GetTutorInfoById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*TutorDetails, error)
+	ChangeTutorActive(ctx context.Context, in *SetActiveTutorById, opts ...grpc.CallOption) (*Success, error)
 	GetStudentById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error)
 	GetUserByTelegramId(ctx context.Context, in *GetByTelegramId, opts ...grpc.CallOption) (*User, error)
 	GetAllUsers(ctx context.Context, in *GetAllRequest, opts ...grpc.CallOption) (*GetAllResponse, error)
 	GetAllTutorsPagination(ctx context.Context, in *GetAllTutorsPaginationRequest, opts ...grpc.CallOption) (*GetTutorsPaginationResponse, error)
 	UpdateBioTutor(ctx context.Context, in *UpdateBioRequest, opts ...grpc.CallOption) (*UpdateBioResponse, error)
+	UpdateTags(ctx context.Context, in *UpdateTagsRequest, opts ...grpc.CallOption) (*Success, error)
+	CreateReview(ctx context.Context, in *CreateReviewRequest, opts ...grpc.CallOption) (*CreateReviewResponse, error)
+	GetReview(ctx context.Context, in *GetReviewRequest, opts ...grpc.CallOption) (*Review, error)
+	GetReviews(ctx context.Context, in *GetReviewsRequest, opts ...grpc.CallOption) (*GetReviewsResponse, error)
 }
 
 type userServiceClient struct {
@@ -75,6 +87,26 @@ func (c *userServiceClient) GetTutorById(ctx context.Context, in *GetById, opts 
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Tutor)
 	err := c.cc.Invoke(ctx, UserService_GetTutorById_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetTutorInfoById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*TutorDetails, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TutorDetails)
+	err := c.cc.Invoke(ctx, UserService_GetTutorInfoById_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) ChangeTutorActive(ctx context.Context, in *SetActiveTutorById, opts ...grpc.CallOption) (*Success, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Success)
+	err := c.cc.Invoke(ctx, UserService_ChangeTutorActive_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +163,46 @@ func (c *userServiceClient) UpdateBioTutor(ctx context.Context, in *UpdateBioReq
 	return out, nil
 }
 
+func (c *userServiceClient) UpdateTags(ctx context.Context, in *UpdateTagsRequest, opts ...grpc.CallOption) (*Success, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Success)
+	err := c.cc.Invoke(ctx, UserService_UpdateTags_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CreateReview(ctx context.Context, in *CreateReviewRequest, opts ...grpc.CallOption) (*CreateReviewResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(CreateReviewResponse)
+	err := c.cc.Invoke(ctx, UserService_CreateReview_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetReview(ctx context.Context, in *GetReviewRequest, opts ...grpc.CallOption) (*Review, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Review)
+	err := c.cc.Invoke(ctx, UserService_GetReview_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) GetReviews(ctx context.Context, in *GetReviewsRequest, opts ...grpc.CallOption) (*GetReviewsResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(GetReviewsResponse)
+	err := c.cc.Invoke(ctx, UserService_GetReviews_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -138,11 +210,17 @@ type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateResponse, error)
 	GetUserById(context.Context, *GetById) (*User, error)
 	GetTutorById(context.Context, *GetById) (*Tutor, error)
+	GetTutorInfoById(context.Context, *GetById) (*TutorDetails, error)
+	ChangeTutorActive(context.Context, *SetActiveTutorById) (*Success, error)
 	GetStudentById(context.Context, *GetById) (*User, error)
 	GetUserByTelegramId(context.Context, *GetByTelegramId) (*User, error)
 	GetAllUsers(context.Context, *GetAllRequest) (*GetAllResponse, error)
 	GetAllTutorsPagination(context.Context, *GetAllTutorsPaginationRequest) (*GetTutorsPaginationResponse, error)
 	UpdateBioTutor(context.Context, *UpdateBioRequest) (*UpdateBioResponse, error)
+	UpdateTags(context.Context, *UpdateTagsRequest) (*Success, error)
+	CreateReview(context.Context, *CreateReviewRequest) (*CreateReviewResponse, error)
+	GetReview(context.Context, *GetReviewRequest) (*Review, error)
+	GetReviews(context.Context, *GetReviewsRequest) (*GetReviewsResponse, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -162,6 +240,12 @@ func (UnimplementedUserServiceServer) GetUserById(context.Context, *GetById) (*U
 func (UnimplementedUserServiceServer) GetTutorById(context.Context, *GetById) (*Tutor, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTutorById not implemented")
 }
+func (UnimplementedUserServiceServer) GetTutorInfoById(context.Context, *GetById) (*TutorDetails, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetTutorInfoById not implemented")
+}
+func (UnimplementedUserServiceServer) ChangeTutorActive(context.Context, *SetActiveTutorById) (*Success, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ChangeTutorActive not implemented")
+}
 func (UnimplementedUserServiceServer) GetStudentById(context.Context, *GetById) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetStudentById not implemented")
 }
@@ -176,6 +260,18 @@ func (UnimplementedUserServiceServer) GetAllTutorsPagination(context.Context, *G
 }
 func (UnimplementedUserServiceServer) UpdateBioTutor(context.Context, *UpdateBioRequest) (*UpdateBioResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateBioTutor not implemented")
+}
+func (UnimplementedUserServiceServer) UpdateTags(context.Context, *UpdateTagsRequest) (*Success, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateTags not implemented")
+}
+func (UnimplementedUserServiceServer) CreateReview(context.Context, *CreateReviewRequest) (*CreateReviewResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateReview not implemented")
+}
+func (UnimplementedUserServiceServer) GetReview(context.Context, *GetReviewRequest) (*Review, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReview not implemented")
+}
+func (UnimplementedUserServiceServer) GetReviews(context.Context, *GetReviewsRequest) (*GetReviewsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetReviews not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -248,6 +344,42 @@ func _UserService_GetTutorById_Handler(srv interface{}, ctx context.Context, dec
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).GetTutorById(ctx, req.(*GetById))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetTutorInfoById_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetById)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetTutorInfoById(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetTutorInfoById_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetTutorInfoById(ctx, req.(*GetById))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_ChangeTutorActive_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetActiveTutorById)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).ChangeTutorActive(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_ChangeTutorActive_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).ChangeTutorActive(ctx, req.(*SetActiveTutorById))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -342,6 +474,78 @@ func _UserService_UpdateBioTutor_Handler(srv interface{}, ctx context.Context, d
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_UpdateTags_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateTagsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).UpdateTags(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_UpdateTags_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).UpdateTags(ctx, req.(*UpdateTagsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CreateReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CreateReview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateReview(ctx, req.(*CreateReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetReview_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReviewRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetReview(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetReview_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetReview(ctx, req.(*GetReviewRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_GetReviews_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetReviewsRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).GetReviews(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_GetReviews_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).GetReviews(ctx, req.(*GetReviewsRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -362,6 +566,14 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserService_GetTutorById_Handler,
 		},
 		{
+			MethodName: "GetTutorInfoById",
+			Handler:    _UserService_GetTutorInfoById_Handler,
+		},
+		{
+			MethodName: "ChangeTutorActive",
+			Handler:    _UserService_ChangeTutorActive_Handler,
+		},
+		{
 			MethodName: "GetStudentById",
 			Handler:    _UserService_GetStudentById_Handler,
 		},
@@ -380,6 +592,22 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateBioTutor",
 			Handler:    _UserService_UpdateBioTutor_Handler,
+		},
+		{
+			MethodName: "UpdateTags",
+			Handler:    _UserService_UpdateTags_Handler,
+		},
+		{
+			MethodName: "CreateReview",
+			Handler:    _UserService_CreateReview_Handler,
+		},
+		{
+			MethodName: "GetReview",
+			Handler:    _UserService_GetReview_Handler,
+		},
+		{
+			MethodName: "GetReviews",
+			Handler:    _UserService_GetReviews_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

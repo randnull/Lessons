@@ -31,3 +31,9 @@ type CreateUser struct {
 	TelegramId int64  `json:"telegram_id"`
 	Role       string `json:"role"`
 }
+
+type TutorDetails struct {
+	Tutor   TutorDB
+	Reviews []Review
+	Tags    []string
+}

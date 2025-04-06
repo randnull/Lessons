@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/custom_errors"
@@ -334,6 +335,138 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.User, 
 }
 
 func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
-	//querySetTags := `UPDATE`
+	queryUpdateTutorTags := `
+		UPDATE tutors
+		SET tags = $1
+		WHERE id = $2
+	`
+
+	_, err := r.db.Exec(queryUpdateTutorTags, pq.Array(tags), tutorID)
+	if err != nil {
+		log.Printf("Failed to update tags for tutor")
+		return err //custom_errors.ErrorTagsTutor
+	}
+
+	return nil
+}
+
+func (r *Repository) CreateReview(tutorID, studentID string, rating int, comment string) (string, error) {
+	timestamp := time.Now()
+
+	queryInsertReview := `INSERT INTO reviews (
+                     tutor_id,
+                     student_id,
+                     rating,
+                     comment,
+                     created_at
+        )
+		VALUES ($1, $2, $3, $4, $5) RETURNING id
+	`
+
+	var reviewID string
+	err := r.db.QueryRow(queryInsertReview, tutorID, studentID, rating, comment, timestamp).Scan(&reviewID)
+	if err != nil {
+		log.Printf("Failed create review ((: %v", err)
+		return "", err
+	}
+
+	return reviewID, nil
+}
+
+func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
+	query := `SELECT 
+    			id, 
+    			tutor_id, 
+    			student_id, 
+    			rating, 
+    			comment, 
+    			created_at
+		FROM reviews
+		WHERE tutor_id = $1
+	`
+
+	rows, err := r.db.Query(query, tutorID)
+	if err != nil {
+		log.Printf("Failed get reviews for tutor %s: %v", tutorID, err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	var reviews []models.Review
+
+	for rows.Next() {
+		var review models.Review
+		err := rows.Scan(&review.ID, &review.TutorID, &review.StudentID, &review.Rating, &review.Comment, &review.CreatedAt)
+		if err != nil {
+			log.Printf("Failed to scan review row: %v", err)
+			continue
+		}
+		reviews = append(reviews, review)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Printf(err.Error())
+		return nil, err
+	}
+
+	return reviews, nil
+}
+
+func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
+	query := `SELECT 
+    			id,
+       			tutor_id,
+       			student_id,
+       			rating,
+       			comment,
+       			created_at
+		FROM reviews
+		WHERE id = $1
+	`
+
+	var review models.Review
+	err := r.db.QueryRow(query, reviewID).Scan(
+		&review.ID, &review.TutorID, &review.StudentID, &review.Rating, &review.Comment, &review.CreatedAt,
+	)
+	if err != nil {
+		log.Printf("Failed get review with ID %s: %v", reviewID, err)
+		return nil, err
+	}
+
+	return &review, nil
+}
+
+func (r *Repository) GetTagsByTutorID(tutorID string) ([]string, error) {
+	query := `SELECT
+    			tags
+			FROM tutors WHERE id = $1`
+	rows, err := r.db.Query(query, tutorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tags []string
+	for rows.Next() {
+		var tagArray []string
+		if err := rows.Scan(pq.Array(&tagArray)); err != nil {
+			return nil, err
+		}
+		tags = append(tags, tagArray...)
+	}
+	return tags, nil
+}
+
+func (r *Repository) SetNewIsActiveTutor(tutorID string, isActive bool) error {
+	query := `UPDATE tutors SET
+                is_active = $1
+              WHERE id = $2`
+
+	_, err := r.db.Exec(query, isActive, tutorID)
+	if err != nil {
+		log.Printf("Failed is_active for tutor %s: %v", tutorID, err)
+		return err
+	}
+
 	return nil
 }

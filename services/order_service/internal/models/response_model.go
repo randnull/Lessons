@@ -32,9 +32,3 @@ type ResponseToBrokerModel struct {
 	OrderID    string `json:"order_id"`
 	Title      string `json:"order_name"`
 }
-
-//response_id: UUID4
-//tutor_id: int
-//student_id: int
-//order_id: UUID4
-//order_name: string

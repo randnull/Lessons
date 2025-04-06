@@ -16,6 +16,12 @@ type UserServiceInt interface {
 	GetTutors() ([]*pb.User, error)
 	GetTutorsPagination(page int, size int) (*pb.GetTutorsPaginationResponse, error)
 	UpdateBioTutor(userID string, bio string) error
+	UpdateTutorTags(tutorID string, tags []string) error
+	CreateReview(tutorID, studentID string, rating int, comment string) (string, error)
+	GetReviews(tutorID string) ([]models.Review, error)
+	GetReviewById(reviewID string) (*models.Review, error)
+	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
+	ChangeTutorActive(tutorID string, IsActive bool) error
 }
 
 type UserService struct {
@@ -72,4 +78,44 @@ func (s *UserService) GetTutorsPagination(page int, size int) (*pb.GetTutorsPagi
 		Count: int64(count),
 		Users: tutors,
 	}, nil
+}
+
+func (s *UserService) UpdateTutorTags(tutorID string, tags []string) error {
+	return s.userRepository.UpdateTutorTags(tutorID, tags)
+}
+func (s *UserService) CreateReview(tutorID string, studentID string, rating int, comment string) (string, error) {
+	return s.userRepository.CreateReview(tutorID, studentID, rating, comment)
+}
+func (s *UserService) GetReviews(tutorID string) ([]models.Review, error) {
+	return s.userRepository.GetReviews(tutorID)
+}
+func (s *UserService) GetReviewById(reviewID string) (*models.Review, error) {
+	return s.userRepository.GetReviewById(reviewID)
+}
+
+func (s *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, error) {
+	tutor, err := s.userRepository.GetTutorByID(tutorID)
+	if err != nil {
+		return nil, err
+	}
+
+	reviews, err := s.userRepository.GetReviews(tutorID)
+	if err != nil {
+		return nil, err
+	}
+
+	tags, err := s.userRepository.GetTagsByTutorID(tutorID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &models.TutorDetails{
+		Tutor:   *tutor,
+		Reviews: reviews,
+		Tags:    tags,
+	}, nil
+}
+
+func (s *UserService) ChangeTutorActive(tutorID string, IsActive bool) error {
+	return s.userRepository.SetNewIsActiveTutor(tutorID, IsActive)
 }

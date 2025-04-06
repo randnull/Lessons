@@ -62,7 +62,7 @@ func (g *GRPCClient) Close() {
 }
 
 func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	userPB, err := g.client.GetUserById(ctx, &pb.GetById{Id: userID})
@@ -79,7 +79,7 @@ func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, 
 }
 
 func (g *GRPCClient) GetStudent(ctx context.Context, userID string) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	userPB, err := g.client.GetStudentById(ctx, &pb.GetById{Id: userID})
@@ -96,7 +96,7 @@ func (g *GRPCClient) GetStudent(ctx context.Context, userID string) (*models.Use
 }
 
 func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) (*models.User, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	userPB, err := g.client.GetUserByTelegramId(ctx, &pb.GetByTelegramId{Id: telegramID})
@@ -113,7 +113,7 @@ func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) 
 }
 
 func (g *GRPCClient) GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	usersPB, err := g.client.GetAllUsers(ctx, &pb.GetAllRequest{})
@@ -126,7 +126,7 @@ func (g *GRPCClient) GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error
 }
 
 func (g *GRPCClient) UpdateBioTutor(ctx context.Context, bio string, TutorID string) (bool, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	fmt.Println(bio, TutorID)
@@ -146,7 +146,7 @@ func (g *GRPCClient) UpdateBioTutor(ctx context.Context, bio string, TutorID str
 }
 
 func (g *GRPCClient) GetTutor(ctx context.Context, TutorID string) (*models.Tutor, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	tutor, err := g.client.GetTutorById(ctx, &pb.GetById{
@@ -165,7 +165,7 @@ func (g *GRPCClient) GetTutor(ctx context.Context, TutorID string) (*models.Tuto
 }
 
 func (g *GRPCClient) GetTutorsPagination(ctx context.Context, page int, size int) (*pb.GetTutorsPaginationResponse, error) {
-	ctx, cancel := context.WithTimeout(ctx, time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	usersPB, err := g.client.GetAllTutorsPagination(ctx, &pb.GetAllTutorsPaginationRequest{
@@ -178,4 +178,121 @@ func (g *GRPCClient) GetTutorsPagination(ctx context.Context, page int, size int
 	}
 
 	return usersPB, nil
+}
+
+func (g *GRPCClient) UpdateTagsTutor(ctx context.Context, tags []string, tutorID string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := g.client.UpdateTags(ctx, &pb.UpdateTagsRequest{
+		TutorId: tutorID,
+		Tags:    tags,
+	})
+	if err != nil {
+		return false, err //custom_errors.ErrorUpdateTags
+	}
+	return resp.Success, nil
+}
+
+func (g *GRPCClient) CreateReview(ctx context.Context, studentID string, tutorID string, comment string, rating int) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := g.client.CreateReview(ctx, &pb.CreateReviewRequest{
+		TutorId:   tutorID,
+		StudentId: studentID,
+		Rating:    int32(rating),
+		Comment:   comment,
+	})
+	if err != nil {
+		return "", err //custom_errors.ErrorCreateReview
+	}
+
+	return resp.Id, nil
+}
+
+func (g *GRPCClient) GetReviewsByTutor(ctx context.Context, tutorID string) ([]models.Review, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := g.client.GetReviews(ctx, &pb.GetReviewsRequest{TutorId: tutorID})
+	if err != nil {
+		return nil, err
+	}
+
+	var reviews []models.Review
+	for _, r := range resp.Reviews {
+		reviews = append(reviews, models.Review{
+			ID:        r.Id,
+			TutorID:   r.TutorId,
+			StudentID: r.StudentId,
+			Rating:    int(r.Rating),
+			Comment:   r.Comment,
+			CreatedAt: r.CreatedAt.AsTime(),
+		})
+	}
+
+	return reviews, nil
+}
+
+func (g *GRPCClient) GetReviewsByID(ctx context.Context, reviewID string) (*models.Review, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := g.client.GetReview(ctx, &pb.GetReviewRequest{Id: reviewID})
+	if err != nil {
+		return nil, err
+	}
+
+	review := &models.Review{
+		ID:        resp.Id,
+		TutorID:   resp.TutorId,
+		StudentID: resp.StudentId,
+		Rating:    int(resp.Rating),
+		Comment:   resp.Comment,
+		CreatedAt: resp.CreatedAt.AsTime(),
+	}
+
+	return review, nil
+}
+
+func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string) (*models.TutorDetails, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := g.client.GetTutorInfoById(ctx, &pb.GetById{Id: tutorID})
+	if err != nil {
+		return nil, err
+	}
+
+	user := resp.Tutor.User
+	tutor := resp.Tutor
+
+	var reviews []models.Review
+	for _, r := range resp.Review {
+		reviews = append(reviews, models.Review{
+			ID:        r.Id,
+			TutorID:   r.TutorId,
+			StudentID: r.StudentId,
+			Rating:    int(r.Rating),
+			Comment:   r.Comment,
+			CreatedAt: r.CreatedAt.AsTime(),
+		})
+	}
+
+	tutorDetails := &models.TutorDetails{
+		Tutor: models.TutorModel{
+			User: models.User{
+				Id:         user.Id,
+				TelegramID: user.TelegramId,
+				Name:       user.Name,
+			},
+			Bio: tutor.Bio,
+		},
+		Bio:     resp.Bio,
+		Reviews: reviews,
+		Tags:    resp.Tags,
+	}
+
+	return tutorDetails, nil
 }

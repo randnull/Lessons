@@ -17,18 +17,37 @@ message Tutor {
   string bio = 2;
 }
 
+message TutorDetails {
+  Tutor tutor = 1;
+  string bio = 2;
+  repeated Review review = 3;
+  repeated string tags = 4;
+}
+
+message Review {
+  string id = 1;
+  string tutor_id = 2;
+  string student_id = 3;
+  int32 rating = 4;
+  string comment = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateResponse);
   rpc GetUserById(GetById) returns (User);
   rpc GetTutorById(GetById) returns (Tutor);
+  rpc GetTutorInfoById(GetById) returns (TutorDetails);
+  rpc ChangeTutorActive(SetActiveTutorById) returns (Success);
   rpc GetStudentById(GetById) returns (User);
   rpc GetUserByTelegramId(GetByTelegramId) returns (User);
   rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
   rpc GetAllTutorsPagination(GetAllTutorsPaginationRequest) returns (GetTutorsPaginationResponse);
   rpc UpdateBioTutor(UpdateBioRequest) returns (UpdateBioResponse);
-  rpc CreateReview() returns
-  rpc GetReviews() returns
-  rpc GetReview() returns
+  rpc UpdateTags(UpdateTagsRequest) returns (Success);
+  rpc CreateReview(CreateReviewRequest) returns (CreateReviewResponse);
+  rpc GetReview(GetReviewRequest) returns (Review);
+  rpc GetReviews(GetReviewsRequest) returns (GetReviewsResponse);
 }
 
 message GetAllTutorsPaginationRequest {
@@ -39,6 +58,10 @@ message GetAllTutorsPaginationRequest {
 message UpdateBioRequest {
   string id = 1;
   string bio = 2;
+}
+
+message UpdateBioResponse {
+  bool success = 1;
 }
 
 message CreateUserRequest {
@@ -55,28 +78,54 @@ message GetByTelegramId {
   int64 id = 1;
 }
 
+message SetActiveTutorById {
+  string id = 1;
+  bool active = 2;
+}
+
 message GetById {
   string id = 1;
 }
 
-message GetStudentById {
-  string id = 1;
-}
-
-message GetAllRequest {
-
-}
+message GetAllRequest {}
 
 message GetAllResponse {
   repeated User users = 1;
 }
-
 
 message GetTutorsPaginationResponse {
   int64 count = 1;
   repeated User users = 2;
 }
 
-message UpdateBioResponse {
+message UpdateTagsRequest {
+  string tutor_id = 1;
+  repeated string tags = 2;
+}
+
+message Success {
   bool success = 1;
+}
+
+message CreateReviewRequest {
+  string tutor_id = 1;
+  string student_id = 2;
+  int32 rating = 3;
+  string comment = 4;
+}
+
+message CreateReviewResponse {
+  string id = 1;
+}
+
+message GetReviewRequest {
+  string id = 1;
+}
+
+message GetReviewsRequest {
+  string tutor_id = 1;
+}
+
+message GetReviewsResponse {
+  repeated Review reviews = 1;
 }
