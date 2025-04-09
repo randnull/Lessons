@@ -1,4 +1,4 @@
-from AnswerEngine.src.TelegramBot.bot import bot
+from AnswerEngine.src.TelegramBot.botStudent import bot_student
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto
 # from AnswerEngine.src.models.dto_table.response_dto import ResponsesDto
 
@@ -11,7 +11,7 @@ async def proceed_order(order_create: NewOrderDto) -> None:
         "📩 <i>Мы уведомим вас, как только найдем подходящего исполнителя.</i>"
     )
 
-    await bot.send_message(chat_id=str(order_create.student_id), text=message, parse_mode="html")
+    await bot_student.send_message(chat_id=str(order_create.student_id), text=message, parse_mode="html")
 
 
 async def proceed_response(response: ResponseDto) -> None:
@@ -23,5 +23,5 @@ async def proceed_response(response: ResponseDto) -> None:
         f"<b>Вы успешно откликнулись на заказ: {response.order_name}!</b>\n\n"
     )
 
-    await bot.send_message(chat_id=response.student_id, text=messageStudent, parse_mode="html")
-    await bot.send_message(chat_id=response.tutor_id, text=messageTutor, parse_mode="html")
+    await bot_student.send_message(chat_id=response.student_id, text=messageStudent, parse_mode="html")
+    await bot_student.send_message(chat_id=response.tutor_id, text=messageTutor, parse_mode="html")

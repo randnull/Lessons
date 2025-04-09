@@ -25,7 +25,6 @@ async def new_order_func(message: IncomingMessage):
         await proceed_order(new_order)
 
 
-
 async def response_func(message: IncomingMessage):
     async with message.process():
         body = json.loads(message.body.decode())

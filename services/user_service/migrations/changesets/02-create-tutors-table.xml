@@ -27,6 +27,10 @@
             <column name="tags" type="TEXT[]" remarks="tutors tags">
             </column>
 
+            <column name="response_count" type="BIGINT" defaultValueComputed="1" remarks="tutors count responses">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP" remarks="creation timestamp">
                 <constraints nullable="false"/>
             </column>

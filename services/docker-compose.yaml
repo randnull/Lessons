@@ -1,0 +1,48 @@
+version: '3'
+services:
+  answer-engine-postgresql:
+    image: postgres:latest
+    container_name: postgresql-answer
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=response_database
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lessons-network
+  migrations-answer-engine:
+    image: liquibase/liquibase:latest
+    volumes:
+      - ./AnswerEngine/migrations:/app
+    command: --defaultsFile=/app/answer.properties update
+    depends_on:
+      answer-engine-postgresql:
+        condition: service_healthy
+    networks:
+      - lessons-network
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment:
+      RABBITMQ_USER: ${MQ_USER}
+      RABBITMQ_PASS: ${MQ_PASS}
+    networks:
+      - lessons-network
+networks:
+  lessons-network:
+    name: "lessons-network"
