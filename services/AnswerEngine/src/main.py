@@ -27,8 +27,13 @@ async def lifespan(app: FastAPI):
     webhook_url_tutor = f"{webhook_url}/tutor"
     await start_student()
     await start_tutor()
+    print("Student bot started.")
+    print("Tutor bot started.")
+
     await bot_student.set_webhook(url=webhook_url_student, allowed_updates=dp_student.resolve_used_update_types(), drop_pending_updates=True)
     await bot_tutor.set_webhook(url=webhook_url_tutor, allowed_updates=dp_tutor.resolve_used_update_types(), drop_pending_updates=True)
+    print("Student: ", webhook_url_student)
+    print("Tutor: ", webhook_url_tutor)
     await OrderConsumer.connect()
     await ResponseConsumer.connect()
     asyncio.create_task(OrderConsumer.consume())
