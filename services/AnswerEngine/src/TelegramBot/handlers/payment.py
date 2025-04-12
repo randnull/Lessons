@@ -57,7 +57,7 @@ async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
         )
         return
 
-    sub_type = int(payload.split(":")[1])
+    sub_type = int(payload.split("_")[1])
     #
     if sub_type not in [5, 10, 15, 30]:
         await pre_checkout_query.answer(
