@@ -164,47 +164,68 @@ func (r *Repository) GetStudentById(userID string) (*models.UserDB, error) {
 }
 
 func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
-	log.Println("come here 3")
+	query := `
+        SELECT 
+            u.id, 
+            u.telegram_id, 
+            u.name, 
+            u.role, 
+            u.created_at,
+            t.bio,
+            t.response_count,
+            t.tags,
+            t.is_active,
+            t.created_at
+        FROM users u 
+        INNER JOIN tutors t ON u.id = t.id
+        WHERE u.id = $1 AND u.role = $2 AND t.is_active = true`
 
-	user := &models.TutorDB{}
-
-	query := `SELECT 
-    			u.id, 
-    			u.telegram_id, 
-    			u.name, 
-    			u.role, 
-    			u.created_at,
-    			t.bio
-			FROM users u 
-			LEFT JOIN tutors t ON u.id = t.id
-			WHERE u.id = $1 AND u.role = $2`
-
-	log.Println("come here 5")
-
+	var tutor models.TutorDB
 	var bio sql.NullString
+	var responseCount sql.NullInt32
+	var tags pq.StringArray
+	var isActive sql.NullBool
+	var tutorCreatedAt sql.NullTime
 
 	err := r.db.QueryRow(query, userID, "Tutor").Scan(
-		&user.Id,
-		&user.TelegramID,
-		&user.Name,
-		&user.Role,
-		&user.CreatedAt,
+		&tutor.Id,
+		&tutor.TelegramID,
+		&tutor.Name,
+		&tutor.Role,
+		&tutor.CreatedAt,
 		&bio,
+		&responseCount,
+		&tags,
+		&isActive,
+		&tutorCreatedAt,
 	)
-	if bio.Valid {
-		user.Bio = bio.String
-	}
-
-	log.Println(err)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, custom_errors.UserNotFound
 		}
-		return nil, err
+		return nil, fmt.Errorf("failed to query tutor: %w", err)
 	}
 
-	return user, nil
+	if bio.Valid {
+		tutor.Bio = bio.String
+	}
+	if responseCount.Valid {
+		tutor.ResponseCount = int32(responseCount.Int32)
+	}
+	if tags != nil {
+		tutor.Tags = tags
+	} else {
+		tutor.Tags = []string{}
+	}
+	if isActive.Valid {
+		tutor.IsActive = isActive.Bool
+	}
+	if tutorCreatedAt.Valid {
+		tutor.TutorCreatedAt = tutorCreatedAt.Time
+	}
+
+	return &tutor, nil
 }
 
 func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
@@ -230,37 +251,51 @@ func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
 	return user, nil
 }
 
-func (r *Repository) GetAllTutors() ([]*pb.User, error) {
-	query := `SELECT id, name FROM users WHERE role = $1 ORDER BY created_at DESC`
+func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
+	query := `
+		SELECT 
+			u.id, 
+			u.name, 
+			u.telegram_id, 
+			t.tags
+		FROM users u
+		JOIN tutors t ON u.id = t.id
+		WHERE u.role = $1 AND t.is_active = true
+		ORDER BY u.created_at DESC`
 
 	rows, err := r.db.Query(query, "Tutor")
+	if err != nil {
+		return nil, fmt.Errorf("failed to query tutors: %w", err)
+	}
 	defer rows.Close()
 
-	if err != nil {
-		return nil, err
-	}
-
-	var Users []*pb.User
-
+	var tutors []*pb.Tutor
 	for rows.Next() {
-		var user pb.User
+		var id, name string
+		var telegramID int64
+		var tags pq.StringArray
 
-		err := rows.Scan(
-			&user.Id,
-			&user.Name,
-		)
-
+		err := rows.Scan(&id, &name, &telegramID, &tags)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		Users = append(Users, &user)
-	}
-	if err = rows.Err(); err != nil {
-		return nil, err
+		tutor := &pb.Tutor{
+			User: &pb.User{
+				Id:         id,
+				Name:       name,
+				TelegramId: telegramID,
+			},
+			Tags: tags,
+		}
+		tutors = append(tutors, tutor)
 	}
 
-	return Users, nil
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error during row iteration: %w", err)
+	}
+
+	return tutors, nil
 }
 
 func (r *Repository) UpdateTutorBio(userID string, bio string) error {
@@ -276,64 +311,65 @@ func (r *Repository) UpdateTutorBio(userID string, bio string) error {
 	return nil
 }
 
-func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.User, int, error) {
-	tx, err := r.db.Begin()
-	if err != nil {
-		return nil, 0, err
-	}
-	defer tx.Rollback()
-
+func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.Tutor, int, error) {
 	var total int
+	queryCount := `
+		SELECT COUNT(*) 
+		FROM users u
+		JOIN tutors t ON u.id = t.id
+		WHERE u.role = $1 AND t.is_active = true`
 
-	queryCount := `SELECT 
-    					COUNT(*) 
-					FROM users WHERE role = $1`
-
-	err = tx.QueryRow(queryCount, "Tutor").Scan(&total)
-
+	err := r.db.QueryRow(queryCount, "Tutor").Scan(&total)
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("failed to count tutors: %w", err)
 	}
 
-	queryGetAllPagination := `SELECT
-    							id, 
-    							name 
-							FROM users WHERE role = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	queryGetAllPagination := `
+		SELECT 
+			u.id, 
+			u.name, 
+			u.telegram_id,
+			t.tags
+		FROM users u
+		JOIN tutors t ON u.id = t.id
+		WHERE u.role = $1 AND t.is_active = true
+		ORDER BY u.created_at DESC 
+		LIMIT $2 OFFSET $3`
 
-	rows, err := tx.Query(queryGetAllPagination, "Tutor", limit, offset)
+	rows, err := r.db.Query(queryGetAllPagination, "Tutor", limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to query tutors: %w", err)
+	}
 	defer rows.Close()
 
-	if err != nil {
-		return nil, 0, err
-	}
-
-	var Users []*pb.User
-
+	var tutors []*pb.Tutor
 	for rows.Next() {
-		var user pb.User
+		var id, name string
+		var telegramID int64
+		var tags pq.StringArray
 
-		err := rows.Scan(
-			&user.Id,
-			&user.Name,
-		)
-
+		err := rows.Scan(&id, &name, &telegramID, &tags)
 		if err != nil {
-			return nil, 0, err
+			return nil, 0, fmt.Errorf("failed to scan row: %w", err)
 		}
 
-		Users = append(Users, &user)
+		tutor := &pb.Tutor{
+			User: &pb.User{
+				Id:         id,
+				Name:       name,
+				TelegramId: telegramID,
+			},
+			Tags: tags,
+		}
+		tutors = append(tutors, tutor)
 	}
+
 	if err = rows.Err(); err != nil {
-		return nil, 0, err
+		return nil, 0, fmt.Errorf("error during row iteration: %w", err)
 	}
 
-	if err = tx.Commit(); err != nil {
-		return nil, 0, err
-	}
-
-	return Users, total, nil
+	return tutors, total, nil
 }
-
 func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
 	queryUpdateTutorTags := `
 		UPDATE tutors
@@ -469,4 +505,52 @@ func (r *Repository) SetNewIsActiveTutor(tutorID string, isActive bool) error {
 	}
 
 	return nil
+}
+
+func (r *Repository) RemoveOneResponse(tutorID string) error {
+	query := `UPDATE tutors SET
+                response_count = response_count - 1
+              WHERE id = $1 AND response_count > 0
+              RETURNING response_count`
+
+	var newCount int64
+	err := r.db.QueryRow(query, tutorID).Scan(&newCount)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Failed to remove response for tutor %s: no tutor found or response_count is already 0", tutorID)
+			return fmt.Errorf("tutor %s not found or no responses to remove", tutorID)
+		}
+		log.Printf("Failed to remove response for tutor %s: %v", tutorID, err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int, error) {
+	if responseCount < 1 {
+		return 0, fmt.Errorf("response count cannot be negative: %d", responseCount)
+	}
+
+	query := `
+         	UPDATE tutors
+			SET response_count = response_count + $1
+			WHERE id = (
+				SELECT id FROM users WHERE telegram_id = $2
+			)
+			RETURNING response_count`
+
+	var newCount int64
+	err := r.db.QueryRow(query, responseCount, tutorTelegramID).Scan(&newCount)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			log.Printf("Failed to add responses for tutor with telegram_id %d: tutor not found", tutorTelegramID)
+			return 0, fmt.Errorf("tutor with telegram_id %d not found", tutorTelegramID)
+		}
+		log.Printf("Failed to add responses for tutor with telegram_id %d: %v", tutorTelegramID, err)
+		return 0, err
+	}
+
+	return int(newCount), nil
 }

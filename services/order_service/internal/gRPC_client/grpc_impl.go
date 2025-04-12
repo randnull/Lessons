@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/randnull/Lessons/internal/config"
-	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"time"
 )
@@ -18,47 +18,41 @@ type GRPCClient struct {
 }
 
 func NewGRPCClient(cfg config.GRPCConfig) *GRPCClient {
-	fmt.Println("Waiting connection")
-	//
-	//var retryPolicy = `{
-	//        "methodConfig": [{
-	//            // config per method or all methods under service
-	//            "name": [{"service": "grpc.examples.echo.Echo"}],
-	//
-	//            "retryPolicy": {
-	//                "MaxAttempts": 4,
-	//                "InitialBackoff": ".01s",
-	//                "MaxBackoff": ".01s",
-	//                "BackoffMultiplier": 1.0,
-	//                // this value is grpc code
-	//                "RetryableStatusCodes": [ "UNAVAILABLE" ]
-	//            }
-	//        }]
-	//    }`
+	connectionLink := fmt.Sprintf("%v:%v", cfg.Host, cfg.Port)
 
-	connection_link := fmt.Sprintf("%v:%v", cfg.Host, cfg.Port)
-	fmt.Println(connection_link)
-	// FATAL!!!! ОЖИДАЕТ Connection до КОНЦА!! СРОЧНО ИСПРАВИТЬ
-	conn, err := grpc.Dial(connection_link, grpc.WithInsecure(), grpc.WithBlock())
-	//conn, err := grpc.NewClient(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-
-	if err != nil {
-		log.Fatal("Can't establish connect with gRPC. Fatal Error")
+	dialOptions := []grpc.DialOption{
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultServiceConfig(`{
+            "methodConfig": [{
+                "name": [{"service": "users.UserService"}],
+                "retryPolicy": {
+                    "MaxAttempts": 4,
+                    "InitialBackoff": "0.1s",
+                    "MaxBackoff": "1s",
+                    "BackoffMultiplier": 2.0,
+                    "RetryableStatusCodes": ["UNAVAILABLE", "DEADLINE_EXCEEDED"]
+                }
+            }]
+        }`),
 	}
-	client := pb.NewUserServiceClient(conn)
 
-	log.Println("Connection with gRPC: ok")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	conn, err := grpc.DialContext(ctx, connectionLink, dialOptions...)
+	if err != nil {
+		log.Fatal("error connection to grpc")
+	}
+
+	client := pb.NewUserServiceClient(conn)
 	return &GRPCClient{
 		conn:   conn,
 		client: client,
 	}
 }
 
-func (g *GRPCClient) Close() {
-	err := g.conn.Close()
-	if err != nil {
-		log.Printf("error with close connection")
-	}
+func (g *GRPCClient) Close() error {
+	return g.conn.Close()
 }
 
 func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, error) {
@@ -66,9 +60,8 @@ func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, 
 	defer cancel()
 
 	userPB, err := g.client.GetUserById(ctx, &pb.GetById{Id: userID})
-
 	if err != nil {
-		return nil, custom_errors.ErrorGetUser
+		return nil, err
 	}
 
 	return &models.User{
@@ -83,9 +76,8 @@ func (g *GRPCClient) GetStudent(ctx context.Context, userID string) (*models.Use
 	defer cancel()
 
 	userPB, err := g.client.GetStudentById(ctx, &pb.GetById{Id: userID})
-
 	if err != nil {
-		return nil, custom_errors.ErrorGetUser
+		return nil, err
 	}
 
 	return &models.User{
@@ -100,9 +92,8 @@ func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) 
 	defer cancel()
 
 	userPB, err := g.client.GetUserByTelegramId(ctx, &pb.GetByTelegramId{Id: telegramID})
-
 	if err != nil {
-		return nil, custom_errors.ErrorGetUser
+		return nil, err
 	}
 
 	return &models.User{
@@ -117,50 +108,42 @@ func (g *GRPCClient) GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error
 	defer cancel()
 
 	usersPB, err := g.client.GetAllUsers(ctx, &pb.GetAllRequest{})
-
 	if err != nil {
-		return nil, custom_errors.ErrorGetUser
+		return nil, err
 	}
 
 	return usersPB, nil
 }
 
-func (g *GRPCClient) UpdateBioTutor(ctx context.Context, bio string, TutorID string) (bool, error) {
+func (g *GRPCClient) UpdateBioTutor(ctx context.Context, bio string, tutorID string) (bool, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	fmt.Println(bio, TutorID)
-
 	status, err := g.client.UpdateBioTutor(ctx, &pb.UpdateBioRequest{
-		Id:  TutorID,
+		Id:  tutorID,
 		Bio: bio,
 	})
-
-	fmt.Println(status, err)
-
 	if err != nil {
 		return false, err
 	}
 
-	return status.Success, err
+	return status.Success, nil
 }
 
-func (g *GRPCClient) GetTutor(ctx context.Context, TutorID string) (*models.Tutor, error) {
+func (g *GRPCClient) GetTutor(ctx context.Context, tutorID string) (*models.Tutor, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	tutor, err := g.client.GetTutorById(ctx, &pb.GetById{
-		Id: TutorID,
-	})
-
-	if err != nil || tutor == nil {
+	tutorPB, err := g.client.GetTutorById(ctx, &pb.GetById{Id: tutorID})
+	if err != nil {
 		return nil, err
 	}
 
 	return &models.Tutor{
-		Id:   tutor.User.Id,
-		Name: tutor.User.Name,
-		Bio:  tutor.Bio,
+		Id:         tutorPB.User.Id,
+		TelegramID: tutorPB.User.TelegramId,
+		Name:       tutorPB.User.Name,
+		Tags:       tutorPB.Tags,
 	}, nil
 }
 
@@ -172,9 +155,8 @@ func (g *GRPCClient) GetTutorsPagination(ctx context.Context, page int, size int
 		Page: int32(page),
 		Size: int32(size),
 	})
-
 	if err != nil {
-		return nil, custom_errors.ErrorGetUser
+		return nil, err
 	}
 
 	return usersPB, nil
@@ -189,7 +171,7 @@ func (g *GRPCClient) UpdateTagsTutor(ctx context.Context, tags []string, tutorID
 		Tags:    tags,
 	})
 	if err != nil {
-		return false, err //custom_errors.ErrorUpdateTags
+		return false, err
 	}
 	return resp.Success, nil
 }
@@ -205,7 +187,7 @@ func (g *GRPCClient) CreateReview(ctx context.Context, studentID string, tutorID
 		Comment:   comment,
 	})
 	if err != nil {
-		return "", err //custom_errors.ErrorCreateReview
+		return "", err
 	}
 
 	return resp.Id, nil
@@ -244,16 +226,14 @@ func (g *GRPCClient) GetReviewsByID(ctx context.Context, reviewID string) (*mode
 		return nil, err
 	}
 
-	review := &models.Review{
+	return &models.Review{
 		ID:        resp.Id,
 		TutorID:   resp.TutorId,
 		StudentID: resp.StudentId,
 		Rating:    int(resp.Rating),
 		Comment:   resp.Comment,
 		CreatedAt: resp.CreatedAt.AsTime(),
-	}
-
-	return review, nil
+	}, nil
 }
 
 func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string) (*models.TutorDetails, error) {
@@ -264,9 +244,6 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string) (*mod
 	if err != nil {
 		return nil, err
 	}
-
-	user := resp.Tutor.User
-	tutor := resp.Tutor
 
 	var reviews []models.Review
 	for _, r := range resp.Review {
@@ -280,19 +257,44 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string) (*mod
 		})
 	}
 
-	tutorDetails := &models.TutorDetails{
-		Tutor: models.TutorModel{
-			User: models.User{
-				Id:         user.Id,
-				TelegramID: user.TelegramId,
-				Name:       user.Name,
-			},
-			Bio: tutor.Bio,
+	return &models.TutorDetails{
+		Tutor: models.User{
+			Id:         resp.Tutor.User.Id,
+			TelegramID: resp.Tutor.User.TelegramId,
+			Name:       resp.Tutor.User.Name,
 		},
-		Bio:     resp.Bio,
-		Reviews: reviews,
-		Tags:    resp.Tags,
+		Bio:           resp.Bio,
+		ResponseCount: resp.ResponseCount,
+		Reviews:       reviews,
+		Tags:          resp.Tags,
+	}, nil
+}
+
+func (g *GRPCClient) ChangeTutorActive(ctx context.Context, tutorID string, active bool) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := g.client.ChangeTutorActive(ctx, &pb.SetActiveTutorById{
+		Id:     tutorID,
+		Active: active,
+	})
+	if err != nil {
+		return false, err
 	}
 
-	return tutorDetails, nil
+	return resp.Success, nil
+}
+
+func (g *GRPCClient) CreateNewResponse(ctx context.Context, tutorID string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := g.client.CreateNewResponse(ctx, &pb.CreateResponseRequest{
+		TutorId: tutorID,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return resp.Success, nil
 }

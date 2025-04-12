@@ -63,14 +63,6 @@ func NewApp(cfg *config.Config) *App {
 func (a *App) Run() {
 	router := fiber.New()
 
-	// В случае плохой производительности - расширить
-	//fiber.Config{
-	//       Prefork:       true,  // включаем предварительное форкование для увеличения производительности на многоядерных процессорах
-	//       ServerHeader:  "Fiber", // добавляем заголовок для идентификации сервера
-	//       CaseSensitive: true,    // включаем чувствительность к регистру в URL
-	//       StrictRouting: true,    // включаем строгую маршрутизацию
-	//   })
-
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: "*", // НЕБЕЗОПАСНО, ЗАМЕНИТЬ ТОЛЬКО НА ХОСТ ФРОНТА!
 		AllowMethods: strings.Join([]string{
@@ -87,47 +79,54 @@ func (a *App) Run() {
 
 	router.Use(logger.New(logger.Config{
 		Format: "[LOG] ${time} [${ip}]:${port} ${status} - ${method} - ${latency} ${path}\n",
-		// output ...
 	}))
 
 	router.Get("/", a.orderControllers.HealtzHandler)
 
+	// Группа заказов
 	orders := router.Group("api/orders")
-	orders.Use(controllers.TokenAuthMiddleware(a.cfg.BotConfig))
 
-	orders.Post("/", a.orderControllers.CreateOrder)                                 // StudentOnly
-	orders.Get("/id/:id", a.orderControllers.GetOrderByID)                           // All
-	orders.Get("/", a.orderControllers.GetAllUsersOrders)                            // All
-	orders.Delete("/id/:id", a.orderControllers.DeleteOrderByID)                     // StudentOnly
-	orders.Get("/all", a.orderControllers.GetAllOrders)                              // TutorOnly
-	orders.Put("/id/:id", a.orderControllers.UpdateOrderByID)                        // StudentOnly
-	orders.Get("/mini/id/:id/", a.orderControllers.GetOrderByIdTutor)                // Tutor Only
-	orders.Post("/select/id/:id/", a.orderControllers.SelectTutorToOrder)            // Student Only
-	orders.Get("/pagination", a.orderControllers.GetOrdersPagination)                // tutors
-	orders.Get("/pagination/student", a.orderControllers.GetStudentOrdersPagination) // students
+	// Работа с заказами для учеников
 
+	studentType := "Student"
+	tutorType := "Tutor"
+	anyType := "Any"
+
+	orders.Post("/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.CreateOrder)
+	orders.Get("/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetAllUsersOrders) // ручка устарела, теперь pagination
+	orders.Get("/pagination/student", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetStudentOrdersPagination)
+	orders.Put("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.UpdateOrderByID)
+	orders.Get("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetOrderByID)
+	orders.Delete("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.DeleteOrderByID)
+
+	orders.Post("/select/id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.SelectTutorToOrder)
+
+	// Работа с заказами для репетиторов
+	orders.Get("/mini/id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetOrderByIdTutor)
+	orders.Get("/all", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetAllOrders) // ручка устарела, теперь pagination
+	orders.Get("/pagination", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetOrdersPagination)
+
+	// Группа откликов
 	responses := router.Group("api/responses")
-	responses.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
 
-	responses.Post("/id/:id", a.responseControllers.ResponseToOrder)
-	responses.Get("/id/:id", a.responseControllers.GetResponseById)
+	responses.Post("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.responseControllers.ResponseToOrder)
+	responses.Get("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.responseControllers.GetResponseById)
+	responses.Post("/list", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.responseControllers.GetTutorsResponses)
 
+	// Группа пользователей
 	users := router.Group("/api/users")
-	users.Use(controllers.TokenAuthMiddlewareResponses(a.cfg.BotConfig)) // другой bot config
 
-	//users.Post("/", a.userControllers.CreateUser)
-	users.Get("/", a.userControllers.GetAllUser)
-	users.Get("/id/:id", a.userControllers.GetUser)
+	users.Get("/pagination", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.userControllers.GetTutorsPagination)
 
-	users.Get("/tutor/id/:id", a.userControllers.GetTutor)
-	users.Post("/tutor/bio", a.userControllers.UpdateBioTutor)
-	users.Get("/pagination", a.userControllers.GetTutorsPagination)
+	users.Get("/tutor/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.userControllers.GetTutorInfoById)
 
-	users.Post("/tutor/tags", a.userControllers.UpdateTagsTutor)
-	users.Post("/review", a.userControllers.CreateReview)
-	users.Get("/review/id/:id", a.userControllers.GetReviewByID)
-	users.Get("/review/tutor/id/:id", a.userControllers.GetReviewsByTutor)
-	users.Get("/tutor/details/id/:id", a.userControllers.GetTutorInfoById)
+	users.Post("/tutor/bio", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.UpdateBioTutor)
+	users.Post("/tutor/tags", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.UpdateTagsTutor)
+	users.Post("/tutor/active", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.ChangeTutorActive)
+
+	users.Post("/review", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.userControllers.CreateReview)
+	users.Get("/review/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.userControllers.GetReviewByID)
+	users.Get("/tutor/id/:id/reviews", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.userControllers.GetReviewsByTutor)
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 

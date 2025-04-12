@@ -78,9 +78,15 @@ func (orderServ *OrderService) GetOrdersWithPagination(page int, size int, UserD
 		return nil, err
 	}
 
+	addPage := 0
+
+	if count%size != 0 {
+		addPage += 1
+	}
+
 	return &models.OrderPagination{
 		Orders: orders,
-		Pages:  count,
+		Pages:  count/size + addPage,
 	}, nil
 }
 
@@ -111,6 +117,12 @@ func (orderServ *OrderService) GetAllOrders(UserData models.UserData) ([]*models
 }
 
 func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error {
+	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(orderID, UserData.UserID)
+
+	if !isExist || err != nil {
+		return custom_errors.ErrNotAllowed
+	}
+
 	return orderServ.orderRepository.UpdateOrder(orderID, order, UserData.UserID)
 }
 

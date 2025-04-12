@@ -2,10 +2,14 @@ package controllers
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -86,18 +90,18 @@ func (s *UserControllers) GetAllUsers(ctx context.Context, in *pb.GetAllRequest)
 	}
 
 	return &pb.GetAllResponse{
-		Users: users,
+		Tutors: users,
 	}, nil
 }
 
 func (s *UserControllers) GetAllTutorsPagination(ctx context.Context, in *pb.GetAllTutorsPaginationRequest) (*pb.GetTutorsPaginationResponse, error) {
-	users, err := s.UserService.GetTutorsPagination(int(in.Page), int(in.Size))
+	tutors, err := s.UserService.GetTutorsPagination(int(in.Page), int(in.Size))
 
 	if err != nil {
 		return nil, err
 	}
 
-	return users, nil
+	return tutors, nil
 }
 
 func (s *UserControllers) UpdateBioTutor(ctx context.Context, in *pb.UpdateBioRequest) (*pb.UpdateBioResponse, error) {
@@ -121,9 +125,11 @@ func (s *UserControllers) UpdateTags(ctx context.Context, in *pb.UpdateTagsReque
 
 func (s *UserControllers) GetTutorById(ctx context.Context, in *pb.GetById) (*pb.Tutor, error) {
 	tutor, err := s.UserService.GetTutorById(in.Id)
-
 	if err != nil {
-		return nil, err
+		if errors.Is(err, custom_errors.UserNotFound) {
+			return nil, status.Errorf(codes.NotFound, "tutor not found: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "failed to get tutor: %v", err)
 	}
 
 	userPB := &pb.User{
@@ -133,8 +139,8 @@ func (s *UserControllers) GetTutorById(ctx context.Context, in *pb.GetById) (*pb
 	}
 
 	return &pb.Tutor{
-		Bio:  tutor.Bio,
 		User: userPB,
+		Tags: tutor.Tags,
 	}, nil
 }
 
@@ -171,11 +177,11 @@ func (s *UserControllers) GetTutorInfoById(ctx context.Context, in *pb.GetById) 
 				Name:       tutor.Tutor.Name,
 				TelegramId: tutor.Tutor.TelegramID,
 			},
-			Bio: tutor.Tutor.Bio,
 		},
-		Bio:    tutor.Tutor.Bio,
-		Tags:   tutor.Tags,
-		Review: reviews,
+		ResponseCount: tutor.ResponseCount,
+		Bio:           tutor.Tutor.Bio,
+		Tags:          tutor.Tags,
+		Review:        reviews,
 	}, nil
 }
 
@@ -226,5 +232,29 @@ func (s *UserControllers) GetReviews(ctx context.Context, in *pb.GetReviewsReque
 
 	return &pb.GetReviewsResponse{
 		Reviews: pbReviews,
+	}, nil
+}
+
+func (s *UserControllers) CreateNewResponse(ctx context.Context, in *pb.CreateResponseRequest) (*pb.Success, error) {
+	err := s.UserService.CreateNewResponse(in.TutorId)
+
+	if err != nil {
+		return &pb.Success{Success: false}, err
+	}
+	return &pb.Success{Success: true}, nil
+}
+
+func (s *UserControllers) AddResponsesToTutor(ctx context.Context, in *pb.AddResponseToTutorRequest) (*pb.AddResponseToTutorResponse, error) {
+	responses, err := s.UserService.AddResponses(in.TutorId, int(in.ResponseCount))
+
+	if err != nil {
+		return &pb.AddResponseToTutorResponse{
+			ResponseCount: 0,
+			Success:       false,
+		}, err
+	}
+	return &pb.AddResponseToTutorResponse{
+		ResponseCount: int32(responses),
+		Success:       true,
 	}, nil
 }

@@ -20,6 +20,8 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	UserService_CreateUser_FullMethodName             = "/users.UserService/CreateUser"
+	UserService_AddResponsesToTutor_FullMethodName    = "/users.UserService/AddResponsesToTutor"
+	UserService_CreateNewResponse_FullMethodName      = "/users.UserService/CreateNewResponse"
 	UserService_GetUserById_FullMethodName            = "/users.UserService/GetUserById"
 	UserService_GetTutorById_FullMethodName           = "/users.UserService/GetTutorById"
 	UserService_GetTutorInfoById_FullMethodName       = "/users.UserService/GetTutorInfoById"
@@ -40,6 +42,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type UserServiceClient interface {
 	CreateUser(ctx context.Context, in *CreateUserRequest, opts ...grpc.CallOption) (*CreateResponse, error)
+	AddResponsesToTutor(ctx context.Context, in *AddResponseToTutorRequest, opts ...grpc.CallOption) (*AddResponseToTutorResponse, error)
+	CreateNewResponse(ctx context.Context, in *CreateResponseRequest, opts ...grpc.CallOption) (*Success, error)
 	GetUserById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*User, error)
 	GetTutorById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*Tutor, error)
 	GetTutorInfoById(ctx context.Context, in *GetById, opts ...grpc.CallOption) (*TutorDetails, error)
@@ -67,6 +71,26 @@ func (c *userServiceClient) CreateUser(ctx context.Context, in *CreateUserReques
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(CreateResponse)
 	err := c.cc.Invoke(ctx, UserService_CreateUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) AddResponsesToTutor(ctx context.Context, in *AddResponseToTutorRequest, opts ...grpc.CallOption) (*AddResponseToTutorResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(AddResponseToTutorResponse)
+	err := c.cc.Invoke(ctx, UserService_AddResponsesToTutor_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *userServiceClient) CreateNewResponse(ctx context.Context, in *CreateResponseRequest, opts ...grpc.CallOption) (*Success, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Success)
+	err := c.cc.Invoke(ctx, UserService_CreateNewResponse_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -208,6 +232,8 @@ func (c *userServiceClient) GetReviews(ctx context.Context, in *GetReviewsReques
 // for forward compatibility.
 type UserServiceServer interface {
 	CreateUser(context.Context, *CreateUserRequest) (*CreateResponse, error)
+	AddResponsesToTutor(context.Context, *AddResponseToTutorRequest) (*AddResponseToTutorResponse, error)
+	CreateNewResponse(context.Context, *CreateResponseRequest) (*Success, error)
 	GetUserById(context.Context, *GetById) (*User, error)
 	GetTutorById(context.Context, *GetById) (*Tutor, error)
 	GetTutorInfoById(context.Context, *GetById) (*TutorDetails, error)
@@ -233,6 +259,12 @@ type UnimplementedUserServiceServer struct{}
 
 func (UnimplementedUserServiceServer) CreateUser(context.Context, *CreateUserRequest) (*CreateResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateUser not implemented")
+}
+func (UnimplementedUserServiceServer) AddResponsesToTutor(context.Context, *AddResponseToTutorRequest) (*AddResponseToTutorResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddResponsesToTutor not implemented")
+}
+func (UnimplementedUserServiceServer) CreateNewResponse(context.Context, *CreateResponseRequest) (*Success, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateNewResponse not implemented")
 }
 func (UnimplementedUserServiceServer) GetUserById(context.Context, *GetById) (*User, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserById not implemented")
@@ -308,6 +340,42 @@ func _UserService_CreateUser_Handler(srv interface{}, ctx context.Context, dec f
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UserServiceServer).CreateUser(ctx, req.(*CreateUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_AddResponsesToTutor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddResponseToTutorRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).AddResponsesToTutor(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_AddResponsesToTutor_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).AddResponsesToTutor(ctx, req.(*AddResponseToTutorRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _UserService_CreateNewResponse_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateResponseRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).CreateNewResponse(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_CreateNewResponse_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).CreateNewResponse(ctx, req.(*CreateResponseRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -556,6 +624,14 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateUser",
 			Handler:    _UserService_CreateUser_Handler,
+		},
+		{
+			MethodName: "AddResponsesToTutor",
+			Handler:    _UserService_AddResponsesToTutor_Handler,
+		},
+		{
+			MethodName: "CreateNewResponse",
+			Handler:    _UserService_CreateNewResponse_Handler,
 		},
 		{
 			MethodName: "GetUserById",

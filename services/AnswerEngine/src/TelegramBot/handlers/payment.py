@@ -2,6 +2,7 @@ from aiogram import Bot
 from aiogram.types import Message, LabeledPrice, PreCheckoutQuery, CallbackQuery
 
 from AnswerEngine.src.TelegramBot.keyboards.keyboards import payment_keyboard
+from AnswerEngine.src.functions.payment_functions import add_tutor_responses
 
 
 async def send_invoice_handler(message: Message):
@@ -21,7 +22,7 @@ async def process_subscription_callback(callback_query: CallbackQuery, bot: Bot)
         amount = 10
         description = "Оплатить 20⭐"
     elif subscription_type == "sub_15":
-        amount = 30
+        amount = 15
         description = "Оплатить 30⭐"
     elif subscription_type == "sub_30":
         amount = 30
@@ -30,10 +31,10 @@ async def process_subscription_callback(callback_query: CallbackQuery, bot: Bot)
         await callback_query.answer("Недостустимое количетсво!")
         return
 
-    prices = [LabeledPrice(label="XTR", amount=amount)]
+    prices = [LabeledPrice(label="XTR", amount=1)] # amount
     await bot.send_invoice(
         chat_id=callback_query.from_user.id,
-        title="Подписка на канал",
+        title="Покупка откликов",
         description=description,
         prices=prices,
         provider_token="",
@@ -47,6 +48,7 @@ async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
     payload = pre_checkout_query.invoice_payload
     total_amount = pre_checkout_query.total_amount
     currency = pre_checkout_query.currency
+    tutor_id = pre_checkout_query.from_user.id
 
     if not payload.startswith("subscription:"):
         await pre_checkout_query.answer(
@@ -55,9 +57,9 @@ async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
         )
         return
 
-    sub_type = payload.split(":")[1]
-
-    if sub_type == "sub_5" and total_amount != int(payload.split("_")[1]):
+    sub_type = int(payload.split(":")[1])
+    #
+    if sub_type not in [5, 10, 15, 30]:
         await pre_checkout_query.answer(
             ok=False,
             error_message="Ошибка валидации."
@@ -71,12 +73,10 @@ async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
         )
         return
 
-    # if requests.get("https://lessonsmy.tech").status_code != 205:
-    #     await pre_checkout_query.answer(
-    #         ok=False,
-    #         error_message="Сайт недоступен, попробуйте позже."
-    #     )
-    #     return
+    responses, status = await add_tutor_responses(tutor_id, total_amount)
+
+    if not status:
+        await pre_checkout_query.answer(ok=False, error_message="Пожалуйста, попробуйте позже")
 
     await pre_checkout_query.answer(ok=True)
 

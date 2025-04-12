@@ -8,3 +8,5 @@ pydantic==2.10.4
 psutil==6.1.1
 asyncpg==0.29.0
 greenlet
+grpcio==1.62.1
+grpcio-tools==1.62.1

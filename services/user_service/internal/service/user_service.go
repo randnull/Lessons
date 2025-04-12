@@ -4,7 +4,6 @@ import (
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/repository"
-	"log"
 )
 
 type UserServiceInt interface {
@@ -13,7 +12,7 @@ type UserServiceInt interface {
 	GetTutorById(TutorID string) (*models.TutorDB, error)
 	//GetUserByTelegramId(TelegramId int64) (*models.UserDB, error)
 	CreateUser(user models.CreateUser) (string, error)
-	GetTutors() ([]*pb.User, error)
+	GetTutors() ([]*pb.Tutor, error)
 	GetTutorsPagination(page int, size int) (*pb.GetTutorsPaginationResponse, error)
 	UpdateBioTutor(userID string, bio string) error
 	UpdateTutorTags(tutorID string, tags []string) error
@@ -22,6 +21,8 @@ type UserServiceInt interface {
 	GetReviewById(reviewID string) (*models.Review, error)
 	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
 	ChangeTutorActive(tutorID string, IsActive bool) error
+	CreateNewResponse(tutorID string) error
+	AddResponses(tutorID int64, responseCount int) (int, error)
 }
 
 type UserService struct {
@@ -48,11 +49,10 @@ func (s *UserService) GetStudentById(UserId string) (*models.UserDB, error) {
 //}
 
 func (s *UserService) CreateUser(user models.CreateUser) (string, error) {
-	log.Println("USE!!", user)
 	return s.userRepository.CreateUser(&user)
 }
 
-func (s *UserService) GetTutors() ([]*pb.User, error) {
+func (s *UserService) GetTutors() ([]*pb.Tutor, error) {
 	return s.userRepository.GetAllTutors()
 }
 
@@ -75,8 +75,8 @@ func (s *UserService) GetTutorsPagination(page int, size int) (*pb.GetTutorsPagi
 	}
 
 	return &pb.GetTutorsPaginationResponse{
-		Count: int64(count),
-		Users: tutors,
+		Count:  int64(count),
+		Tutors: tutors,
 	}, nil
 }
 
@@ -118,4 +118,12 @@ func (s *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, er
 
 func (s *UserService) ChangeTutorActive(tutorID string, IsActive bool) error {
 	return s.userRepository.SetNewIsActiveTutor(tutorID, IsActive)
+}
+
+func (s *UserService) CreateNewResponse(tutorID string) error {
+	return s.userRepository.RemoveOneResponse(tutorID)
+}
+
+func (s *UserService) AddResponses(tutorID int64, responseCount int) (int, error) {
+	return s.userRepository.AddResponses(tutorID, responseCount)
 }

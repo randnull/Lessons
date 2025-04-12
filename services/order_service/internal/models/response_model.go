@@ -8,6 +8,7 @@ type NewResponseModel struct {
 
 type Response struct {
 	ID        string    `json:"id" db:"id"`
+	OrderID   string    `json:"order_id" db:"order_id"`
 	TutorID   string    `json:"tutor_id" db:"tutor_id"`
 	Name      string    `json:"name" db:"name"`
 	IsFinal   bool      `json:"is_final" db:"is_final"`

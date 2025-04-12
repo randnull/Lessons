@@ -17,6 +17,23 @@ func NewResponseController(ResponseServ service.ResponseServiceInt) *ResponseCon
 	}
 }
 
+func (r *ResponseController) GetTutorsResponses(ctx *fiber.Ctx) error {
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	response, err := r.ResponseService.GetTutorsResponses(UserData)
+
+	if err != nil {
+		fmt.Println(err)
+		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	return ctx.JSON(response)
+}
+
 func (r *ResponseController) GetResponseById(ctx *fiber.Ctx) error {
 	ResponseID := ctx.Params("id")
 

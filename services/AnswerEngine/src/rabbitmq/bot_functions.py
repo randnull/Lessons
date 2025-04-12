@@ -1,4 +1,5 @@
 from AnswerEngine.src.TelegramBot.botStudent import bot_student
+from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto
 # from AnswerEngine.src.models.dto_table.response_dto import ResponsesDto
 
@@ -24,4 +25,4 @@ async def proceed_response(response: ResponseDto) -> None:
     )
 
     await bot_student.send_message(chat_id=response.student_id, text=messageStudent, parse_mode="html")
-    await bot_student.send_message(chat_id=response.tutor_id, text=messageTutor, parse_mode="html")
+    await bot_tutor.send_message(chat_id=response.tutor_id, text=messageTutor, parse_mode="html")

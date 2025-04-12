@@ -14,14 +14,15 @@ message User {
 
 message Tutor {
   User user = 1;
-  string bio = 2;
+  repeated string tags = 2;
 }
 
 message TutorDetails {
   Tutor tutor = 1;
   string bio = 2;
-  repeated Review review = 3;
-  repeated string tags = 4;
+  int32 response_count = 3; // это только для своего профиля
+  repeated Review review = 4;
+  repeated string tags = 5;
 }
 
 message Review {
@@ -35,6 +36,8 @@ message Review {
 
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateResponse);
+  rpc AddResponsesToTutor(AddResponseToTutorRequest) returns (AddResponseToTutorResponse);
+  rpc CreateNewResponse(CreateResponseRequest) returns (Success);
   rpc GetUserById(GetById) returns (User);
   rpc GetTutorById(GetById) returns (Tutor);
   rpc GetTutorInfoById(GetById) returns (TutorDetails);
@@ -74,6 +77,20 @@ message CreateResponse {
   string id = 1;
 }
 
+message CreateResponseRequest {
+  string tutor_id = 1;
+}
+
+message AddResponseToTutorRequest {
+  int64 tutor_id = 1;
+  int32 response_count = 2;
+}
+
+message AddResponseToTutorResponse {
+  int32 response_count = 1;
+  bool success = 2;
+}
+
 message GetByTelegramId {
   int64 id = 1;
 }
@@ -90,12 +107,12 @@ message GetById {
 message GetAllRequest {}
 
 message GetAllResponse {
-  repeated User users = 1;
+  repeated Tutor tutors = 1;
 }
 
 message GetTutorsPaginationResponse {
   int64 count = 1;
-  repeated User users = 2;
+  repeated Tutor tutors = 2;
 }
 
 message UpdateTagsRequest {

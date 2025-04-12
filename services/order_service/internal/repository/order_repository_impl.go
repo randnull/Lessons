@@ -575,7 +575,10 @@ func (orderStorage *Repository) DeleteOrder(id string) error {
 	return nil
 }
 
-func (orderStorage *Repository) CreateResponse(orderID string, response *models.NewResponseModel, Tutor *models.User, username string) (string, error) {
+func (orderStorage *Repository) CreateResponse(orderID string,
+	response *models.NewResponseModel,
+	Tutor *models.Tutor,
+	username string) (string, error) {
 	var ResponseID string
 
 	queryCheck := `SELECT id FROM responses WHERE order_id = $1 AND tutor_id = $2`
@@ -598,15 +601,10 @@ func (orderStorage *Repository) CreateResponse(orderID string, response *models.
 	}
 
 	timestamp := time.Now()
-	// SELECT WHERE order_id = ... без UPDATE
+
 	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, tutor_username, greetings, is_final, created_at)
 					VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
-	//
-	//if response == nil {
-	//
-	//}
-	fmt.Println(response, response.Greetings)
 	greetingsMessage := response.Greetings
 
 	err = tx.QueryRow(queryInsert, orderID, Tutor.Name, Tutor.Id, username, greetingsMessage, false, timestamp).Scan(&ResponseID)
@@ -616,7 +614,6 @@ func (orderStorage *Repository) CreateResponse(orderID string, response *models.
 		return "", err
 	}
 
-	// response_count = response_count + 1
 	queryUpdate := `UPDATE orders SET response_count = response_count + 1 WHERE id = $1`
 
 	_, err = tx.Exec(queryUpdate, orderID)
@@ -691,13 +688,9 @@ func (orderStorage *Repository) GetResponseById(ResponseID string, studentID str
 func (orderStorage *Repository) SetTutorToOrder(response *models.ResponseDB, UserData models.UserData) error {
 	queryCheckStatus := `SELECT status FROM orders WHERE id = $1`
 
-	log.Println(queryCheckStatus)
-
 	var status string
 
 	err := orderStorage.db.QueryRow(queryCheckStatus, response.OrderID).Scan(&status)
-
-	log.Println(err, status)
 
 	if status != "New" {
 		return custom_errors.ErrorAlreadySetTutor
@@ -711,7 +704,6 @@ func (orderStorage *Repository) SetTutorToOrder(response *models.ResponseDB, Use
 		tx.Rollback()
 		return err
 	}
-	fmt.Println("Selected", response.ID, response.OrderID)
 
 	querySetStatus := `UPDATE orders SET status = $1 WHERE id = $2` // status = $1,
 
@@ -726,7 +718,6 @@ func (orderStorage *Repository) SetTutorToOrder(response *models.ResponseDB, Use
 	queryUpdateResponses := `UPDATE responses SET is_final = $1 WHERE id = $2`
 
 	_, err = tx.Exec(queryUpdateResponses, true, response.ID)
-	log.Println(err)
 
 	if err != nil {
 		tx.Rollback()
@@ -741,4 +732,49 @@ func (orderStorage *Repository) SetTutorToOrder(response *models.ResponseDB, Use
 	}
 
 	return nil
+}
+
+func (orderStorage *Repository) GetTutorsResponses(tutorID string) ([]models.Response, error) {
+	query := `
+        SELECT 
+            id,
+            order_id,
+            name,
+            tutor_id,
+            tutor_username,
+            greetings,
+            is_final,
+            created_at
+        FROM responses 
+        WHERE tutor_id = $1
+        ORDER BY created_at DESC`
+
+	rows, err := orderStorage.db.Query(query, tutorID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var responses []models.Response
+	for rows.Next() {
+		var resp models.Response
+		err := rows.Scan(
+			&resp.ID,
+			//&resp.OrderID,
+			&resp.Name,
+			&resp.TutorID,
+			&resp.IsFinal,
+			&resp.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		responses = append(responses, resp)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return responses, nil
 }

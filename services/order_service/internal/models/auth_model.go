@@ -1,9 +1,5 @@
 package models
 
-type InitModel struct {
-	InitData string `json:"initData"`
-} // depricated
-
 type UserData struct {
 	UserID     string `json:"user_id"`
 	TelegramID int64  `json:"telegram_id"`

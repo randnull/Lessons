@@ -11,8 +11,8 @@ type UserRepository interface {
 	GetUserById(userID string) (*models.UserDB, error)
 	GetTutorByID(userID string) (*models.TutorDB, error)
 	GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error)
-	GetAllTutors() ([]*pb.User, error)
-	GetAllTutorsPagination(limit int, offset int) ([]*pb.User, int, error)
+	GetAllTutors() ([]*pb.Tutor, error)
+	GetAllTutorsPagination(limit int, offset int) ([]*pb.Tutor, int, error)
 	UpdateTutorBio(userID string, bio string) error
 	UpdateTutorTags(tutorID string, tags []string) error
 	CreateReview(tutorID, studentID string, rating int, comment string) (string, error)
@@ -20,4 +20,6 @@ type UserRepository interface {
 	GetReviewById(reviewID string) (*models.Review, error)
 	GetTagsByTutorID(tutorID string) ([]string, error)
 	SetNewIsActiveTutor(tutorID string, IsActive bool) error
+	AddResponses(tutorTelegramID int64, responseCount int) (int, error)
+	RemoveOneResponse(tutorID string) error
 }

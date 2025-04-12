@@ -14,6 +14,7 @@ import (
 type ResponseServiceInt interface {
 	ResponseToOrder(orderID string, newResponse *models.NewResponseModel, UserData models.UserData) (string, error)
 	GetResponseById(ResponseID string, UserData models.UserData) (*models.ResponseDB, error)
+	GetTutorsResponses(UserData models.UserData) ([]models.Response, error)
 }
 
 type ResponseService struct {
@@ -30,13 +31,11 @@ func NewResponseService(orderRepo repository.OrderRepository, producerBroker rab
 	}
 }
 
+func (s *ResponseService) GetTutorsResponses(UserData models.UserData) ([]models.Response, error) {
+	return s.orderRepository.GetTutorsResponses(UserData.UserID)
+}
+
 func (s *ResponseService) GetResponseById(ResponseID string, UserData models.UserData) (*models.ResponseDB, error) {
-	//UserInfo, err := s.GRPCClient.GetUserByTelegramID(context.Background(), UserData.TelegramID)
-
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	return s.orderRepository.GetResponseById(ResponseID, UserData.UserID)
 }
 
@@ -45,19 +44,37 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		return "", custom_errors.ErrNotAllowed
 	}
 
-	TutorInfo, err := s.GRPCClient.GetUser(context.Background(), UserData.UserID)
-	log.Println("ok")
-	studentID, err := s.orderRepository.GetUserByOrder(orderID)
-	log.Println(studentID)
-	log.Println(err)
-	StudentInfo, err := s.GRPCClient.GetStudent(context.Background(), studentID)
-	log.Println(err)
+	TutorInfo, err := s.GRPCClient.GetTutor(context.Background(), UserData.UserID)
+
+	if err != nil {
+		return "", err
+	}
+
+	log.Println(UserData.UserID)
+
+	isAvaliable, err := s.GRPCClient.CreateNewResponse(context.Background(), UserData.UserID)
+
+	if err != nil {
+		log.Println(err)
+		return "", err
+	}
+
+	if !isAvaliable {
+		log.Println("no resposes")
+		return "", errors.New("No responses")
+	}
+
+	Order, err := s.orderRepository.GetOrderByID(orderID)
+
+	if err != nil {
+		return "", err
+	}
+
+	StudentInfo, err := s.GRPCClient.GetStudent(context.Background(), Order.StudentID)
 
 	if err != nil {
 		return "", custom_errors.ErrorGetUser
 	}
-
-	log.Println(StudentInfo)
 
 	responseID, err := s.orderRepository.CreateResponse(orderID, newResponse, TutorInfo, UserData.Username)
 
@@ -75,7 +92,7 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		TutorID:    TutorInfo.TelegramID,
 		StudentID:  StudentInfo.TelegramID,
 		OrderID:    orderID,
-		Title:      "1",
+		Title:      Order.Title,
 	}
 
 	err = s.ProducerBroker.Publish("order_response", ResponseToBroker)

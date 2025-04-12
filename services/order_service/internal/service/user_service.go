@@ -9,7 +9,7 @@ import (
 type UserServiceInt interface {
 	GetUser(UserID string) (*models.User, error)
 	GetTutor(TutorID string) (*models.Tutor, error)
-	GetAllUsers() ([]*models.User, error)
+	//GetAllUsers() ([]*models.Tutor, error)
 	GetAllTutorsPagination(page int, size int) (*models.TutorsPagination, error)
 	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
 	UpdateTagsTutor(tags []string, TutorID string) (bool, error)
@@ -17,6 +17,7 @@ type UserServiceInt interface {
 	GetReviewsByTutor(tutorID string) ([]models.Review, error)
 	GetReviewsByID(reviewID string) (*models.Review, error)
 	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
+	ChangeTutorActive(isActive bool, UserData models.UserData) (bool, error)
 }
 
 type UserService struct {
@@ -37,19 +38,20 @@ func (u *UserService) GetUser(UserID string) (*models.User, error) {
 	return u.GRPCClient.GetUser(context.Background(), UserID)
 }
 
-func (u *UserService) GetAllUsers() ([]*models.User, error) {
+func (u *UserService) GetAllUsers() ([]*models.TutorForList, error) {
 	usersRPC, err := u.GRPCClient.GetAllUsers(context.Background())
 
 	if err != nil {
 		return nil, err
 	}
 
-	var users []*models.User
+	var users []*models.TutorForList
 
-	for _, grpcUser := range usersRPC.Users {
-		users = append(users, &models.User{
-			Id:   grpcUser.Id,
-			Name: grpcUser.Name,
+	for _, grpcUser := range usersRPC.Tutors {
+		users = append(users, &models.TutorForList{
+			Id:   grpcUser.User.Id,
+			Name: grpcUser.User.Name,
+			Tags: grpcUser.Tags,
 		})
 	}
 
@@ -73,12 +75,13 @@ func (u *UserService) GetAllTutorsPagination(page int, size int) (*models.Tutors
 		return nil, err
 	}
 
-	var users []*models.User
+	var tutors []*models.TutorForList
 
-	for _, grpcUser := range usersRPC.Users {
-		users = append(users, &models.User{
-			Id:   grpcUser.Id,
-			Name: grpcUser.Name,
+	for _, grpcUser := range usersRPC.Tutors {
+		tutors = append(tutors, &models.TutorForList{
+			Id:   grpcUser.User.Id,
+			Name: grpcUser.User.Name,
+			Tags: grpcUser.Tags,
 		})
 	}
 
@@ -89,8 +92,8 @@ func (u *UserService) GetAllTutorsPagination(page int, size int) (*models.Tutors
 	}
 
 	return &models.TutorsPagination{
-		User:  users,
-		Pages: (int(usersRPC.Count) / size) + addPage,
+		Tutors: tutors,
+		Pages:  (int(usersRPC.Count) / size) + addPage,
 	}, nil
 }
 
@@ -132,4 +135,14 @@ func (u *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, er
 	}
 
 	return TutorDetails, nil
+}
+
+func (u *UserService) ChangeTutorActive(isActive bool, UserData models.UserData) (bool, error) {
+	isOk, err := u.GRPCClient.ChangeTutorActive(context.Background(), UserData.UserID, isActive)
+
+	if err != nil {
+		return false, err
+	}
+
+	return isOk, nil
 }

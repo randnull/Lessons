@@ -7,17 +7,27 @@ import (
 )
 
 type GRPCClientInt interface {
+	// User operations
 	GetUser(ctx context.Context, userID string) (*models.User, error)
 	GetStudent(ctx context.Context, userID string) (*models.User, error)
-	GetTutor(ctx context.Context, TutorID string) (*models.Tutor, error)
 	GetUserByTelegramID(ctx context.Context, telegramID int64) (*models.User, error)
 	GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error)
-	GetTutorsPagination(ctx context.Context, page int, size int) (*pb.GetTutorsPaginationResponse, error)
-	UpdateBioTutor(ctx context.Context, bio string, TutorID string) (bool, error)
-	UpdateTagsTutor(ctx context.Context, tags []string, TutorID string) (bool, error)
-	CreateReview(ctx context.Context, studentID string, tutorID string, comment string, rating int) (string, error)
+
+	// Tutor operations
+	GetTutor(ctx context.Context, tutorID string) (*models.Tutor, error)
+	GetTutorInfoById(ctx context.Context, tutorID string) (*models.TutorDetails, error)
+	GetTutorsPagination(ctx context.Context, page, size int) (*pb.GetTutorsPaginationResponse, error)
+	UpdateBioTutor(ctx context.Context, bio, tutorID string) (bool, error)
+	UpdateTagsTutor(ctx context.Context, tags []string, tutorID string) (bool, error)
+
+	ChangeTutorActive(ctx context.Context, tutorID string, active bool) (bool, error)
+	CreateNewResponse(ctx context.Context, tutorID string) (bool, error)
+
+	// Review operations
+	CreateReview(ctx context.Context, studentID, tutorID, comment string, rating int) (string, error)
 	GetReviewsByTutor(ctx context.Context, tutorID string) ([]models.Review, error)
 	GetReviewsByID(ctx context.Context, reviewID string) (*models.Review, error)
-	GetTutorInfoById(ctx context.Context, TutorID string) (*models.TutorDetails, error)
-	Close()
+
+	// Connection management
+	Close() error
 }

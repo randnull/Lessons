@@ -6,35 +6,36 @@ type CreateUser struct {
 }
 
 type TutorsPagination struct {
-	User  []*User
-	Pages int
+	Tutors []*TutorForList
+	Pages  int
 }
 
 type User struct {
 	Id         string `json:"id"`
 	TelegramID int64  `json:"telegram_id"`
 	Name       string `json:"name"`
-	//CreatedAt  time.Time `json:"created_at"`
 }
 
 type Tutor struct {
-	Id string `json:"id"`
-	//TelegramID int64  `json:"telegram_id"`
-	Bio  string `json:"bio"`
-	Name string `json:"name"`
-	//CreatedAt  time.Time `json:"created_at"`
+	Id         string
+	TelegramID int64
+	Name       string
+	Bio        string
+	Tags       []string
 }
 
-type TutorModel struct {
-	User User
-	Bio  string `json:"bio"`
+type TutorForList struct {
+	Id   string
+	Name string
+	Tags []string
 }
 
 type TutorDetails struct {
-	Reviews []Review
-	Tags    []string
-	Tutor   TutorModel
-	Bio     string
+	Tutor         User
+	Bio           string
+	ResponseCount int32
+	Reviews       []Review
+	Tags          []string
 }
 
 type UpdateBioTutor struct {
@@ -43,4 +44,8 @@ type UpdateBioTutor struct {
 
 type UpdateTagsTutor struct {
 	Tags []string `json:"tags"`
+}
+
+type ChangeActive struct {
+	IsActive bool `json:"is_active"`
 }
