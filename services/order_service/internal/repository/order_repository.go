@@ -11,7 +11,8 @@ type OrderRepository interface {
 
 	GetOrders() ([]*models.Order, error) // GetAllOrders
 	GetOrdersPagination(limit int, offset int) ([]*models.Order, int, error)
-	GetStudentOrders(studentID string) ([]*models.Order, error) // GetAllUsersOrders
+	GetStudentOrders(studentID string) ([]*models.Order, error)
+
 	GetStudentOrdersPagination(limit int, offset int, studentID string) ([]*models.Order, int, error)
 
 	UpdateOrder(orderID string, order *models.UpdateOrder, studentID string) error
@@ -22,6 +23,7 @@ type OrderRepository interface {
 
 	CheckOrderByStudentID(orderID string, studentID string) (bool, error)
 
+	CheckResponseExist(TutorID, OrderID string) bool
 	CreateResponse(orderID string, response *models.NewResponseModel, Tutor *models.Tutor, username string) (string, error)
 	GetResponseById(ResponseID string, studentID string) (*models.ResponseDB, error)
 

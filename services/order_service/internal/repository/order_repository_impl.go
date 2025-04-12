@@ -184,6 +184,7 @@ func (orderStorage *Repository) GetOrderByID(id string) (*models.OrderDetails, e
 		if responseID.Valid {
 			validResponse := models.Response{
 				ID:        responseID.String,
+				OrderID:   id,
 				Name:      tutorName.String,
 				TutorID:   tutorID.String,
 				IsFinal:   isFinal.Bool,
@@ -575,6 +576,21 @@ func (orderStorage *Repository) DeleteOrder(id string) error {
 	return nil
 }
 
+func (orderStorage *Repository) CheckResponseExist(TutorID, OrderID string) bool {
+	var ResponseID string
+
+	queryCheck := `SELECT id FROM responses WHERE order_id = $1 AND tutor_id = $2`
+
+	err := orderStorage.db.QueryRow(queryCheck, OrderID, TutorID).Scan(&ResponseID)
+
+	if err == nil || !errors.Is(err, sql.ErrNoRows) {
+		if err == nil {
+			return true
+		}
+	}
+	return false
+}
+
 func (orderStorage *Repository) CreateResponse(orderID string,
 	response *models.NewResponseModel,
 	Tutor *models.Tutor,
@@ -741,8 +757,6 @@ func (orderStorage *Repository) GetTutorsResponses(tutorID string) ([]models.Res
             order_id,
             name,
             tutor_id,
-            tutor_username,
-            greetings,
             is_final,
             created_at
         FROM responses 
@@ -760,7 +774,7 @@ func (orderStorage *Repository) GetTutorsResponses(tutorID string) ([]models.Res
 		var resp models.Response
 		err := rows.Scan(
 			&resp.ID,
-			//&resp.OrderID,
+			&resp.OrderID,
 			&resp.Name,
 			&resp.TutorID,
 			&resp.IsFinal,

@@ -41,13 +41,14 @@ service UserService {
   rpc GetUserById(GetById) returns (User);
   rpc GetTutorById(GetById) returns (Tutor);
   rpc GetTutorInfoById(GetById) returns (TutorDetails);
-  rpc ChangeTutorActive(SetActiveTutorById) returns (Success);
   rpc GetStudentById(GetById) returns (User);
   rpc GetUserByTelegramId(GetByTelegramId) returns (User);
   rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
   rpc GetAllTutorsPagination(GetAllTutorsPaginationRequest) returns (GetTutorsPaginationResponse);
   rpc UpdateBioTutor(UpdateBioRequest) returns (UpdateBioResponse);
   rpc UpdateTags(UpdateTagsRequest) returns (Success);
+  rpc ChangeTutorActive(SetActiveTutorById) returns (Success);
+  rpc ChangeTutorName(ChangeNameRequest) returns (Success);
   rpc CreateReview(CreateReviewRequest) returns (CreateReviewResponse);
   rpc GetReview(GetReviewRequest) returns (Review);
   rpc GetReviews(GetReviewsRequest) returns (GetReviewsResponse);
@@ -61,6 +62,11 @@ message GetAllTutorsPaginationRequest {
 message UpdateBioRequest {
   string id = 1;
   string bio = 2;
+}
+
+message ChangeNameRequest {
+  string id = 1;
+  string name = 2;
 }
 
 message UpdateBioResponse {

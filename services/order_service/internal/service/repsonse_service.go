@@ -44,6 +44,10 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		return "", custom_errors.ErrNotAllowed
 	}
 
+	if s.orderRepository.CheckResponseExist(UserData.UserID, orderID) {
+		return "", custom_errors.ErrResponseAlredyExist
+	}
+
 	TutorInfo, err := s.GRPCClient.GetTutor(context.Background(), UserData.UserID)
 
 	if err != nil {

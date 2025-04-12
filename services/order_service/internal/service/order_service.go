@@ -62,6 +62,11 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 }
 
 func (orderServ *OrderService) GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error) {
+	_, err := orderServ.orderRepository.CheckOrderByStudentID(id, UserData.UserID)
+	if err != nil {
+		return nil, err
+	}
+
 	return orderServ.orderRepository.GetOrderByID(id)
 }
 

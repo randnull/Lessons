@@ -4,7 +4,7 @@ import os
 class Settings(BaseSettings):
     BOT_TOKEN: str = os.getenv('BOT_TOKEN', "7629903300:AAFwHNldwaNDI8cqv7FneC6DtYetbhe0DP0")
     BOT_TOKEN_TUTOR: str = os.getenv('BOT_TOKEN_TUTOR', "7236922684:AAFqILxlgUMlqmVIGmg7rkjmhnt3qyFlJ4k")
-    FQND_HOST: str = "l7ofhy-109-252-118-16.ru.tuna.am" #"lessonsmy.tech" #os.getenv('FQND_HOST', "lessonsmy.tech")
+    FQND_HOST: str = "lessonsmy.tech" #os.getenv('FQND_HOST', "lessonsmy.tech")
     ANSWER_DB_USER: str = os.getenv('ANSWER_DB_USER', "postgres")
     ANSWER_DB_PASSWORD: str = os.getenv('ANSWER_DB_PASSWORD', "postgres")
     ANSWER_DB_NAME: str = os.getenv('ANSWER_DB_NAME', "response_database")

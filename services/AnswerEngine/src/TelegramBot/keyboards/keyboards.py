@@ -3,7 +3,6 @@ from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
 def student_start_keyboard() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
-    # builder.button(text="Мои заявки")
     builder.button(
         text="Найти репетитора",
         web_app=WebAppInfo(url="https://lessonsmy.tech/")
@@ -13,7 +12,6 @@ def student_start_keyboard() -> ReplyKeyboardMarkup:
 
 def tutor_start_keyboard() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
-    # builder.button(text="Мои заявки")
     builder.button(
         text="Найти учеников",
         web_app=WebAppInfo(url="https://lessonsmy.tech/tutors")

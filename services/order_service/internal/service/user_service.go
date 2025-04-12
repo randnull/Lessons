@@ -9,7 +9,7 @@ import (
 type UserServiceInt interface {
 	GetUser(UserID string) (*models.User, error)
 	GetTutor(TutorID string) (*models.Tutor, error)
-	//GetAllUsers() ([]*models.Tutor, error)
+
 	GetAllTutorsPagination(page int, size int) (*models.TutorsPagination, error)
 	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
 	UpdateTagsTutor(tags []string, TutorID string) (bool, error)
