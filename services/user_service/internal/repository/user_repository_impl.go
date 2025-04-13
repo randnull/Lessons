@@ -210,6 +210,15 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 	if bio.Valid {
 		tutor.Bio = bio.String
 	}
+	fmt.Println("Количества откликов (smth): ", tutor.ResponseCount)
+	fmt.Println("Количества откликов (base int32):  ", responseCount.Int32)
+
+	log.Println("ТУТ")
+	log.Println(responseCount)
+	log.Println(responseCount.Int32)
+	fmt.Println(responseCount)
+	fmt.Println(responseCount.Int32)
+	log.Println("ТУТ")
 	if responseCount.Valid {
 		tutor.ResponseCount = int32(responseCount.Int32)
 	}

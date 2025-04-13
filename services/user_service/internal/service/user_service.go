@@ -115,9 +115,10 @@ func (s *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, er
 	}
 
 	return &models.TutorDetails{
-		Tutor:   *tutor,
-		Reviews: reviews,
-		Tags:    tags,
+		Tutor:         *tutor,
+		ResponseCount: tutor.ResponseCount,
+		Reviews:       reviews,
+		Tags:          tags,
 	}, nil
 }
 

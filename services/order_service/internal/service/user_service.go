@@ -3,8 +3,10 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
+	"log"
 )
 
 type UserServiceInt interface {
@@ -131,6 +133,9 @@ func (u *UserService) GetReviewsByID(reviewID string) (*models.Review, error) {
 
 func (u *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, error) {
 	TutorDetails, err := u.GRPCClient.GetTutorInfoById(context.Background(), tutorID)
+
+	log.Println(TutorDetails)
+	fmt.Println(TutorDetails)
 
 	if err != nil {
 		return nil, err
