@@ -178,10 +178,12 @@ func (s *UserControllers) GetTutorInfoById(ctx context.Context, in *pb.GetById) 
 				TelegramId: tutor.Tutor.TelegramID,
 			},
 		},
+		IsActive:      tutor.Tutor.IsActive,
 		ResponseCount: tutor.ResponseCount,
 		Bio:           tutor.Tutor.Bio,
 		Tags:          tutor.Tags,
 		Review:        reviews,
+		CreatedAt:     timestamppb.New(tutor.Tutor.CreatedAt),
 	}, nil
 }
 
@@ -256,5 +258,19 @@ func (s *UserControllers) AddResponsesToTutor(ctx context.Context, in *pb.AddRes
 	return &pb.AddResponseToTutorResponse{
 		ResponseCount: int32(responses),
 		Success:       true,
+	}, nil
+}
+
+// rpc ChangeTutorName(ChangeNameRequest) returns (Success);
+func (s *UserControllers) ChangeTutorName(ctx context.Context, in *pb.ChangeNameRequest) (*pb.Success, error) {
+	err := s.UserService.UpdateNameTutor(in.Id, in.Name)
+
+	if err != nil {
+		return &pb.Success{
+			Success: false,
+		}, err
+	}
+	return &pb.Success{
+		Success: true,
 	}, nil
 }

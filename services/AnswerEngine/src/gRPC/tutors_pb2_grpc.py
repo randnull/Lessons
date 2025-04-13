@@ -44,11 +44,6 @@ class UserServiceStub(object):
                 request_serializer=gRPC_dot_tutors__pb2.GetById.SerializeToString,
                 response_deserializer=gRPC_dot_tutors__pb2.TutorDetails.FromString,
                 )
-        self.ChangeTutorActive = channel.unary_unary(
-                '/users.UserService/ChangeTutorActive',
-                request_serializer=gRPC_dot_tutors__pb2.SetActiveTutorById.SerializeToString,
-                response_deserializer=gRPC_dot_tutors__pb2.Success.FromString,
-                )
         self.GetStudentById = channel.unary_unary(
                 '/users.UserService/GetStudentById',
                 request_serializer=gRPC_dot_tutors__pb2.GetById.SerializeToString,
@@ -77,6 +72,16 @@ class UserServiceStub(object):
         self.UpdateTags = channel.unary_unary(
                 '/users.UserService/UpdateTags',
                 request_serializer=gRPC_dot_tutors__pb2.UpdateTagsRequest.SerializeToString,
+                response_deserializer=gRPC_dot_tutors__pb2.Success.FromString,
+                )
+        self.ChangeTutorActive = channel.unary_unary(
+                '/users.UserService/ChangeTutorActive',
+                request_serializer=gRPC_dot_tutors__pb2.SetActiveTutorById.SerializeToString,
+                response_deserializer=gRPC_dot_tutors__pb2.Success.FromString,
+                )
+        self.ChangeTutorName = channel.unary_unary(
+                '/users.UserService/ChangeTutorName',
+                request_serializer=gRPC_dot_tutors__pb2.ChangeNameRequest.SerializeToString,
                 response_deserializer=gRPC_dot_tutors__pb2.Success.FromString,
                 )
         self.CreateReview = channel.unary_unary(
@@ -135,12 +140,6 @@ class UserServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def ChangeTutorActive(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
     def GetStudentById(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -172,6 +171,18 @@ class UserServiceServicer(object):
         raise NotImplementedError('Method not implemented!')
 
     def UpdateTags(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ChangeTutorActive(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ChangeTutorName(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -228,11 +239,6 @@ def add_UserServiceServicer_to_server(servicer, server):
                     request_deserializer=gRPC_dot_tutors__pb2.GetById.FromString,
                     response_serializer=gRPC_dot_tutors__pb2.TutorDetails.SerializeToString,
             ),
-            'ChangeTutorActive': grpc.unary_unary_rpc_method_handler(
-                    servicer.ChangeTutorActive,
-                    request_deserializer=gRPC_dot_tutors__pb2.SetActiveTutorById.FromString,
-                    response_serializer=gRPC_dot_tutors__pb2.Success.SerializeToString,
-            ),
             'GetStudentById': grpc.unary_unary_rpc_method_handler(
                     servicer.GetStudentById,
                     request_deserializer=gRPC_dot_tutors__pb2.GetById.FromString,
@@ -261,6 +267,16 @@ def add_UserServiceServicer_to_server(servicer, server):
             'UpdateTags': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateTags,
                     request_deserializer=gRPC_dot_tutors__pb2.UpdateTagsRequest.FromString,
+                    response_serializer=gRPC_dot_tutors__pb2.Success.SerializeToString,
+            ),
+            'ChangeTutorActive': grpc.unary_unary_rpc_method_handler(
+                    servicer.ChangeTutorActive,
+                    request_deserializer=gRPC_dot_tutors__pb2.SetActiveTutorById.FromString,
+                    response_serializer=gRPC_dot_tutors__pb2.Success.SerializeToString,
+            ),
+            'ChangeTutorName': grpc.unary_unary_rpc_method_handler(
+                    servicer.ChangeTutorName,
+                    request_deserializer=gRPC_dot_tutors__pb2.ChangeNameRequest.FromString,
                     response_serializer=gRPC_dot_tutors__pb2.Success.SerializeToString,
             ),
             'CreateReview': grpc.unary_unary_rpc_method_handler(
@@ -391,23 +407,6 @@ class UserService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def ChangeTutorActive(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/users.UserService/ChangeTutorActive',
-            gRPC_dot_tutors__pb2.SetActiveTutorById.SerializeToString,
-            gRPC_dot_tutors__pb2.Success.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
     def GetStudentById(request,
             target,
             options=(),
@@ -505,6 +504,40 @@ class UserService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/users.UserService/UpdateTags',
             gRPC_dot_tutors__pb2.UpdateTagsRequest.SerializeToString,
+            gRPC_dot_tutors__pb2.Success.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ChangeTutorActive(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/users.UserService/ChangeTutorActive',
+            gRPC_dot_tutors__pb2.SetActiveTutorById.SerializeToString,
+            gRPC_dot_tutors__pb2.Success.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ChangeTutorName(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/users.UserService/ChangeTutorName',
+            gRPC_dot_tutors__pb2.ChangeNameRequest.SerializeToString,
             gRPC_dot_tutors__pb2.Success.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -513,8 +513,10 @@ func (r *Repository) RemoveOneResponse(tutorID string) error {
               WHERE id = $1 AND response_count > 0
               RETURNING response_count`
 
+	log.Println("here and trying")
 	var newCount int64
 	err := r.db.QueryRow(query, tutorID).Scan(&newCount)
+	log.Println(err)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			log.Printf("Failed to remove response for tutor %s: no tutor found or response_count is already 0", tutorID)
@@ -553,4 +555,17 @@ func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int
 	}
 
 	return int(newCount), nil
+}
+
+func (r *Repository) UpdateTutorName(tutorID string, name string) error {
+	queryUpdateBioTutor := `UPDATE users SET name = $1 WHERE id = $2 AND role = $3`
+
+	_, err := r.db.Exec(queryUpdateBioTutor, name, tutorID, "Tutor")
+
+	if err != nil {
+		log.Println(err)
+		return errors.New("error update name") //custom_errors.ErrorUpdateBio
+	}
+
+	return nil
 }

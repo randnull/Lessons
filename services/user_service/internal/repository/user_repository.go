@@ -15,6 +15,7 @@ type UserRepository interface {
 	GetAllTutorsPagination(limit int, offset int) ([]*pb.Tutor, int, error)
 	UpdateTutorBio(userID string, bio string) error
 	UpdateTutorTags(tutorID string, tags []string) error
+	UpdateTutorName(tutorID string, name string) error
 	CreateReview(tutorID, studentID string, rating int, comment string) (string, error)
 	GetReviews(tutorID string) ([]models.Review, error)
 	GetReviewById(reviewID string) (*models.Review, error)

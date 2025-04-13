@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
 )
@@ -18,6 +19,7 @@ type UserServiceInt interface {
 	GetReviewsByID(reviewID string) (*models.Review, error)
 	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
 	ChangeTutorActive(isActive bool, UserData models.UserData) (bool, error)
+	UpdateTutorName(tutorID, name string) error
 }
 
 type UserService struct {
@@ -145,4 +147,14 @@ func (u *UserService) ChangeTutorActive(isActive bool, UserData models.UserData)
 	}
 
 	return isOk, nil
+}
+
+func (u *UserService) UpdateTutorName(tutorID, name string) error {
+	isOk, err := u.GRPCClient.UpdateNameTutor(context.Background(), tutorID, name)
+
+	if err != nil || !isOk {
+		return errors.New("cannot update tutor name")
+	}
+
+	return nil
 }

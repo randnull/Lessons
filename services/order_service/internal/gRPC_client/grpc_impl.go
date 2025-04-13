@@ -267,6 +267,8 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string) (*mod
 		ResponseCount: resp.ResponseCount,
 		Reviews:       reviews,
 		Tags:          resp.Tags,
+		IsActive:      resp.IsActive,
+		CreatedAt:     resp.CreatedAt.AsTime(),
 	}, nil
 }
 
@@ -297,4 +299,19 @@ func (g *GRPCClient) CreateNewResponse(ctx context.Context, tutorID string) (boo
 	}
 
 	return resp.Success, nil
+}
+
+func (g *GRPCClient) UpdateNameTutor(ctx context.Context, tutorID, name string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	status, err := g.client.ChangeTutorName(ctx, &pb.ChangeNameRequest{
+		Id:   tutorID,
+		Name: name,
+	})
+	if err != nil {
+		return false, err
+	}
+
+	return status.Success, nil
 }

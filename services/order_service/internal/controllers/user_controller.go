@@ -199,3 +199,25 @@ func (u *UserController) ChangeTutorActive(ctx *fiber.Ctx) error {
 
 	return nil
 }
+
+func (u *UserController) UpdateNameTutor(ctx *fiber.Ctx) error {
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	var UpdateNameTutor models.UpdateNameTutor
+
+	if err := ctx.BodyParser(&UpdateNameTutor); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	err := u.UserService.UpdateTutorName(UserData.UserID, UpdateNameTutor.Name)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

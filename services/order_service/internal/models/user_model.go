@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type CreateUser struct {
 	Name       string `json:"name"`
 	TelegramId int64  `json:"telegram_id"`
@@ -25,9 +27,10 @@ type Tutor struct {
 }
 
 type TutorForList struct {
-	Id   string
-	Name string
-	Tags []string
+	Id     string
+	Name   string
+	Rating float32
+	Tags   []string
 }
 
 type TutorDetails struct {
@@ -35,7 +38,10 @@ type TutorDetails struct {
 	Bio           string
 	ResponseCount int32
 	Reviews       []Review
+	IsActive      bool
 	Tags          []string
+	Rating        float32
+	CreatedAt     time.Time
 }
 
 type UpdateBioTutor struct {
@@ -48,4 +54,8 @@ type UpdateTagsTutor struct {
 
 type ChangeActive struct {
 	IsActive bool `json:"is_active"`
+}
+
+type UpdateNameTutor struct {
+	Name string `json:"name"`
 }

@@ -11,6 +11,7 @@ type UserServiceInt interface {
 	GetStudentById(UserId string) (*models.UserDB, error)
 	GetTutorById(TutorID string) (*models.TutorDB, error)
 	//GetUserByTelegramId(TelegramId int64) (*models.UserDB, error)
+	UpdateNameTutor(tutorID string, name string) error
 	CreateUser(user models.CreateUser) (string, error)
 	GetTutors() ([]*pb.Tutor, error)
 	GetTutorsPagination(page int, size int) (*pb.GetTutorsPaginationResponse, error)
@@ -58,6 +59,10 @@ func (s *UserService) GetTutors() ([]*pb.Tutor, error) {
 
 func (s *UserService) UpdateBioTutor(userID string, bio string) error {
 	return s.userRepository.UpdateTutorBio(userID, bio)
+}
+
+func (s *UserService) UpdateNameTutor(tutorID string, name string) error {
+	return s.userRepository.UpdateTutorName(tutorID, name)
 }
 
 func (s *UserService) GetTutorById(TutorID string) (*models.TutorDB, error) {

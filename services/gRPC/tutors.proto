@@ -23,6 +23,8 @@ message TutorDetails {
   int32 response_count = 3; // это только для своего профиля
   repeated Review review = 4;
   repeated string tags = 5;
+  bool is_active = 6; // это только для своего профиля
+  google.protobuf.Timestamp created_at = 7;
 }
 
 message Review {

@@ -123,6 +123,7 @@ func (a *App) Run() {
 	users.Post("/tutor/bio", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.UpdateBioTutor)
 	users.Post("/tutor/tags", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.UpdateTagsTutor)
 	users.Post("/tutor/active", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.ChangeTutorActive)
+	users.Post("/tutor/name", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.UpdateNameTutor)
 
 	users.Post("/review", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.userControllers.CreateReview)
 	users.Get("/review/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.userControllers.GetReviewByID)
