@@ -16,7 +16,7 @@ type GRPCClientInt interface {
 	// Tutor operations
 	GetTutor(ctx context.Context, tutorID string) (*models.Tutor, error)
 	GetTutorInfoById(ctx context.Context, tutorID string) (*models.TutorDetails, error)
-	GetTutorsPagination(ctx context.Context, page, size int) (*pb.GetTutorsPaginationResponse, error)
+	GetTutorsPagination(ctx context.Context, page, size int, tag string) (*pb.GetTutorsPaginationResponse, error)
 	UpdateBioTutor(ctx context.Context, bio, tutorID string) (bool, error)
 	UpdateTagsTutor(ctx context.Context, tags []string, tutorID string) (bool, error)
 	UpdateNameTutor(ctx context.Context, tutorID, name string) (bool, error)

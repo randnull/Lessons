@@ -267,7 +267,7 @@ func (orderStorage *Repository) GetOrders() ([]*models.Order, error) {
 	return orders, nil
 }
 
-func (orderStorage *Repository) GetOrdersPagination(limit int, offset int) ([]*models.Order, int, error) {
+func (orderStorage *Repository) GetOrdersPagination(limit int, offset int, tags string) ([]*models.Order, int, error) {
 	tx, err := orderStorage.db.Begin()
 
 	if err != nil {
@@ -282,7 +282,14 @@ func (orderStorage *Repository) GetOrdersPagination(limit int, offset int) ([]*m
     					COUNT(*) 
 					FROM orders WHERE status = $1`
 
-	err = tx.QueryRow(queryCount, "New").Scan(&total)
+	countArgs := []interface{}{"New"}
+
+	if tags != "" {
+		queryCount += ` AND $2 = ANY(tags)`
+		countArgs = append(countArgs, tags)
+	}
+
+	err = tx.QueryRow(queryCount, countArgs...).Scan(&total)
 
 	if err != nil {
 		return nil, 0, err
@@ -291,21 +298,31 @@ func (orderStorage *Repository) GetOrdersPagination(limit int, offset int) ([]*m
 	var orders []*models.Order
 
 	query := `SELECT 
-    			id, 
-    			student_id, 
-    			title, 
-    			description,
-    			grade,
-    			tags, 
-    			min_price, 
-    			max_price, 
-    			status,
-    			response_count,
-    			created_at, 
-    			updated_at 
-			FROM orders WHERE status = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+                id, 
+                student_id, 
+                title, 
+                description,
+                grade,
+                tags, 
+                min_price, 
+                max_price, 
+                status,
+                response_count,
+                created_at, 
+                updated_at 
+            FROM orders WHERE status = $1`
 
-	rows, err := tx.Query(query, "New", limit, offset)
+	queryArgs := []interface{}{"New"}
+
+	if tags != "" {
+		query += ` AND $2 = ANY(tags)`
+		queryArgs = append(queryArgs, tags)
+	}
+
+	query += ` ORDER BY created_at DESC LIMIT $` + strconv.Itoa(len(queryArgs)+1) + ` OFFSET $` + strconv.Itoa(len(queryArgs)+2)
+	queryArgs = append(queryArgs, limit, offset)
+
+	rows, err := tx.Query(query, queryArgs...)
 	if err != nil {
 		return nil, 0, err
 	}

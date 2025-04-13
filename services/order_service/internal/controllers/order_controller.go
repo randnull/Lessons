@@ -121,13 +121,17 @@ func (c *OrderController) GetOrdersPagination(ctx *fiber.Ctx) error {
 
 	}
 
+	tag := ctx.Query("tag")
+
+	fmt.Println(tag)
+
 	UserData, ok := ctx.Locals("user_data").(models.UserData)
 
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	orders, err := c.OrderService.GetOrdersWithPagination(page, size, UserData)
+	orders, err := c.OrderService.GetOrdersWithPagination(page, size, tag, UserData)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})

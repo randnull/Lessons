@@ -95,7 +95,7 @@ func (s *UserControllers) GetAllUsers(ctx context.Context, in *pb.GetAllRequest)
 }
 
 func (s *UserControllers) GetAllTutorsPagination(ctx context.Context, in *pb.GetAllTutorsPaginationRequest) (*pb.GetTutorsPaginationResponse, error) {
-	tutors, err := s.UserService.GetTutorsPagination(int(in.Page), int(in.Size))
+	tutors, err := s.UserService.GetTutorsPagination(int(in.Page), int(in.Size), in.Tag)
 
 	if err != nil {
 		return nil, err

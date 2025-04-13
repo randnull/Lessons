@@ -10,7 +10,7 @@ type OrderRepository interface {
 	GetOrderByIdTutor(orderID string, tutorID string) (*models.OrderDetailsTutor, error)
 
 	GetOrders() ([]*models.Order, error) // GetAllOrders
-	GetOrdersPagination(limit int, offset int) ([]*models.Order, int, error)
+	GetOrdersPagination(limit int, offset int, tags string) ([]*models.Order, int, error)
 	GetStudentOrders(studentID string) ([]*models.Order, error)
 
 	GetStudentOrdersPagination(limit int, offset int, studentID string) ([]*models.Order, int, error)

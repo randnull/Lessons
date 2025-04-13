@@ -36,11 +36,13 @@ func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
 
 	_, ok := ctx.Locals("user_data").(models.UserData)
 
+	tag := ctx.Query("tag")
+
 	if !ok {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
 	}
 
-	users, err := u.UserService.GetAllTutorsPagination(page, size)
+	users, err := u.UserService.GetAllTutorsPagination(page, size, tag)
 
 	if err != nil {
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "users not found"})

@@ -210,15 +210,7 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 	if bio.Valid {
 		tutor.Bio = bio.String
 	}
-	fmt.Println("Количества откликов (smth): ", tutor.ResponseCount)
-	fmt.Println("Количества откликов (base int32):  ", responseCount.Int32)
 
-	log.Println("ТУТ")
-	log.Println(responseCount)
-	log.Println(responseCount.Int32)
-	fmt.Println(responseCount)
-	fmt.Println(responseCount.Int32)
-	log.Println("ТУТ")
 	if responseCount.Valid {
 		tutor.ResponseCount = int32(responseCount.Int32)
 	}
@@ -274,7 +266,7 @@ func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
 
 	rows, err := r.db.Query(query, "Tutor")
 	if err != nil {
-		return nil, fmt.Errorf("failed to query tutors: %w", err)
+		return nil, errors.New("error with query")
 	}
 	defer rows.Close()
 
@@ -286,7 +278,7 @@ func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
 
 		err := rows.Scan(&id, &name, &telegramID, &tags)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan row: %w", err)
+			return nil, errors.New("error with scan")
 		}
 
 		tutor := &pb.Tutor{
@@ -301,7 +293,7 @@ func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
 	}
 
 	if err = rows.Err(); err != nil {
-		return nil, fmt.Errorf("error during row iteration: %w", err)
+		return nil, errors.New("error with rows")
 	}
 
 	return tutors, nil
@@ -320,17 +312,26 @@ func (r *Repository) UpdateTutorBio(userID string, bio string) error {
 	return nil
 }
 
-func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.Tutor, int, error) {
+func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) ([]*pb.Tutor, int, error) {
 	var total int
+
 	queryCount := `
 		SELECT COUNT(*) 
 		FROM users u
 		JOIN tutors t ON u.id = t.id
 		WHERE u.role = $1 AND t.is_active = true`
 
-	err := r.db.QueryRow(queryCount, "Tutor").Scan(&total)
+	argsCount := []interface{}{"Tutor"}
+
+	if tag != "" {
+		queryCount += ` AND $2 = ANY(t.tags)`
+		argsCount = append(argsCount, tag)
+	}
+
+	err := r.db.QueryRow(queryCount, argsCount...).Scan(&total)
+
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to count tutors: %w", err)
+		return nil, 0, errors.New("error with rows")
 	}
 
 	queryGetAllPagination := `
@@ -341,25 +342,35 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.Tutor,
 			t.tags
 		FROM users u
 		JOIN tutors t ON u.id = t.id
-		WHERE u.role = $1 AND t.is_active = true
-		ORDER BY u.created_at DESC 
-		LIMIT $2 OFFSET $3`
+		WHERE u.role = $1 AND t.is_active = true`
 
-	rows, err := r.db.Query(queryGetAllPagination, "Tutor", limit, offset)
+	argsPagination := []interface{}{"Tutor", limit, offset}
+
+	if tag != "" {
+		queryGetAllPagination += ` AND $4 = ANY(t.tags)`
+		argsPagination = append(argsPagination, tag)
+	}
+
+	queryGetAllPagination += ` ORDER BY u.created_at DESC LIMIT $2 OFFSET $3`
+
+	rows, err := r.db.Query(queryGetAllPagination, argsPagination...)
+
 	if err != nil {
-		return nil, 0, fmt.Errorf("failed to query tutors: %w", err)
+		return nil, 0, errors.New("error with rows")
 	}
 	defer rows.Close()
 
 	var tutors []*pb.Tutor
+
 	for rows.Next() {
-		var id, name string
+		var id string
+		var name string
 		var telegramID int64
 		var tags pq.StringArray
 
 		err := rows.Scan(&id, &name, &telegramID, &tags)
 		if err != nil {
-			return nil, 0, fmt.Errorf("failed to scan row: %w", err)
+			return nil, 0, errors.New("error with scan")
 		}
 
 		tutor := &pb.Tutor{
@@ -373,12 +384,15 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int) ([]*pb.Tutor,
 		tutors = append(tutors, tutor)
 	}
 
-	if err = rows.Err(); err != nil {
-		return nil, 0, fmt.Errorf("error during row iteration: %w", err)
+	err = rows.Err()
+
+	if err != nil {
+		return nil, 0, errors.New("error with rows")
 	}
 
 	return tutors, total, nil
 }
+
 func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
 	queryUpdateTutorTags := `
 		UPDATE tutors
@@ -443,14 +457,16 @@ func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
 		var review models.Review
 		err := rows.Scan(&review.ID, &review.TutorID, &review.StudentID, &review.Rating, &review.Comment, &review.CreatedAt)
 		if err != nil {
-			log.Printf("Failed to scan review row: %v", err)
+			log.Println(err)
 			continue
 		}
 		reviews = append(reviews, review)
 	}
 
-	if err = rows.Err(); err != nil {
-		log.Printf(err.Error())
+	err = rows.Err()
+
+	if err != nil {
+		log.Println(err)
 		return nil, err
 	}
 
@@ -473,8 +489,9 @@ func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
 	err := r.db.QueryRow(query, reviewID).Scan(
 		&review.ID, &review.TutorID, &review.StudentID, &review.Rating, &review.Comment, &review.CreatedAt,
 	)
+
 	if err != nil {
-		log.Printf("Failed get review with ID %s: %v", reviewID, err)
+		log.Println(err)
 		return nil, err
 	}
 
@@ -494,7 +511,8 @@ func (r *Repository) GetTagsByTutorID(tutorID string) ([]string, error) {
 	var tags []string
 	for rows.Next() {
 		var tagArray []string
-		if err := rows.Scan(pq.Array(&tagArray)); err != nil {
+		err := rows.Scan(pq.Array(&tagArray))
+		if err != nil {
 			return nil, err
 		}
 		tags = append(tags, tagArray...)
@@ -509,7 +527,7 @@ func (r *Repository) SetNewIsActiveTutor(tutorID string, isActive bool) error {
 
 	_, err := r.db.Exec(query, isActive, tutorID)
 	if err != nil {
-		log.Printf("Failed is_active for tutor %s: %v", tutorID, err)
+		log.Println(err)
 		return err
 	}
 
@@ -522,16 +540,15 @@ func (r *Repository) RemoveOneResponse(tutorID string) error {
               WHERE id = $1 AND response_count > 0
               RETURNING response_count`
 
-	log.Println("here and trying")
 	var newCount int64
 	err := r.db.QueryRow(query, tutorID).Scan(&newCount)
 	log.Println(err)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("Failed to remove response for tutor %s: no tutor found or response_count is already 0", tutorID)
-			return fmt.Errorf("tutor %s not found or no responses to remove", tutorID)
+			log.Println(err)
+			return errors.New(fmt.Sprintf("no responses or tutor not found %v", tutorID))
 		}
-		log.Printf("Failed to remove response for tutor %s: %v", tutorID, err)
+		log.Println(err)
 		return err
 	}
 
@@ -540,7 +557,7 @@ func (r *Repository) RemoveOneResponse(tutorID string) error {
 
 func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int, error) {
 	if responseCount < 1 {
-		return 0, fmt.Errorf("response count cannot be negative: %d", responseCount)
+		return 0, errors.New("responses less 0")
 	}
 
 	query := `
@@ -556,10 +573,10 @@ func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int
 
 	if err != nil {
 		if err == sql.ErrNoRows {
-			log.Printf("Failed to add responses for tutor with telegram_id %d: tutor not found", tutorTelegramID)
-			return 0, fmt.Errorf("tutor with telegram_id %d not found", tutorTelegramID)
+			log.Println("cannot add responses", tutorTelegramID)
+			return 0, errors.New(fmt.Sprintf("tutor with telegram_id %d not found", tutorTelegramID))
 		}
-		log.Printf("Failed to add responses for tutor with telegram_id %d: %v", tutorTelegramID, err)
+		log.Println("cannot add responses", tutorTelegramID)
 		return 0, err
 	}
 

@@ -147,13 +147,14 @@ func (g *GRPCClient) GetTutor(ctx context.Context, tutorID string) (*models.Tuto
 	}, nil
 }
 
-func (g *GRPCClient) GetTutorsPagination(ctx context.Context, page int, size int) (*pb.GetTutorsPaginationResponse, error) {
+func (g *GRPCClient) GetTutorsPagination(ctx context.Context, page int, size int, tag string) (*pb.GetTutorsPaginationResponse, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	usersPB, err := g.client.GetAllTutorsPagination(ctx, &pb.GetAllTutorsPaginationRequest{
 		Page: int32(page),
 		Size: int32(size),
+		Tag:  tag,
 	})
 	if err != nil {
 		return nil, err

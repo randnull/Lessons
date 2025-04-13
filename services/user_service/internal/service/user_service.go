@@ -14,7 +14,7 @@ type UserServiceInt interface {
 	UpdateNameTutor(tutorID string, name string) error
 	CreateUser(user models.CreateUser) (string, error)
 	GetTutors() ([]*pb.Tutor, error)
-	GetTutorsPagination(page int, size int) (*pb.GetTutorsPaginationResponse, error)
+	GetTutorsPagination(page int, size int, tag string) (*pb.GetTutorsPaginationResponse, error)
 	UpdateBioTutor(userID string, bio string) error
 	UpdateTutorTags(tutorID string, tags []string) error
 	CreateReview(tutorID, studentID string, rating int, comment string) (string, error)
@@ -69,11 +69,11 @@ func (s *UserService) GetTutorById(TutorID string) (*models.TutorDB, error) {
 	return s.userRepository.GetTutorByID(TutorID)
 }
 
-func (s *UserService) GetTutorsPagination(page int, size int) (*pb.GetTutorsPaginationResponse, error) {
+func (s *UserService) GetTutorsPagination(page int, size int, tag string) (*pb.GetTutorsPaginationResponse, error) {
 	limit := size
 	offset := (page - 1) * size
 
-	tutors, count, err := s.userRepository.GetAllTutorsPagination(limit, offset)
+	tutors, count, err := s.userRepository.GetAllTutorsPagination(limit, offset, tag)
 
 	if err != nil {
 		return nil, err

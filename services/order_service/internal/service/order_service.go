@@ -14,7 +14,7 @@ type OrderServiceInt interface {
 	CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error)
 	GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error)
 	GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error)
-	GetOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error)
+	GetOrdersWithPagination(page int, size int, tag string, UserData models.UserData) (*models.OrderPagination, error)
 	GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error)
 	GetAllOrders(UserData models.UserData) ([]*models.Order, error)
 	GetAllUsersOrders(UserData models.UserData) ([]*models.Order, error)
@@ -74,11 +74,11 @@ func (orderServ *OrderService) GetOrderByIdTutor(id string, UserData models.User
 	return orderServ.orderRepository.GetOrderByIdTutor(id, UserData.UserID)
 }
 
-func (orderServ *OrderService) GetOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error) {
+func (orderServ *OrderService) GetOrdersWithPagination(page int, size int, tag string, UserData models.UserData) (*models.OrderPagination, error) {
 	limit := size
 	offset := (page - 1) * size
 
-	orders, count, err := orderServ.orderRepository.GetOrdersPagination(limit, offset)
+	orders, count, err := orderServ.orderRepository.GetOrdersPagination(limit, offset, tag)
 	if err != nil {
 		return nil, err
 	}

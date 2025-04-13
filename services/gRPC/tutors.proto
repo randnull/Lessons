@@ -59,6 +59,7 @@ service UserService {
 message GetAllTutorsPaginationRequest {
   int32 page = 1;
   int32 size = 2;
+  string tag = 3;
 }
 
 message UpdateBioRequest {
