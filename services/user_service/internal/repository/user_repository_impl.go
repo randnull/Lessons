@@ -178,7 +178,7 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
             t.created_at
         FROM users u 
         INNER JOIN tutors t ON u.id = t.id
-        WHERE u.id = $1 AND u.role = $2 AND t.is_active = true`
+        WHERE u.id = $1 AND u.role = $2`
 
 	var tutor models.TutorDB
 	var bio sql.NullString
