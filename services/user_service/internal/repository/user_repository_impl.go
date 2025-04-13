@@ -536,12 +536,12 @@ func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int
          	UPDATE tutors
 			SET response_count = response_count + $1
 			WHERE id = (
-				SELECT id FROM users WHERE telegram_id = $2
+				SELECT id FROM users WHERE telegram_id = $2 AND role = $3
 			)
 			RETURNING response_count`
 
 	var newCount int64
-	err := r.db.QueryRow(query, responseCount, tutorTelegramID).Scan(&newCount)
+	err := r.db.QueryRow(query, responseCount, tutorTelegramID, "Tutor").Scan(&newCount)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
