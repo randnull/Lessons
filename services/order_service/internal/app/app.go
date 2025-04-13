@@ -119,6 +119,7 @@ func (a *App) Run() {
 	users.Get("/pagination", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.userControllers.GetTutorsPagination)
 
 	users.Get("/tutor/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.userControllers.GetTutorInfoById)
+	users.Get("/tutor/profile", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.GetMyTutorProfile)
 
 	users.Post("/tutor/bio", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.UpdateBioTutor)
 	users.Post("/tutor/tags", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.UpdateTagsTutor)

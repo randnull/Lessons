@@ -49,6 +49,25 @@ func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
 	return ctx.JSON(users)
 }
 
+func (u *UserController) GetMyTutorProfile(ctx *fiber.Ctx) error {
+	log.Println("Запрос на всей инфы от репета своей страницы")
+
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad auth data"})
+	}
+
+	tutorID := UserData.UserID
+
+	info, err := u.UserService.GetTutorInfoById(tutorID)
+	if err != nil {
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot get data tutor" + err.Error()})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(info)
+}
+
 func (u *UserController) GetTutorInfoById(ctx *fiber.Ctx) error {
 	log.Println("Запрос на всей инфы от репета")
 
