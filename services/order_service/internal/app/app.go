@@ -98,7 +98,7 @@ func (a *App) Run() {
 	orders.Put("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.UpdateOrderByID)
 	orders.Get("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetOrderByID)
 	orders.Delete("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.DeleteOrderByID)
-
+	orders.Post("/id/:id/active", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.SetActiveToOrder)
 	orders.Post("/select/id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.SelectTutorToOrder)
 
 	// Работа с заказами для репетиторов

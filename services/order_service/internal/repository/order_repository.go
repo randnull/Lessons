@@ -25,7 +25,8 @@ type OrderRepository interface {
 
 	CheckResponseExist(TutorID, OrderID string) bool
 	CreateResponse(orderID string, response *models.NewResponseModel, Tutor *models.Tutor, username string) (string, error)
-	GetResponseById(ResponseID string, studentID string) (*models.ResponseDB, error)
+	GetResponseById(ResponseID string) (*models.ResponseDB, error)
+	SetOrderStatus(status string, orderID string) error
 
 	SetTutorToOrder(response *models.ResponseDB, UserData models.UserData) error
 }

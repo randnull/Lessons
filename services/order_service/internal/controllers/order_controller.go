@@ -261,3 +261,27 @@ func (c *OrderController) SelectTutorToOrder(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{})
 }
+
+func (c *OrderController) SetActiveToOrder(ctx *fiber.Ctx) error {
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	orderID := ctx.Params("id")
+
+	var IsActive models.ChangeActive
+
+	if err := ctx.BodyParser(&IsActive); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request."})
+	}
+
+	err := c.OrderService.SetActiveOrderStatus(orderID, IsActive.IsActive, UserData)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to set inactive"})
+	}
+
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{})
+}

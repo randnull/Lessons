@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
@@ -36,7 +37,25 @@ func (s *ResponseService) GetTutorsResponses(UserData models.UserData) ([]models
 }
 
 func (s *ResponseService) GetResponseById(ResponseID string, UserData models.UserData) (*models.ResponseDB, error) {
-	return s.orderRepository.GetResponseById(ResponseID, UserData.UserID)
+	response, err := s.orderRepository.GetResponseById(ResponseID)
+
+	if err != nil {
+		return nil, errors.New("error with getting response")
+	}
+
+	if UserData.UserID != response.TutorID {
+		isUserRequest, err := s.orderRepository.CheckOrderByStudentID(response.OrderID, UserData.UserID)
+
+		if err != nil {
+			log.Println(err)
+			return nil, err
+		}
+
+		if !isUserRequest {
+			return nil, errors.New("no access")
+		}
+	}
+	return response, nil
 }
 
 func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.NewResponseModel, UserData models.UserData) (string, error) {
@@ -48,10 +67,22 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		return "", custom_errors.ErrResponseAlredyExist
 	}
 
-	TutorInfo, err := s.GRPCClient.GetTutor(context.Background(), UserData.UserID)
+	TutorInfoRaw, err := s.GRPCClient.GetTutorInfoById(context.Background(), UserData.UserID)
 
 	if err != nil {
-		return "", err
+		return "", errors.New(fmt.Sprintf("tutors with id %v does not exist", UserData.UserID))
+	}
+
+	if TutorInfoRaw.ResponseCount <= 0 {
+		return "", errors.New(fmt.Sprintf("tutors with id have %v responses. Denied", TutorInfoRaw.ResponseCount))
+	}
+
+	TutorInfo := &models.Tutor{
+		Id:         TutorInfoRaw.Tutor.Id,
+		TelegramID: TutorInfoRaw.Tutor.TelegramID,
+		Name:       TutorInfoRaw.Tutor.Name,
+		Bio:        TutorInfoRaw.Bio,
+		Tags:       TutorInfoRaw.Tags,
 	}
 
 	log.Println(UserData.UserID)

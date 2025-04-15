@@ -33,3 +33,7 @@ type ResponseToBrokerModel struct {
 	OrderID    string `json:"order_id"`
 	Title      string `json:"order_name"`
 }
+
+type SelectedResponseToBroker struct {
+	ResponseID string `json:"response_id"`
+}

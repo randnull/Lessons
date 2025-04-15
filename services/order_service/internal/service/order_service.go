@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
@@ -21,6 +22,8 @@ type OrderServiceInt interface {
 	UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error
 	DeleteOrder(orderID string, UserData models.UserData) error
 	SelectTutor(responseID string, UserData models.UserData) error
+	ApproveSelectedOrderByTutor(responseID string, UserData models.UserData) error
+	SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error
 }
 
 type OrderService struct {
@@ -146,7 +149,17 @@ func (orderServ *OrderService) GetAllUsersOrders(UserData models.UserData) ([]*m
 }
 
 func (orderServ *OrderService) SelectTutor(responseID string, UserData models.UserData) error {
-	response, err := orderServ.orderRepository.GetResponseById(responseID, UserData.UserID)
+	response, err := orderServ.orderRepository.GetResponseById(responseID)
+
+	isUserRequest, err := orderServ.orderRepository.CheckOrderByStudentID(responseID, UserData.UserID)
+
+	if err != nil {
+		return err
+	}
+
+	if !isUserRequest {
+		return custom_errors.ErrNotAllowed
+	}
 
 	log.Println(response, err)
 
@@ -162,5 +175,87 @@ func (orderServ *OrderService) SelectTutor(responseID string, UserData models.Us
 		return custom_errors.ErrNotAllowed
 	}
 
-	return orderServ.orderRepository.SetTutorToOrder(response, UserData)
+	err = orderServ.orderRepository.SetTutorToOrder(response, UserData)
+
+	if err != nil {
+		return errors.New("error with select tutor")
+	}
+
+	err = orderServ.ProducerBroker.Publish("selected_orders", models.SelectedResponseToBroker{
+		ResponseID: responseID,
+	})
+
+	if err != nil {
+		log.Printf("error with push response selected to broker")
+	}
+
+	return nil
+}
+
+func (orderServ *OrderService) ApproveSelectedOrderByTutor(responseID string, UserData models.UserData) error {
+	response, err := orderServ.orderRepository.GetResponseById(responseID)
+
+	if err != nil {
+		return errors.New("error with get response")
+	}
+
+	if response.TutorID != UserData.UserID {
+		return errors.New("error not allowed")
+	}
+
+	if !response.IsFinal {
+		return errors.New("error not final") // тут проверяем, что репетитора правда выбрали
+	}
+
+	err = orderServ.orderRepository.SetOrderStatus("Approved", response.OrderID)
+
+	if err != nil {
+		return errors.New("error with approved order")
+	}
+
+	err = orderServ.ProducerBroker.Publish("approved_orders", models.SelectedResponseToBroker{
+		ResponseID: responseID,
+	})
+
+	if err != nil {
+		log.Println("error with publish to broker")
+	}
+
+	return nil
+}
+
+func (orderServ *OrderService) SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error {
+	order, err := orderServ.orderRepository.GetOrderByID(orderID)
+
+	if err != nil {
+		return errors.New("error with get order")
+	}
+
+	if order.StudentID != UserData.UserID {
+		return errors.New("error not allowed")
+	}
+
+	if IsActive {
+		if order.Status != "Inactive" {
+			return errors.New("error not Inactive state")
+		}
+
+		err = orderServ.orderRepository.SetOrderStatus("New", orderID)
+
+		if err != nil {
+			return errors.New("error with NEW state order")
+		}
+	} else {
+		if order.Status != "New" {
+			return errors.New("error not NEW state")
+		}
+
+		err = orderServ.orderRepository.SetOrderStatus("Inactive", orderID)
+
+		if err != nil {
+			return errors.New("error with inactive order")
+		}
+	}
+
+	return nil
 }

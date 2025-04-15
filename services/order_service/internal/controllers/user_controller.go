@@ -82,6 +82,9 @@ func (u *UserController) GetTutorInfoById(ctx *fiber.Ctx) error {
 	tutorID := ctx.Params("id")
 
 	info, err := u.UserService.GetTutorInfoById(tutorID)
+
+	info.Tutor.TelegramID = 0 // скрываем для ученика профиль репетитора
+
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot get data tutor" + err.Error()})
 	}
@@ -135,7 +138,7 @@ func (u *UserController) UpdateBioTutor(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return nil
+	return ctx.SendStatus(fiber.StatusCreated)
 }
 
 // Отзывы
@@ -218,7 +221,7 @@ func (u *UserController) ChangeTutorActive(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Cannot update status"})
 	}
 
-	return nil
+	return ctx.SendStatus(fiber.StatusCreated)
 }
 
 func (u *UserController) UpdateNameTutor(ctx *fiber.Ctx) error {
@@ -240,5 +243,5 @@ func (u *UserController) UpdateNameTutor(ctx *fiber.Ctx) error {
 		return err
 	}
 
-	return nil
+	return ctx.SendStatus(fiber.StatusCreated)
 }

@@ -681,7 +681,7 @@ func (orderStorage *Repository) CheckOrderByStudentID(orderID string, studentID 
 	return isExist, nil
 }
 
-func (orderStorage *Repository) GetResponseById(ResponseID string, studentID string) (*models.ResponseDB, error) {
+func (orderStorage *Repository) GetResponseById(ResponseID string) (*models.ResponseDB, error) {
 	var response models.ResponseDB
 
 	query := `
@@ -701,18 +701,6 @@ func (orderStorage *Repository) GetResponseById(ResponseID string, studentID str
 	if err != nil {
 		fmt.Println(err)
 		return nil, custom_errors.ErrGetResponse
-	}
-
-	fmt.Println(response.OrderID, studentID)
-
-	isExist, err := orderStorage.CheckOrderByStudentID(response.OrderID, studentID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !isExist {
-		return nil, custom_errors.ErrNotAllowed
 	}
 
 	return &response, nil
@@ -738,7 +726,7 @@ func (orderStorage *Repository) SetTutorToOrder(response *models.ResponseDB, Use
 		return err
 	}
 
-	querySetStatus := `UPDATE orders SET status = $1 WHERE id = $2` // status = $1,
+	querySetStatus := `UPDATE orders SET status = $1 WHERE id = $2`
 
 	_, err = tx.Exec(querySetStatus, "Selected", response.OrderID) // "Selected",
 
@@ -764,6 +752,18 @@ func (orderStorage *Repository) SetTutorToOrder(response *models.ResponseDB, Use
 		return err
 	}
 
+	return nil
+}
+
+func (orderStorage *Repository) SetOrderStatus(status string, orderID string) error {
+	querySetStatus := `UPDATE orders SET status = $1 WHERE id = $2`
+
+	_, err := orderStorage.db.Exec(querySetStatus, status, orderID)
+
+	if err != nil {
+		log.Println(err)
+		return errors.New("cannot set status")
+	}
 	return nil
 }
 
