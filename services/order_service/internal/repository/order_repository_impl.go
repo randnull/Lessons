@@ -58,6 +58,7 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID st
 	timestamp := time.Now()
 
 	query := `INSERT INTO orders (
+                    name,
                     student_id, 
                     title, 
                     description, 
@@ -70,7 +71,7 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID st
                     created_at, 
                     updated_at
             )
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)  RETURNING id`
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)  RETURNING id`
 
 	var orderID string
 
@@ -79,6 +80,7 @@ func (orderStorage *Repository) CreateOrder(order *models.NewOrder, studentID st
 	log.Println(tags)
 
 	err := orderStorage.db.QueryRow(query,
+		order.Name,
 		studentID,
 		order.Title,
 		order.Description,
@@ -115,6 +117,7 @@ func (orderStorage *Repository) GetOrderByID(id string) (*models.OrderDetails, e
 	query := `
 		SELECT 
 			o.id, 
+			o.name,
 			o.student_id, 
 			o.title, 
 			o.description, 
@@ -157,6 +160,7 @@ func (orderStorage *Repository) GetOrderByID(id string) (*models.OrderDetails, e
 
 		err := rows.Scan(
 			&order.ID,
+			&order.Name,
 			&order.StudentID,
 			&order.Title,
 			&order.Description,
@@ -219,6 +223,7 @@ func (orderStorage *Repository) GetOrders() ([]*models.Order, error) {
 
 	query := `SELECT 
     			id, 
+    			name,
     			student_id, 
     			title, 
     			description,
@@ -242,6 +247,7 @@ func (orderStorage *Repository) GetOrders() ([]*models.Order, error) {
 		var order models.Order
 		err := rows.Scan(
 			&order.ID,
+			&order.Name,
 			&order.StudentID,
 			&order.Title,
 			&order.Description,
@@ -299,6 +305,7 @@ func (orderStorage *Repository) GetOrdersPagination(limit int, offset int, tags 
 
 	query := `SELECT 
                 id, 
+                name,
                 student_id, 
                 title, 
                 description,
@@ -332,6 +339,7 @@ func (orderStorage *Repository) GetOrdersPagination(limit int, offset int, tags 
 		var order models.Order
 		err := rows.Scan(
 			&order.ID,
+			&order.Name,
 			&order.StudentID,
 			&order.Title,
 			&order.Description,
@@ -386,6 +394,7 @@ func (orderStorage *Repository) GetStudentOrdersPagination(limit int, offset int
 
 	query := `SELECT 
     			id, 
+    			name,
     			student_id, 
     			title, 
     			description,
@@ -409,6 +418,7 @@ func (orderStorage *Repository) GetStudentOrdersPagination(limit int, offset int
 		var order models.Order
 		err := rows.Scan(
 			&order.ID,
+			&order.Name,
 			&order.StudentID,
 			&order.Title,
 			&order.Description,
@@ -444,6 +454,7 @@ func (orderStorage *Repository) GetOrderByIdTutor(id string, tutorID string) (*m
 	query := `
 		SELECT 
 			id, 
+			name,
 			title, 
 			description, 
 			grade,
@@ -490,6 +501,7 @@ func (orderStorage *Repository) GetStudentOrders(studentID string) ([]*models.Or
 
 	query := `SELECT 
     			id, 
+    			name,
     			student_id, 
     			title, 
     			description, 
@@ -514,6 +526,7 @@ func (orderStorage *Repository) GetStudentOrders(studentID string) ([]*models.Or
 		var order models.Order
 		err := rows.Scan(
 			&order.ID,
+			&order.Name,
 			&order.StudentID,
 			&order.Title,
 			&order.Description,

@@ -7,6 +7,7 @@ import (
 
 type NewOrder struct {
 	Title       string   `json:"title"`
+	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	Grade       string   `json:"grade"`
 	MinPrice    int      `json:"min_price"`
@@ -25,6 +26,7 @@ type UpdateOrder struct {
 
 type Order struct {
 	ID            string         `json:"id"`
+	Name          string         `json:"name"`
 	StudentID     string         `json:"student_id"`
 	Title         string         `json:"title"`
 	Description   string         `json:"description"`
@@ -45,6 +47,7 @@ type OrderPagination struct {
 
 type OrderDetailsTutor struct {
 	ID            string         `json:"id" db:"id"`
+	Name          string         `json:"name" db:"name"`
 	Title         string         `json:"title" db:"title"`
 	Description   string         `json:"description" db:"description"`
 	Grade         string         `json:"grade" db:"grade"`
@@ -59,6 +62,7 @@ type OrderDetailsTutor struct {
 
 type OrderDetails struct {
 	ID            string         `json:"id"`
+	Name          string         `json:"name"`
 	StudentID     string         `json:"student_id"`
 	Title         string         `json:"title"`
 	Description   string         `json:"description"`
@@ -78,6 +82,5 @@ type OrderToBrokerWithID struct {
 	StudentID int64    `json:"student_id"`
 	Title     string   `json:"order_name"`
 	Tags      []string `json:"tags"`
-	//ChatID    int64    `json:"chat_id"`
-	Status string `json:"status"`
+	Status    string   `json:"status"`
 }
