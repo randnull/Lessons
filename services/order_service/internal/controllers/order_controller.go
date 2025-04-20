@@ -256,7 +256,7 @@ func (c *OrderController) SelectTutorToOrder(ctx *fiber.Ctx) error {
 	err := c.OrderService.SelectTutor(responseID, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to get orders"})
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to get orders" + err.Error()})
 	}
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{})

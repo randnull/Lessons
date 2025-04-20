@@ -151,27 +151,17 @@ func (orderServ *OrderService) GetAllUsersOrders(UserData models.UserData) ([]*m
 func (orderServ *OrderService) SelectTutor(responseID string, UserData models.UserData) error {
 	response, err := orderServ.orderRepository.GetResponseById(responseID)
 
-	isUserRequest, err := orderServ.orderRepository.CheckOrderByStudentID(responseID, UserData.UserID)
-
 	if err != nil {
 		return err
 	}
 
+	isUserRequest, err := orderServ.orderRepository.CheckOrderByStudentID(response.OrderID, UserData.UserID)
+
+	if err != nil {
+		return custom_errors.ErrNotAllowed
+	}
+
 	if !isUserRequest {
-		return custom_errors.ErrNotAllowed
-	}
-
-	log.Println(response, err)
-
-	if err != nil || response == nil {
-		return custom_errors.ErrNotAllowed
-	}
-
-	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(response.OrderID, UserData.UserID)
-
-	log.Println(isExist, err)
-
-	if err != nil || !isExist {
 		return custom_errors.ErrNotAllowed
 	}
 

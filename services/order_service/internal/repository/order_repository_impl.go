@@ -687,6 +687,7 @@ func (orderStorage *Repository) CheckOrderByStudentID(orderID string, studentID 
     `
 
 	err := orderStorage.db.QueryRow(query, orderID, studentID).Scan(&isExist)
+
 	if err != nil {
 		return false, err
 	}
