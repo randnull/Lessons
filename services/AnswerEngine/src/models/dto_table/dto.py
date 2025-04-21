@@ -58,8 +58,8 @@ class SuggestDto(BaseModel):
     tutor_id: int
     title: str
     description: str
-    min_price: str
-    max_price: str
+    min_price: int
+    max_price: int
 
 class TagDto(BaseModel):
     id: Optional[UUID4]
