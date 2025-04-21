@@ -1,7 +1,6 @@
 from AnswerEngine.src.TelegramBot.botStudent import bot_student
 from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
-from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto
-# from AnswerEngine.src.models.dto_table.response_dto import ResponsesDto
+from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto
 
 from AnswerEngine.src.config.settings import settings
 
@@ -26,3 +25,16 @@ async def proceed_response(response: ResponseDto) -> None:
 
     await bot_student.send_message(chat_id=response.student_id, text=messageStudent, parse_mode="html")
     await bot_tutor.send_message(chat_id=response.tutor_id, text=messageTutor, parse_mode="html")
+
+async def proceed_suggest(suggest_order: SuggestDto) -> None:
+
+    message = (
+        f"<b>Вам предложили заказ: {suggest_order.title}</b>\n\n"
+        f"<b>Название: {suggest_order.title}</b>\n\n"
+        f"<b>Описание: {suggest_order.description}</b>\n\n"
+        f"<b>Цена: {suggest_order.min_price} - {suggest_order.max_price} </b>\n\n"
+    )
+
+    await bot_tutor.send_message(chat_id=suggest_order.tutor_id, text=message, parse_mode="html")
+
+

@@ -53,6 +53,13 @@ class ResponseDto(BaseModel):
     order_id: UUID4
     order_name: str
 
+class SuggestDto(BaseModel):
+    id: UUID4
+    tutor_id: int
+    title: str
+    description: str
+    min_price: str
+    max_price: str
 
 class TagDto(BaseModel):
     id: Optional[UUID4]

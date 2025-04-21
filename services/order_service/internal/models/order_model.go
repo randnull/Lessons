@@ -84,3 +84,12 @@ type OrderToBrokerWithID struct {
 	Tags      []string `json:"tags"`
 	Status    string   `json:"status"`
 }
+
+type SuggestOrder struct {
+	ID              string `json:"order_id"`
+	TutorTelegramID int64  `json:"tutor_telegram_id"`
+	Title           string `json:"order_name"`
+	Description     string `json:"description"`
+	MinPrice        int    `json:"min_price"`
+	MaxPrice        int    `json:"max_price"`
+}

@@ -285,3 +285,22 @@ func (c *OrderController) SetActiveToOrder(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{})
 }
+
+func (c *OrderController) SuggestOrder(ctx *fiber.Ctx) error {
+	UserData, ok := ctx.Locals("user_data").(models.UserData)
+
+	if !ok {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
+	}
+
+	tutorID := ctx.Params("id")
+	orderID := ctx.Query("order_id")
+
+	err := c.OrderService.SuggestOrderToTutor(orderID, tutorID, UserData)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to suggest order"})
+	}
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+}

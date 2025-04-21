@@ -22,6 +22,7 @@ type OrderServiceInt interface {
 	UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error
 	DeleteOrder(orderID string, UserData models.UserData) error
 	SelectTutor(responseID string, UserData models.UserData) error
+	SuggestOrderToTutor(orderID, tutorID string, UserData models.UserData) error
 	ApproveSelectedOrderByTutor(responseID string, UserData models.UserData) error
 	SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error
 }
@@ -245,6 +246,44 @@ func (orderServ *OrderService) SetActiveOrderStatus(orderID string, IsActive boo
 		if err != nil {
 			return errors.New("error with inactive order")
 		}
+	}
+
+	return nil
+}
+
+func (orderServ *OrderService) SuggestOrderToTutor(orderID, tutorID string, UserData models.UserData) error {
+	user, err := orderServ.GRPCClient.GetTutor(context.Background(), tutorID)
+
+	if err != nil {
+		return err
+	}
+
+	orderInfo, err := orderServ.orderRepository.GetOrderByID(orderID)
+
+	if err != nil {
+		return err
+	}
+
+	if orderInfo.Status != "New" {
+		return errors.New("order not NEW state")
+	}
+
+	if orderInfo.StudentID != UserData.UserID {
+		return errors.New("not allowed")
+	}
+
+	suggestOrderModel := models.SuggestOrder{
+		ID:              orderInfo.ID,
+		TutorTelegramID: user.TelegramID,
+		Title:           orderInfo.Title,
+		Description:     orderInfo.Description,
+		MinPrice:        orderInfo.MinPrice,
+		MaxPrice:        orderInfo.MaxPrice,
+	}
+
+	err = orderServ.ProducerBroker.Publish("suggest_order", suggestOrderModel)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -1,14 +1,14 @@
-from aiogram.types import ReplyKeyboardMarkup, WebAppInfo, InlineKeyboardMarkup
+from aiogram.types import ReplyKeyboardMarkup, WebAppInfo, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardBuilder
 
-def student_start_keyboard() -> ReplyKeyboardMarkup:
-    builder = ReplyKeyboardBuilder()
-    builder.button(
-        text="Найти репетитора",
-        web_app=WebAppInfo(url="https://lessonsmy.tech/")
-    )
-    builder.adjust(1)
-    return builder.as_markup(resize_keyboard=True)
+def student_start_keyboard() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="🔍 Найти репетитора",
+            web_app=WebAppInfo(url="https://lessonsmy.tech/")
+        )]
+    ])
+    return keyboard
 
 def tutor_start_keyboard() -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
@@ -18,6 +18,15 @@ def tutor_start_keyboard() -> ReplyKeyboardMarkup:
     )
     builder.adjust(1)
     return builder.as_markup(resize_keyboard=True)
+
+def tutors_start_keyboard() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="🔍 Найти учеников",
+            web_app=WebAppInfo(url="https://lessonsmy.tech/reps")
+        )]
+    ])
+    return keyboard
 
 
 def payment_keyboard():
