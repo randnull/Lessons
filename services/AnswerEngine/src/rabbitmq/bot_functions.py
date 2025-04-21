@@ -29,8 +29,7 @@ async def proceed_response(response: ResponseDto) -> None:
 async def proceed_suggest(suggest_order: SuggestDto) -> None:
 
     message = (
-        f"<b>Вам предложили заказ: {suggest_order.title}</b>\n\n"
-        f"<b>Название: {suggest_order.title}</b>\n\n"
+        f"<b>Вам предложили заказ: {suggest_order.order_name}</b>\n\n"
         f"<b>Описание: {suggest_order.description}</b>\n\n"
         f"<b>Цена: {suggest_order.min_price} - {suggest_order.max_price} </b>\n\n"
     )
