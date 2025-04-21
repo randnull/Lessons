@@ -34,6 +34,6 @@ async def proceed_suggest(suggest_order: SuggestDto) -> None:
         f"<b>Цена: {suggest_order.min_price} - {suggest_order.max_price} </b>\n\n"
     )
 
-    await bot_tutor.send_message(chat_id=suggest_order.tutor_id, text=message, parse_mode="html")
+    await bot_tutor.send_message(chat_id=suggest_order.tutor_telegram_id, text=message, parse_mode="html")
 
 
