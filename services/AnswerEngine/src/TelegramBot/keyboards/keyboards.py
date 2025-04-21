@@ -10,14 +10,14 @@ def student_start_keyboard() -> InlineKeyboardMarkup:
     ])
     return keyboard
 
-def tutor_start_keyboard() -> ReplyKeyboardMarkup:
-    builder = ReplyKeyboardBuilder()
-    builder.button(
-        text="Найти учеников",
-        web_app=WebAppInfo(url="https://lessonsmy.tech/tutors")
-    )
-    builder.adjust(1)
-    return builder.as_markup(resize_keyboard=True)
+def tutor_start_keyboard() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(
+            text="🔍 Найти учеников",
+            web_app=WebAppInfo(url="https://lessonsmy.tech/reps")
+        )]
+    ])
+    return keyboard
 
 def tutors_start_keyboard() -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
