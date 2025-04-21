@@ -157,7 +157,7 @@ func (u *UserController) CreateReview(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad auth"})
 	}
 
-	id, err := u.UserService.CreateReview(UserData.UserID, ReviewRequest.TutorID, ReviewRequest.Comment, ReviewRequest.Rating)
+	id, err := u.UserService.CreateReview(ReviewRequest.OrderID, ReviewRequest.TutorID, ReviewRequest.Comment, ReviewRequest.Rating, UserData)
 	if err != nil {
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "error review" + err.Error()})
 	}

@@ -30,7 +30,7 @@ message TutorDetails {
 message Review {
   string id = 1;
   string tutor_id = 2;
-  string student_id = 3;
+  string order_id = 3;
   int32 rating = 4;
   string comment = 5;
   google.protobuf.Timestamp created_at = 6;
@@ -135,7 +135,7 @@ message Success {
 
 message CreateReviewRequest {
   string tutor_id = 1;
-  string student_id = 2;
+  string order_id = 2;
   int32 rating = 3;
   string comment = 4;
 }

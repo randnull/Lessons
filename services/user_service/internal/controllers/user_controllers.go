@@ -163,7 +163,7 @@ func (s *UserControllers) GetTutorInfoById(ctx context.Context, in *pb.GetById) 
 		reviews = append(reviews, &pb.Review{
 			Id:        r.ID,
 			TutorId:   r.TutorID,
-			StudentId: r.StudentID,
+			OrderId:   r.OrderID,
 			Rating:    int32(r.Rating),
 			Comment:   r.Comment,
 			CreatedAt: timestamppb.New(r.CreatedAt),
@@ -188,7 +188,7 @@ func (s *UserControllers) GetTutorInfoById(ctx context.Context, in *pb.GetById) 
 }
 
 func (s *UserControllers) CreateReview(ctx context.Context, in *pb.CreateReviewRequest) (*pb.CreateReviewResponse, error) {
-	reviewID, err := s.UserService.CreateReview(in.TutorId, in.StudentId, int(in.Rating), in.Comment)
+	reviewID, err := s.UserService.CreateReview(in.TutorId, in.OrderId, int(in.Rating), in.Comment)
 	if err != nil {
 		return nil, err
 	}
@@ -207,7 +207,7 @@ func (s *UserControllers) GetReview(ctx context.Context, in *pb.GetReviewRequest
 	return &pb.Review{
 		Id:        review.ID,
 		TutorId:   review.TutorID,
-		StudentId: review.StudentID,
+		OrderId:   review.OrderID,
 		Rating:    int32(review.Rating),
 		Comment:   review.Comment,
 		CreatedAt: timestamppb.New(review.CreatedAt),
@@ -225,7 +225,7 @@ func (s *UserControllers) GetReviews(ctx context.Context, in *pb.GetReviewsReque
 		pbReviews = append(pbReviews, &pb.Review{
 			Id:        r.ID,
 			TutorId:   r.TutorID,
-			StudentId: r.StudentID,
+			OrderId:   r.OrderID,
 			Rating:    int32(r.Rating),
 			Comment:   r.Comment,
 			CreatedAt: timestamppb.New(r.CreatedAt),

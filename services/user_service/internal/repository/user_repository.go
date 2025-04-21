@@ -16,7 +16,7 @@ type UserRepository interface {
 	UpdateTutorBio(userID string, bio string) error
 	UpdateTutorTags(tutorID string, tags []string) error
 	UpdateTutorName(tutorID string, name string) error
-	CreateReview(tutorID, studentID string, rating int, comment string) (string, error)
+	CreateReview(tutorID, orderID string, rating int, comment string) (string, error)
 	GetReviews(tutorID string) ([]models.Review, error)
 	GetReviewById(reviewID string) (*models.Review, error)
 	GetTagsByTutorID(tutorID string) ([]string, error)

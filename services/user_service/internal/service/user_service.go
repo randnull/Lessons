@@ -17,7 +17,7 @@ type UserServiceInt interface {
 	GetTutorsPagination(page int, size int, tag string) (*pb.GetTutorsPaginationResponse, error)
 	UpdateBioTutor(userID string, bio string) error
 	UpdateTutorTags(tutorID string, tags []string) error
-	CreateReview(tutorID, studentID string, rating int, comment string) (string, error)
+	CreateReview(tutorID, orderID string, rating int, comment string) (string, error)
 	GetReviews(tutorID string) ([]models.Review, error)
 	GetReviewById(reviewID string) (*models.Review, error)
 	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
@@ -88,8 +88,8 @@ func (s *UserService) GetTutorsPagination(page int, size int, tag string) (*pb.G
 func (s *UserService) UpdateTutorTags(tutorID string, tags []string) error {
 	return s.userRepository.UpdateTutorTags(tutorID, tags)
 }
-func (s *UserService) CreateReview(tutorID string, studentID string, rating int, comment string) (string, error) {
-	return s.userRepository.CreateReview(tutorID, studentID, rating, comment)
+func (s *UserService) CreateReview(tutorID string, orderID string, rating int, comment string) (string, error) {
+	return s.userRepository.CreateReview(tutorID, orderID, rating, comment)
 }
 func (s *UserService) GetReviews(tutorID string) ([]models.Review, error) {
 	return s.userRepository.GetReviews(tutorID)

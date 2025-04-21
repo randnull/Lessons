@@ -177,15 +177,15 @@ func (g *GRPCClient) UpdateTagsTutor(ctx context.Context, tags []string, tutorID
 	return resp.Success, nil
 }
 
-func (g *GRPCClient) CreateReview(ctx context.Context, studentID string, tutorID string, comment string, rating int) (string, error) {
+func (g *GRPCClient) CreateReview(ctx context.Context, orderID string, tutorID string, comment string, rating int) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	resp, err := g.client.CreateReview(ctx, &pb.CreateReviewRequest{
-		TutorId:   tutorID,
-		StudentId: studentID,
-		Rating:    int32(rating),
-		Comment:   comment,
+		TutorId: tutorID,
+		OrderId: orderID,
+		Rating:  int32(rating),
+		Comment: comment,
 	})
 	if err != nil {
 		return "", err
@@ -208,7 +208,7 @@ func (g *GRPCClient) GetReviewsByTutor(ctx context.Context, tutorID string) ([]m
 		reviews = append(reviews, models.Review{
 			ID:        r.Id,
 			TutorID:   r.TutorId,
-			StudentID: r.StudentId,
+			OrderID:   r.OrderId,
 			Rating:    int(r.Rating),
 			Comment:   r.Comment,
 			CreatedAt: r.CreatedAt.AsTime(),
@@ -230,7 +230,7 @@ func (g *GRPCClient) GetReviewsByID(ctx context.Context, reviewID string) (*mode
 	return &models.Review{
 		ID:        resp.Id,
 		TutorID:   resp.TutorId,
-		StudentID: resp.StudentId,
+		OrderID:   resp.OrderId,
 		Rating:    int(resp.Rating),
 		Comment:   resp.Comment,
 		CreatedAt: resp.CreatedAt.AsTime(),
@@ -251,7 +251,7 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string) (*mod
 		reviews = append(reviews, models.Review{
 			ID:        r.Id,
 			TutorID:   r.TutorId,
-			StudentID: r.StudentId,
+			OrderID:   r.OrderId,
 			Rating:    int(r.Rating),
 			Comment:   r.Comment,
 			CreatedAt: r.CreatedAt.AsTime(),

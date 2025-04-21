@@ -54,9 +54,9 @@ class ResponseDto(BaseModel):
     order_name: str
 
 class SuggestDto(BaseModel):
-    id: UUID4
-    tutor_id: int
-    title: str
+    order_id: UUID4
+    tutor_telegram_id: int
+    order_name: str
     description: str
     min_price: int
     max_price: int

@@ -409,12 +409,12 @@ func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
 	return nil
 }
 
-func (r *Repository) CreateReview(tutorID, studentID string, rating int, comment string) (string, error) {
+func (r *Repository) CreateReview(tutorID, orderID string, rating int, comment string) (string, error) {
 	timestamp := time.Now()
 
 	queryInsertReview := `INSERT INTO reviews (
                      tutor_id,
-                     student_id,
+                     order_id,
                      rating,
                      comment,
                      created_at
@@ -423,7 +423,7 @@ func (r *Repository) CreateReview(tutorID, studentID string, rating int, comment
 	`
 
 	var reviewID string
-	err := r.db.QueryRow(queryInsertReview, tutorID, studentID, rating, comment, timestamp).Scan(&reviewID)
+	err := r.db.QueryRow(queryInsertReview, tutorID, orderID, rating, comment, timestamp).Scan(&reviewID)
 	if err != nil {
 		log.Printf("Failed create review ((: %v", err)
 		return "", err
@@ -436,7 +436,7 @@ func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
 	query := `SELECT 
     			id, 
     			tutor_id, 
-    			student_id, 
+    			order_id, 
     			rating, 
     			comment, 
     			created_at
@@ -455,7 +455,7 @@ func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
 
 	for rows.Next() {
 		var review models.Review
-		err := rows.Scan(&review.ID, &review.TutorID, &review.StudentID, &review.Rating, &review.Comment, &review.CreatedAt)
+		err := rows.Scan(&review.ID, &review.TutorID, &review.OrderID, &review.Rating, &review.Comment, &review.CreatedAt)
 		if err != nil {
 			log.Println(err)
 			continue
@@ -477,7 +477,7 @@ func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
 	query := `SELECT 
     			id,
        			tutor_id,
-       			student_id,
+       			order_id,
        			rating,
        			comment,
        			created_at
@@ -487,7 +487,7 @@ func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
 
 	var review models.Review
 	err := r.db.QueryRow(query, reviewID).Scan(
-		&review.ID, &review.TutorID, &review.StudentID, &review.Rating, &review.Comment, &review.CreatedAt,
+		&review.ID, &review.TutorID, &review.OrderID, &review.Rating, &review.Comment, &review.CreatedAt,
 	)
 
 	if err != nil {

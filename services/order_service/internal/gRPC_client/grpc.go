@@ -25,7 +25,7 @@ type GRPCClientInt interface {
 	CreateNewResponse(ctx context.Context, tutorID string) (bool, error)
 
 	// Review operations
-	CreateReview(ctx context.Context, studentID, tutorID, comment string, rating int) (string, error)
+	CreateReview(ctx context.Context, orderID, tutorID, comment string, rating int) (string, error)
 	GetReviewsByTutor(ctx context.Context, tutorID string) ([]models.Review, error)
 	GetReviewsByID(ctx context.Context, reviewID string) (*models.Review, error)
 

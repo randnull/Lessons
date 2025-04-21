@@ -16,7 +16,7 @@ type UserServiceInt interface {
 	GetAllTutorsPagination(page int, size int, tag string) (*models.TutorsPagination, error)
 	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
 	UpdateTagsTutor(tags []string, TutorID string) (bool, error)
-	CreateReview(studentID string, tutorID string, comment string, rating int) (string, error)
+	CreateReview(orderID string, tutorID string, comment string, rating int, UserData models.UserData) (string, error)
 	GetReviewsByTutor(tutorID string) ([]models.Review, error)
 	GetReviewsByID(reviewID string) (*models.Review, error)
 	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
@@ -109,8 +109,9 @@ func (u *UserService) UpdateTagsTutor(tags []string, TutorID string) (bool, erro
 	return success, nil
 }
 
-func (u *UserService) CreateReview(studentID string, tutorID string, comment string, rating int) (string, error) {
-	return u.GRPCClient.CreateReview(context.Background(), studentID, tutorID, comment, rating)
+func (u *UserService) CreateReview(orderID string, tutorID string, comment string, rating int, UserData models.UserData) (string, error) {
+	// вот тут обязательные провекрки
+	return u.GRPCClient.CreateReview(context.Background(), orderID, tutorID, comment, rating)
 }
 
 func (u *UserService) GetReviewsByTutor(tutorID string) ([]models.Review, error) {

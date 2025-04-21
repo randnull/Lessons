@@ -21,8 +21,8 @@
                 <constraints nullable="false" foreignKeyName="fk_reviews_tutors" references="tutors(id)"/>
             </column>
 
-            <column name="student_id" type="${uuid_type}" remarks="ref to student">
-                <constraints nullable="false" foreignKeyName="fk_reviews_students" references="users(id)"/>
+            <column name="order_id" type="${uuid_type}" remarks="order id">
+                <constraints nullable="false"/>
             </column>
 
             <column name="rating" type="INT" remarks="rating from 1 to 5">
@@ -35,6 +35,13 @@
                 <constraints nullable="false"/>
             </column>
         </createTable>
+    </changeSet>
+
+    <changeSet author="k.goryunov" id="create-index">
+        <createIndex indexName="index_tutor_order" tableName="reviews" unique="true">
+            <column name="tutor_id"/>
+            <column name="order_id"/>
+        </createIndex>
     </changeSet>
 
 </databaseChangeLog>
