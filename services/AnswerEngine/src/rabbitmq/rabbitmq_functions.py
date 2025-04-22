@@ -30,6 +30,6 @@ async def response_func(message: IncomingMessage):
 async def suggest_func(message: IncomingMessage):
     async with message.process():
         body = json.loads(message.body.decode())
-        new_response = SuggestDto(**body)
+        new_suggest = SuggestDto(**body)
 
-        await proceed_suggest(new_response)
+        await proceed_suggest(new_suggest)
