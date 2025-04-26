@@ -4,12 +4,15 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/config"
 	auth "github.com/randnull/Lessons/internal/jwt"
+	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 )
 
 func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		token := c.Get("Authorization")
+
+		logger.Debug("TokenAuthMiddleware called")
 
 		if token == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -21,6 +24,8 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 		UserClaims, err := auth.ParseJWTToken(token, cfg.JWTSecret)
 
 		if err != nil {
+			logger.Debug("TokenAuthMiddleware failed: " + err.Error())
+
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,
 				"msg":   "Bad auth data provided. Error in Parse",
@@ -42,6 +47,8 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 		}
 
 		if err != nil {
+			logger.Debug("TokenAuthMiddleware failed: " + err.Error())
+
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,
 				"msg":   "Bad auth data provided. Error in Parse",
@@ -55,6 +62,7 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 				UserID:     UserClaims.UserID,
 				Role:       UserClaims.Role,
 			})
+		logger.Debug("TokenAuthMiddleware Success")
 
 		return c.Next()
 	}

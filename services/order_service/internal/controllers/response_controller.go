@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
 )
@@ -18,61 +18,64 @@ func NewResponseController(ResponseServ service.ResponseServiceInt) *ResponseCon
 }
 
 func (r *ResponseController) GetTutorsResponses(ctx *fiber.Ctx) error {
-	UserData, ok := ctx.Locals("user_data").(models.UserData)
+	logger.Debug("GetTutorsResponses called")
 
-	if !ok {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
-	}
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
 
 	response, err := r.ResponseService.GetTutorsResponses(UserData)
 
 	if err != nil {
-		fmt.Println(err)
+		logger.Error("GetTutorsResponses failed: " + err.Error())
 		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": err.Error()})
 	}
+
+	logger.Debug("GetTutorsResponses successful")
 
 	return ctx.JSON(response)
 }
 
 func (r *ResponseController) GetResponseById(ctx *fiber.Ctx) error {
+	logger.Debug("GetResponseById called")
+
 	ResponseID := ctx.Params("id")
 
-	UserData, ok := ctx.Locals("user_data").(models.UserData)
-
-	if !ok {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
-	}
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
 
 	response, err := r.ResponseService.GetResponseById(ResponseID, UserData)
 
 	if err != nil {
-		fmt.Println(err)
+		logger.Error("GetResponseById failed: " + err.Error())
 		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": err.Error()})
 	}
+
+	logger.Debug("GetResponseById successful")
 
 	return ctx.JSON(response)
 }
 
 func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
+	logger.Debug("ResponseToOrder called")
+
 	orderID := ctx.Params("id")
 
 	var NewResponse models.NewResponseModel
 
 	if err := ctx.BodyParser(&NewResponse); err != nil {
+		logger.Error("ResponseToOrder failed: " + err.Error())
+
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	UserData, ok := ctx.Locals("user_data").(models.UserData)
-
-	if !ok {
-		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": "bad init data"})
-	}
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
 
 	responseID, err := r.ResponseService.ResponseToOrder(orderID, &NewResponse, UserData)
 
 	if err != nil {
+		logger.Error("ResponseToOrder failed: " + err.Error())
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
+
+	logger.Debug("ResponseToOrder successful")
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{
 		"response_id": responseID,

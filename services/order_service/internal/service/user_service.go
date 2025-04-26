@@ -3,10 +3,9 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/randnull/Lessons/internal/gRPC_client"
+	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
-	"log"
 )
 
 type UserServiceInt interface {
@@ -46,6 +45,7 @@ func (u *UserService) GetAllUsers() ([]*models.TutorForList, error) {
 	usersRPC, err := u.GRPCClient.GetAllUsers(context.Background())
 
 	if err != nil {
+		logger.Error("[UserService] GetAllUsers error GetAllUsers: " + err.Error())
 		return nil, err
 	}
 
@@ -63,9 +63,10 @@ func (u *UserService) GetAllUsers() ([]*models.TutorForList, error) {
 }
 
 func (u *UserService) UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error {
-	success, err := u.GRPCClient.UpdateBioTutor(context.Background(), BioModel.Bio, UserData.UserID)
+	_, err := u.GRPCClient.UpdateBioTutor(context.Background(), BioModel.Bio, UserData.UserID)
+	//success
+	if err != nil {
 
-	if !success {
 		return err
 	}
 
@@ -76,6 +77,7 @@ func (u *UserService) GetAllTutorsPagination(page int, size int, tag string) (*m
 	usersRPC, err := u.GRPCClient.GetTutorsPagination(context.Background(), page, size, tag)
 
 	if err != nil {
+		logger.Error("[UserService] GetAllTutorsPagination error GetTutorsPagination: " + err.Error())
 		return nil, err
 	}
 
@@ -117,6 +119,7 @@ func (u *UserService) CreateReview(orderID string, tutorID string, comment strin
 func (u *UserService) GetReviewsByTutor(tutorID string) ([]models.Review, error) {
 	reviews, err := u.GRPCClient.GetReviewsByTutor(context.Background(), tutorID)
 	if err != nil {
+		logger.Error("[UserService] GetReviewsByTutor error GetReviewsByTutor: " + err.Error())
 		return nil, err
 	}
 
@@ -126,6 +129,8 @@ func (u *UserService) GetReviewsByTutor(tutorID string) ([]models.Review, error)
 func (u *UserService) GetReviewsByID(reviewID string) (*models.Review, error) {
 	review, err := u.GRPCClient.GetReviewsByID(context.Background(), reviewID)
 	if err != nil {
+		logger.Error("[UserService] GetReviewsByID error GetReviewsByID: " + err.Error())
+
 		return nil, err
 	}
 
@@ -135,10 +140,8 @@ func (u *UserService) GetReviewsByID(reviewID string) (*models.Review, error) {
 func (u *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, error) {
 	TutorDetails, err := u.GRPCClient.GetTutorInfoById(context.Background(), tutorID)
 
-	log.Println(TutorDetails)
-	fmt.Println(TutorDetails)
-
 	if err != nil {
+		logger.Error("[UserService] GetTutorInfoById error GetTutorInfoById: " + err.Error())
 		return nil, err
 	}
 

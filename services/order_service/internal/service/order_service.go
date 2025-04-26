@@ -5,26 +5,29 @@ import (
 	"errors"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
+	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
-	"log"
 )
 
 type OrderServiceInt interface {
+	// order edit
 	CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error)
-	GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error)
-	GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error)
-	GetOrdersWithPagination(page int, size int, tag string, UserData models.UserData) (*models.OrderPagination, error)
-	GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error)
-	GetAllOrders(UserData models.UserData) ([]*models.Order, error)
-	GetAllUsersOrders(UserData models.UserData) ([]*models.Order, error)
 	UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error
 	DeleteOrder(orderID string, UserData models.UserData) error
 	SelectTutor(responseID string, UserData models.UserData) error
 	SuggestOrderToTutor(orderID, tutorID string, UserData models.UserData) error
 	ApproveSelectedOrderByTutor(responseID string, UserData models.UserData) error
 	SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error
+
+	// order getting
+	GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error)
+	GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error)
+	GetOrdersWithPagination(page int, size int, tag string, UserData models.UserData) (*models.OrderPagination, error)
+	GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error)
+	GetAllOrders(UserData models.UserData) ([]*models.Order, error)
+	GetAllUsersOrders(UserData models.UserData) ([]*models.Order, error)
 }
 
 type OrderService struct {
@@ -45,37 +48,86 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 	_, err := orderServ.GRPCClient.GetStudent(context.Background(), UserData.UserID)
 
 	if err != nil {
+		logger.Error("[OrderService] CreateOrder error get student: " + err.Error())
 		return "", custom_errors.ErrorGetUser
 	}
 
-	createdOrder, err := orderServ.orderRepository.CreateOrder(order, UserData.UserID, UserData.TelegramID)
+	OrderToCreate := &models.CreateOrder{
+		Order:     order,
+		StudentID: UserData.UserID,
+	}
+
+	OrderID, err := orderServ.orderRepository.CreateOrder(OrderToCreate)
 
 	if err != nil {
-		log.Printf("Error creating order: %v", err)
+		logger.Error("[OrderService] CreateOrder error create order: " + err.Error())
 		return "", err
 	}
 
-	err = orderServ.ProducerBroker.Publish("my_queue", createdOrder)
-	if err != nil {
-		log.Printf("Error publishing order: %v", err)
-		return createdOrder.ID, nil
-		// нужно что-то придумать .
+	OrderToBroker := models.OrderToBroker{
+		ID:        OrderID,
+		StudentID: UserData.TelegramID,
+		Title:     order.Title,
+		Tags:      order.Tags,
+		Status:    "New",
 	}
 
-	return createdOrder.ID, nil
+	err = orderServ.ProducerBroker.Publish("new_orders", OrderToBroker)
+	if err != nil {
+		logger.Error("[OrderService] CreateOrder Error publishing order: " + err.Error())
+	}
+
+	return OrderID, nil
 }
 
 func (orderServ *OrderService) GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error) {
-	_, err := orderServ.orderRepository.CheckOrderByStudentID(id, UserData.UserID)
+	order, err := orderServ.orderRepository.GetOrderByID(id)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return orderServ.orderRepository.GetOrderByID(id)
+	if order.StudentID != UserData.UserID {
+		logger.Info("[OrderService] GetOrderById not allowed. User: " + UserData.UserID + " User-Order: " + order.StudentID)
+
+		return nil, custom_errors.ErrNotAllowed
+	}
+
+	responses, err := orderServ.orderRepository.GetResponsesByOrderID(id)
+
+	if err != nil {
+		logger.Error("[OrderService] GetOrderById Error : " + err.Error())
+		return nil, err
+	}
+
+	orderDetails := &models.OrderDetails{
+		Order:     *order,
+		Responses: responses,
+	}
+
+	return orderDetails, nil
 }
 
 func (orderServ *OrderService) GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error) {
-	return orderServ.orderRepository.GetOrderByIdTutor(id, UserData.UserID)
+	order, err := orderServ.orderRepository.GetOrderByID(id)
+
+	if err != nil {
+		logger.Error("[OrderService] GetOrderByIdTutor Error GetOrderByID: " + err.Error())
+		return nil, err
+	}
+
+	isResponded, err := orderServ.orderRepository.GetTutorIsRespond(id, UserData.UserID)
+
+	if err != nil {
+		logger.Error("[OrderService] GetOrderByIdTutor Error GetTutorIsRespond: " + err.Error())
+	}
+
+	orderDetails := &models.OrderDetailsTutor{
+		Order:       *order,
+		IsResponded: isResponded,
+	}
+
+	return orderDetails, nil
 }
 
 func (orderServ *OrderService) GetOrdersWithPagination(page int, size int, tag string, UserData models.UserData) (*models.OrderPagination, error) {
@@ -83,7 +135,9 @@ func (orderServ *OrderService) GetOrdersWithPagination(page int, size int, tag s
 	offset := (page - 1) * size
 
 	orders, count, err := orderServ.orderRepository.GetOrdersPagination(limit, offset, tag)
+
 	if err != nil {
+		logger.Error("[OrderService] GetOrdersWithPagination Error GetOrdersPagination: " + err.Error())
 		return nil, err
 	}
 
@@ -106,6 +160,7 @@ func (orderServ *OrderService) GetStudentOrdersWithPagination(page int, size int
 	orders, count, err := orderServ.orderRepository.GetStudentOrdersPagination(limit, offset, UserData.UserID)
 
 	if err != nil {
+		logger.Error("[OrderService] GetStudentOrdersWithPagination Error GetStudentOrdersPagination: " + err.Error())
 		return nil, err
 	}
 
@@ -129,16 +184,26 @@ func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateO
 	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(orderID, UserData.UserID)
 
 	if !isExist || err != nil {
+		if err != nil {
+			logger.Error("[OrderService] UpdateOrder Error CheckOrderByStudentID: " + err.Error())
+			return custom_errors.ErrorServiceError
+		}
+		logger.Info("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + orderID)
 		return custom_errors.ErrNotAllowed
 	}
 
-	return orderServ.orderRepository.UpdateOrder(orderID, order, UserData.UserID)
+	return orderServ.orderRepository.UpdateOrder(orderID, order)
 }
 
 func (orderServ *OrderService) DeleteOrder(orderID string, UserData models.UserData) error {
 	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(orderID, UserData.UserID)
 
 	if !isExist || err != nil {
+		if err != nil {
+			logger.Error("[OrderService] UpdateOrder Error CheckOrderByStudentID: " + err.Error())
+			return custom_errors.ErrorServiceError
+		}
+		logger.Info("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + orderID)
 		return custom_errors.ErrNotAllowed
 	}
 
@@ -153,23 +218,22 @@ func (orderServ *OrderService) SelectTutor(responseID string, UserData models.Us
 	response, err := orderServ.orderRepository.GetResponseById(responseID)
 
 	if err != nil {
+		logger.Error("[OrderService] SelectTutor Error GetResponseById: " + err.Error())
 		return err
 	}
 
 	isUserRequest, err := orderServ.orderRepository.CheckOrderByStudentID(response.OrderID, UserData.UserID)
 
-	if err != nil {
-		return custom_errors.ErrNotAllowed
-	}
-
-	if !isUserRequest {
+	if err != nil || !isUserRequest {
+		logger.Info("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + response.OrderID)
 		return custom_errors.ErrNotAllowed
 	}
 
 	err = orderServ.orderRepository.SetTutorToOrder(response, UserData)
 
 	if err != nil {
-		return errors.New("error with select tutor")
+		logger.Error("[OrderService] SelectTutor Error SetTutorToOrder: " + err.Error())
+		return custom_errors.ErrorSelectTutor
 	}
 
 	err = orderServ.ProducerBroker.Publish("selected_orders", models.SelectedResponseToBroker{
@@ -177,7 +241,7 @@ func (orderServ *OrderService) SelectTutor(responseID string, UserData models.Us
 	})
 
 	if err != nil {
-		log.Printf("error with push response selected to broker")
+		logger.Error("[OrderService] SelectTutor error with push response selected to broker. Error: " + err.Error())
 	}
 
 	return nil
@@ -187,21 +251,25 @@ func (orderServ *OrderService) ApproveSelectedOrderByTutor(responseID string, Us
 	response, err := orderServ.orderRepository.GetResponseById(responseID)
 
 	if err != nil {
-		return errors.New("error with get response")
+		logger.Error("[OrderService] ApproveSelectedOrderByTutor Error GetResponseById: " + err.Error())
+		return custom_errors.ErrorGetResponse
 	}
 
 	if response.TutorID != UserData.UserID {
+		logger.Info("[OrderService] UpdateOrder Not allowed. Tutor: " + UserData.UserID + " Tutor-Order: " + response.TutorID)
 		return errors.New("error not allowed")
 	}
 
 	if !response.IsFinal {
-		return errors.New("error not final") // тут проверяем, что репетитора правда выбрали
+		logger.Info("[OrderService] UpdateOrder Not final. ResponseID: " + responseID)
+		return errors.New("error not final")
 	}
 
-	err = orderServ.orderRepository.SetOrderStatus("Approved", response.OrderID)
+	err = orderServ.orderRepository.SetOrderStatus(models.StatusApproved, response.OrderID)
 
 	if err != nil {
-		return errors.New("error with approved order")
+		logger.Error("[OrderService] ApproveSelectedOrderByTutor Error SetOrderStatus: " + err.Error())
+		return custom_errors.ErrorSetStatus
 	}
 
 	err = orderServ.ProducerBroker.Publish("approved_orders", models.SelectedResponseToBroker{
@@ -209,7 +277,7 @@ func (orderServ *OrderService) ApproveSelectedOrderByTutor(responseID string, Us
 	})
 
 	if err != nil {
-		log.Println("error with publish to broker")
+		logger.Error("[OrderService] ApproveSelectedOrderByTutor error with push response selected to broker. Error: " + err.Error())
 	}
 
 	return nil
@@ -219,32 +287,37 @@ func (orderServ *OrderService) SetActiveOrderStatus(orderID string, IsActive boo
 	order, err := orderServ.orderRepository.GetOrderByID(orderID)
 
 	if err != nil {
-		return errors.New("error with get order")
+		logger.Error("[OrderService] SetActiveOrderStatus Error GetOrderByID: " + err.Error())
+		return custom_errors.ErrGetOrder
 	}
 
 	if order.StudentID != UserData.UserID {
-		return errors.New("error not allowed")
+		logger.Info("[OrderService] SetActiveOrderStatus Not allowed. User: " + UserData.UserID + " User-Order: " + order.StudentID)
+		return custom_errors.ErrNotAllowed
 	}
 
 	if IsActive {
-		if order.Status != "Inactive" {
+		if order.Status != models.StatusInactive {
+			logger.Info("[OrderService] SetActiveOrderStatus Not Invative state. OrderID:" + orderID)
 			return errors.New("error not Inactive state")
 		}
 
-		err = orderServ.orderRepository.SetOrderStatus("New", orderID)
+		err = orderServ.orderRepository.SetOrderStatus(models.StatusNew, orderID)
 
 		if err != nil {
-			return errors.New("error with NEW state order")
+			logger.Error("[OrderService] SetActiveOrderStatus Error SetOrderStatus: " + err.Error())
+			return custom_errors.ErrorSetStatus
 		}
 	} else {
-		if order.Status != "New" {
-			return errors.New("error not NEW state")
+		if order.Status != models.StatusNew {
+			logger.Info("[OrderService] SetActiveOrderStatus Not Active state. OrderID:" + orderID)
 		}
 
-		err = orderServ.orderRepository.SetOrderStatus("Inactive", orderID)
+		err = orderServ.orderRepository.SetOrderStatus(models.StatusInactive, orderID)
 
 		if err != nil {
-			return errors.New("error with inactive order")
+			logger.Error("[OrderService] SetActiveOrderStatus Error SetOrderStatus: " + err.Error())
+			return custom_errors.ErrorSetStatus
 		}
 	}
 
@@ -255,21 +328,26 @@ func (orderServ *OrderService) SuggestOrderToTutor(orderID, tutorID string, User
 	user, err := orderServ.GRPCClient.GetTutor(context.Background(), tutorID)
 
 	if err != nil {
+		logger.Error("[OrderService] SuggestOrderToTutor Error GRPCClient.GetTutor: " + err.Error())
 		return err
 	}
 
 	orderInfo, err := orderServ.orderRepository.GetOrderByID(orderID)
 
 	if err != nil {
+		logger.Error("[OrderService] SuggestOrderToTutor Error GetOrderByID: " + err.Error())
 		return err
 	}
 
-	if orderInfo.Status != "New" {
+	if orderInfo.Status != models.StatusNew {
+		logger.Info("[OrderService] SuggestOrderToTutor Not New state. OrderID:" + orderID)
 		return errors.New("order not NEW state")
 	}
 
 	if orderInfo.StudentID != UserData.UserID {
-		return errors.New("not allowed")
+		logger.Info("[OrderService] SuggestOrderToTutor Not allowed. User: " + UserData.UserID + " User-Order: " + orderInfo.StudentID)
+
+		return custom_errors.ErrNotAllowed
 	}
 
 	suggestOrderModel := models.SuggestOrder{
@@ -283,6 +361,7 @@ func (orderServ *OrderService) SuggestOrderToTutor(orderID, tutorID string, User
 
 	err = orderServ.ProducerBroker.Publish("suggest_order", suggestOrderModel)
 	if err != nil {
+		logger.Error("[OrderService] CreateOrder Error publishing order: " + err.Error())
 		return err
 	}
 

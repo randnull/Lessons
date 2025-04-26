@@ -6,6 +6,7 @@ import (
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/randnull/Lessons/internal/config"
+	"github.com/randnull/Lessons/internal/logger"
 	"log"
 	"time"
 )
@@ -23,7 +24,7 @@ func NewRabbitMQ(cfg config.MQConfig) *RabbitMQ {
 
 	connectionLink := fmt.Sprintf("amqp://%v:%v@%v:%v/", MqUser, MqPassword, MqHost, MqPort)
 
-	log.Printf("connecting to %v...", connectionLink)
+	log.Printf("[RabbitMQ] connecting to %v...", connectionLink)
 
 	conn, err := amqp.Dial(connectionLink)
 
@@ -31,9 +32,9 @@ func NewRabbitMQ(cfg config.MQConfig) *RabbitMQ {
 		if conn != nil {
 			conn.Close()
 		}
-		log.Fatalf("failed to connect to RabbitMQ: %v", err)
+		log.Fatal("[RabbitMQ] failed to connect to RabbitMQ:" + err.Error())
 	} else {
-		log.Println("Connected to RabbitMQ")
+		log.Println("[RabbitMQ] Connected to RabbitMQ")
 	}
 
 	channel, err := conn.Channel()
@@ -42,10 +43,10 @@ func NewRabbitMQ(cfg config.MQConfig) *RabbitMQ {
 		if channel != nil {
 			channel.Close()
 		}
-		log.Fatalf("failed to open a channel: %v", err)
+		log.Fatal("[RabbitMQ] failed to open a channel:" + err.Error())
 	}
 
-	log.Println("Channel opened")
+	log.Println("[RabbitMQ] Channel opened")
 
 	return &RabbitMQ{
 		conn:    conn,
@@ -54,26 +55,22 @@ func NewRabbitMQ(cfg config.MQConfig) *RabbitMQ {
 }
 
 func (r *RabbitMQ) Publish(queueName string, messageData interface{}) error {
-	//if reflect.TypeOf(messageData).Kind() != reflect.Struct {
-	//	return errors.New("message must be a struct")
-	//}
-
 	message, err := json.Marshal(messageData)
 	if err != nil {
-		log.Fatalf("failed to marshal order info: %v", err)
+		logger.Error("[RabbitMQ] error marshal message" + err.Error())
 	}
 
 	_, err = r.channel.QueueDeclare(
-		queueName, // Имя очереди
-		true,      // Долговечность (durable)
-		false,     // Автоудаление (auto-delete)
-		false,     // Эксклюзивная (exclusive)
-		false,     // Без ожидания (no-wait)
-		nil,       // Доп. аргументы
-	) // убрать отсюда в New
+		queueName,
+		true,
+		false,
+		false,
+		false,
+		nil,
+	)
 
 	if err != nil {
-		log.Printf("failed to declare a queue: %v", err)
+		logger.Error("[RabbitMQ] error init queue" + err.Error())
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -82,8 +79,8 @@ func (r *RabbitMQ) Publish(queueName string, messageData interface{}) error {
 	err = r.channel.PublishWithContext(ctx,
 		"",
 		queueName,
-		false, // Mandatory
-		false, // Immediate
+		false,
+		false,
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        message,
@@ -91,11 +88,11 @@ func (r *RabbitMQ) Publish(queueName string, messageData interface{}) error {
 	)
 
 	if err != nil {
-		log.Printf("failed to publish a message: %v", err)
+		logger.Error("[RabbitMQ] failed to publish a message" + err.Error())
 		return err
 	}
 
-	log.Printf("Successfully published a message %v", message)
+	logger.Info("[RabbitMQ] message pushed")
 
 	return nil
 }

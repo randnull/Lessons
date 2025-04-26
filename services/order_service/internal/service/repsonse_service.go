@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
+	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
-	"log"
 )
 
 type ResponseServiceInt interface {
@@ -40,19 +40,20 @@ func (s *ResponseService) GetResponseById(ResponseID string, UserData models.Use
 	response, err := s.orderRepository.GetResponseById(ResponseID)
 
 	if err != nil {
-		return nil, errors.New("error with getting response")
+		logger.Error("[ResponseService] GetResponseById Error GetResponseById: " + err.Error())
+		return nil, custom_errors.ErrorGetResponse
 	}
 
 	if UserData.UserID != response.TutorID {
 		isUserRequest, err := s.orderRepository.CheckOrderByStudentID(response.OrderID, UserData.UserID)
 
 		if err != nil {
-			log.Println(err)
+			logger.Error("[ResponseService] GetResponseById Error CheckOrderByStudentID: " + err.Error())
 			return nil, err
 		}
 
 		if !isUserRequest {
-			return nil, errors.New("no access")
+			return nil, custom_errors.ErrNotAllowed
 		}
 	}
 	return response, nil
@@ -70,7 +71,7 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 	TutorInfoRaw, err := s.GRPCClient.GetTutorInfoById(context.Background(), UserData.UserID)
 
 	if err != nil {
-		return "", errors.New(fmt.Sprintf("tutors with id %v does not exist", UserData.UserID))
+		return "", custom_errors.ErrorGetUser
 	}
 
 	if TutorInfoRaw.ResponseCount <= 0 {
@@ -85,23 +86,21 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		Tags:       TutorInfoRaw.Tags,
 	}
 
-	log.Println(UserData.UserID)
-
 	isAvaliable, err := s.GRPCClient.CreateNewResponse(context.Background(), UserData.UserID)
 
 	if err != nil {
-		log.Println(err)
+		logger.Error("[ResponseService] ResponseToOrder error CreateNewResponse: " + err.Error())
 		return "", err
 	}
 
 	if !isAvaliable {
-		log.Println("no resposes")
 		return "", errors.New("No responses")
 	}
 
 	Order, err := s.orderRepository.GetOrderByID(orderID)
 
 	if err != nil {
+		logger.Error("[ResponseService] ResponseToOrder error GetOrderByID: " + err.Error())
 		return "", err
 	}
 
@@ -117,6 +116,7 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		if errors.Is(custom_errors.ErrResponseAlredyExist, err) {
 			return responseID, nil
 		}
+		logger.Error("[ResponseService] ResponseToOrder error CreateResponse: " + err.Error())
 		return "", err
 	}
 
@@ -131,6 +131,11 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 	}
 
 	err = s.ProducerBroker.Publish("order_response", ResponseToBroker)
+
+	if err != nil {
+		logger.Error("[OrderService] ResponseToOrder Error publishing order: " + err.Error())
+		return "", err
+	}
 
 	return responseID, nil
 }
