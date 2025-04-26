@@ -223,6 +223,7 @@ func (o *Repository) GetOrderByID(id string) (*models.Order, error) {
 		SELECT 
 			id, 
 			name,
+			student_id,
 			title, 
 			description, 
 			grade,
@@ -231,7 +232,8 @@ func (o *Repository) GetOrderByID(id string) (*models.Order, error) {
 			tags,
 			status,
 			response_count,
-			created_at
+			created_at,
+			updated_at
 		FROM orders WHERE id = $1`
 
 	var order models.Order
