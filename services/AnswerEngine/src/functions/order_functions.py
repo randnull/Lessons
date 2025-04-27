@@ -10,6 +10,9 @@ async def create_new_order(order_data: NewOrderDto) -> List[int]:
     final_tags = list()
     final_tutors_id = list()
 
+    lower_case_tags = [tag.lower() for tag in order_data.tags]
+    order_data.tags = lower_case_tags
+
     async with async_session() as session:
         tags_repository = Repository[TagDao](TagDao, session)
 

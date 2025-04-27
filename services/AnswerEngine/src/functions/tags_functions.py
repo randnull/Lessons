@@ -6,6 +6,9 @@ from AnswerEngine.src.models.dto_table.dto import NewOrderDto, OrderDto, TagDto,
 
 
 async def update_tags(new_tags: TagChangeDto) -> None:
+    lower_case_tags = [tag.lower() for tag in new_tags.tags]
+    new_tags.tags = lower_case_tags
+
     async with async_session() as session:
         tags_repository = Repository[TagDao](TagDao, session)
 
