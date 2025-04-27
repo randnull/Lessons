@@ -1,5 +1,6 @@
 from AnswerEngine.src.TelegramBot.botStudent import bot_student
 from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
+from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto
 
 from AnswerEngine.src.config.settings import settings
@@ -36,6 +37,6 @@ async def proceed_suggest(suggest_order: SuggestDto) -> None:
 
     tutor_id = suggest_order.tutor_telegram_id
 
-    await bot_tutor.send_message(chat_id=tutor_id, text=message, parse_mode="html")
+    await bot_tutor.send_message(chat_id=tutor_id, text=message, parse_mode="html", reply_markup=suggest_keyboard(suggest_order.order_id))
 
 

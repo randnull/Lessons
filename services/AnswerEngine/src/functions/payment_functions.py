@@ -6,7 +6,7 @@ from AnswerEngine.src.gRPC import tutors_pb2, tutors_pb2_grpc
 grpc_host = settings.GRPC_HOST
 grpc_port = settings.GRPC_PORT
 
-async def add_tutor_responses(tutor_id: int, response_count: int = 1) -> tuple[int, bool]:
+async def add_tutor_responses(tutor_id: int, response_count: int) -> tuple[int, bool]:
     async with grpc.aio.insecure_channel(f'{grpc_host}:{grpc_port}') as grpc_channel:
         grpc_stub = tutors_pb2_grpc.UserServiceStub(grpc_channel)
 

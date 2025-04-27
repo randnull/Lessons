@@ -50,6 +50,12 @@ func (a *App) Run() {
 
 	router.Post("/auth/init-data", a.controllers.Login)
 
+	//router.Post("/orders", func(c *fiber.Ctx) error {
+	//	targetURL := "http://lessons-order-service:8001/orders"
+	//	log.Println("Proxying request to:", targetURL)
+	//	return proxy.Do(c, targetURL)
+	//})
+
 	addr := fmt.Sprintf(":%v", a.cfg.ServerPort)
 
 	log.Printf("Listen on: %s\n", addr)

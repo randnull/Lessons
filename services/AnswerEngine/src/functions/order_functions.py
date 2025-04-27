@@ -1,8 +1,3 @@
-import uuid
-from typing import List
-
-from pydantic import UUID4
-
 from AnswerEngine.common.generic_repository.generic_repo import Repository
 from AnswerEngine.common.database_connection.base import async_session
 from AnswerEngine.src.models.dao_table.dao import OrderDao, TagDao, OrderTagDao

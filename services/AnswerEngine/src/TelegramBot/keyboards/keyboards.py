@@ -19,15 +19,14 @@ def tutor_start_keyboard() -> InlineKeyboardMarkup:
     ])
     return keyboard
 
-def tutors_start_keyboard() -> InlineKeyboardMarkup:
+def suggest_keyboard(order_id) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
-            text="🔍 Найти учеников",
-            web_app=WebAppInfo(url="https://lessonsmy.tech/reps")
+            text="Перейти к заказу",
+            web_app=WebAppInfo(url=f"https://lessonsmy.tech/reps/order/{order_id}")
         )]
     ])
     return keyboard
-
 
 def payment_keyboard():
     builder = InlineKeyboardBuilder()
