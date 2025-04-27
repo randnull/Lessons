@@ -32,8 +32,8 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 			})
 		}
 
-		if userType != "Student" && userType != "Tutor" && userType != "Admin" {
-			logger.Debug("TokenAuthMiddleware failed. Get " + userType + " as Role")
+		if UserClaims.Role != "Student" && UserClaims.Role != "Tutor" && UserClaims.Role != "Admin" {
+			logger.Debug("TokenAuthMiddleware failed. Get " + UserClaims.Role + " as Role")
 
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,
