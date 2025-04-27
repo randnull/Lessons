@@ -29,7 +29,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="tutor_username" type="VARCHA(150)" remarks="username">
+            <column name="tutor_username" type="VARCHAR(150)" remarks="username">
                 <constraints nullable="false"/>
             </column>
 
