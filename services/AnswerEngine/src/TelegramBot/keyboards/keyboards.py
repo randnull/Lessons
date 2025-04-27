@@ -23,7 +23,7 @@ def suggest_keyboard(order_id) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(
             text="Перейти к заказу",
-            web_app=WebAppInfo(url=f"https://lessonsmy.tech/reps/order/{order_id}")
+            web_app=WebAppInfo(url=f"https://lessonsmy.tech/reps/#/order/{order_id}")
         )]
     ])
     return keyboard
