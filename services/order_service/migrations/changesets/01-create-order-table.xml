@@ -29,7 +29,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="description" type="TEXT" remarks="order desc">
+            <column name="description" type="VARCHAR(1500)" remarks="order desc">
                 <constraints nullable="false"/>
             </column>
 

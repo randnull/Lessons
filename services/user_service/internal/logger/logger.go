@@ -19,7 +19,7 @@ func InitLogger() error {
 		}
 	}
 
-	file, err := os.OpenFile("./logs/order.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	file, err := os.OpenFile("./logs/users.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		return err
 	}

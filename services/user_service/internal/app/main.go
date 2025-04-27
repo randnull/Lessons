@@ -4,6 +4,7 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/controllers"
 	pb "github.com/randnull/Lessons/internal/gRPC"
+	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
 	"github.com/randnull/Lessons/internal/service"
 	"google.golang.org/grpc"
@@ -20,8 +21,10 @@ type App struct {
 }
 
 func NewApp(cfg *config.Config) *App {
-	userRepo := repository.NewRepository(cfg.DBConfig) //cfg.DBConfig
-	userServic := service.NewUserService(userRepo)
+	userRepo := repository.NewRepository(cfg.DBConfig)
+	BrokerProducer := rabbitmq.NewRabbitMQ(cfg.MQConfig)
+
+	userServic := service.NewUserService(userRepo, BrokerProducer)
 	userController := controllers.NewUserControllers(userServic)
 	return &App{
 		repository:      userRepo,

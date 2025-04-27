@@ -3,7 +3,9 @@ package service
 import (
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
+	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
+	"log"
 )
 
 type UserServiceInt interface {
@@ -28,11 +30,13 @@ type UserServiceInt interface {
 
 type UserService struct {
 	userRepository repository.UserRepository
+	ProducerBroker rabbitmq.RabbitMQInterface
 }
 
-func NewUserService(userRepo repository.UserRepository) UserServiceInt {
+func NewUserService(userRepo repository.UserRepository, producerBroker rabbitmq.RabbitMQInterface) UserServiceInt {
 	return &UserService{
 		userRepository: userRepo,
+		ProducerBroker: producerBroker,
 	}
 }
 
@@ -86,8 +90,31 @@ func (s *UserService) GetTutorsPagination(page int, size int, tag string) (*pb.G
 }
 
 func (s *UserService) UpdateTutorTags(tutorID string, tags []string) error {
-	return s.userRepository.UpdateTutorTags(tutorID, tags)
+	err := s.userRepository.UpdateTutorTags(tutorID, tags)
+
+	if err != nil {
+		return err
+	}
+
+	tutor, err := s.userRepository.GetTutorByID(tutorID)
+
+	if err != nil {
+		return err
+	}
+
+	TutorTags := &models.ChangeTagsTutorToBroker{
+		TutorTelegramID: tutor.TelegramID,
+		Tags:            tags,
+	}
+	err = s.ProducerBroker.Publish("tutors_tags_change", TutorTags)
+
+	if err != nil {
+		log.Println(err)
+	}
+
+	return nil
 }
+
 func (s *UserService) CreateReview(tutorID string, orderID string, rating int, comment string) (string, error) {
 	return s.userRepository.CreateReview(tutorID, orderID, rating, comment)
 }
