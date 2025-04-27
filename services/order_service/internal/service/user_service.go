@@ -6,6 +6,7 @@ import (
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
+	"github.com/randnull/Lessons/internal/rabbitmq"
 )
 
 type UserServiceInt interface {
@@ -14,7 +15,7 @@ type UserServiceInt interface {
 
 	GetAllTutorsPagination(page int, size int, tag string) (*models.TutorsPagination, error)
 	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
-	UpdateTagsTutor(tags []string, TutorID string) (bool, error)
+	UpdateTagsTutor(tags []string, UserData models.UserData) (bool, error)
 	CreateReview(orderID string, tutorID string, comment string, rating int, UserData models.UserData) (string, error)
 	GetReviewsByTutor(tutorID string) ([]models.Review, error)
 	GetReviewsByID(reviewID string) (*models.Review, error)
@@ -24,12 +25,14 @@ type UserServiceInt interface {
 }
 
 type UserService struct {
-	GRPCClient gRPC_client.GRPCClientInt
+	GRPCClient     gRPC_client.GRPCClientInt
+	ProducerBroker rabbitmq.RabbitMQInterface
 }
 
-func NewUSerService(grpcClient gRPC_client.GRPCClientInt) UserServiceInt {
+func NewUSerService(grpcClient gRPC_client.GRPCClientInt, producerBroker rabbitmq.RabbitMQInterface) UserServiceInt {
 	return &UserService{
-		GRPCClient: grpcClient,
+		GRPCClient:     grpcClient,
+		ProducerBroker: producerBroker,
 	}
 }
 
@@ -103,11 +106,25 @@ func (u *UserService) GetAllTutorsPagination(page int, size int, tag string) (*m
 	}, nil
 }
 
-func (u *UserService) UpdateTagsTutor(tags []string, TutorID string) (bool, error) {
-	success, err := u.GRPCClient.UpdateTagsTutor(context.Background(), tags, TutorID)
+func (u *UserService) UpdateTagsTutor(tags []string, UserData models.UserData) (bool, error) {
+	success, err := u.GRPCClient.UpdateTagsTutor(context.Background(), tags, UserData.UserID)
 	if err != nil {
 		return false, err
 	}
+
+	if success {
+		ChangeTagsToBroker := &models.ChangeTagsTutorToBroker{
+			TutorTelegramID: UserData.TelegramID,
+			Tags:            tags,
+		}
+
+		err := u.ProducerBroker.Publish("tutors_tags_change", ChangeTagsToBroker)
+		
+		if err != nil {
+			logger.Error("[OrderService] ResponseToOrder Error publishing order: " + err.Error())
+		}
+	}
+
 	return success, nil
 }
 

@@ -104,9 +104,7 @@ func (u *UserController) UpdateTagsTutor(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "bad format"})
 	}
 
-	tutorID := UserData.UserID
-
-	success, err := u.UserService.UpdateTagsTutor(UpdateTagsTutor.Tags, tutorID)
+	success, err := u.UserService.UpdateTagsTutor(UpdateTagsTutor.Tags, UserData)
 	if err != nil || !success {
 		logger.Error("UpdateTagsTutor failed: " + err.Error())
 

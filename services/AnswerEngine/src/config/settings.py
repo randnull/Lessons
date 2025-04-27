@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     ANSWER_DB_USER: str = os.getenv('ANSWER_DB_USER', "postgres")
     ANSWER_DB_PASSWORD: str = os.getenv('ANSWER_DB_PASSWORD', "postgres")
     ANSWER_DB_NAME: str = os.getenv('ANSWER_DB_NAME', "response_database")
-    ANSWER_DB_HOST: str = os.getenv('ANSWER_DB_HOST', "127.0.0.1:5432")
+    ANSWER_DB_HOST: str = os.getenv('ANSWER_DB_HOST', "127.0.0.1:5434")
     ADMIN_USER: int = os.getenv('ADMIN_USER', "506645542")
     SERVER_PORT: int = os.getenv('ANSWER_SERVER_PORT', "7090")
     GRPC_HOST: str = os.getenv('GRPCUSERHOST', '127.0.0.1')

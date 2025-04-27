@@ -16,6 +16,7 @@ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         <column name="tutor_id" type="BIGINT">
             <constraints nullable="false"/>
         </column>
+
         <column name="tag_id" type="${uuid_type}">
             <constraints nullable="false" foreignKeyName="fk_order_tags_tag"
                          references="tags(id)" />

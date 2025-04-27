@@ -65,7 +65,14 @@ class OrderTagDao(Base):
 class TutorTagDao(Base):
     __tablename__ = "tutor_tags"
 
-    tutor_id: Mapped[UUID] = mapped_column(UUID, primary_key=True)
+    tutor_id: Mapped[BIGINT] = mapped_column(BIGINT, primary_key=True)
     tag_id: Mapped[UUID] = mapped_column(UUID, ForeignKey("tags.id"), primary_key=True)
 
     tag: Mapped["TagDao"] = relationship("TagDao", back_populates="tutors")
+
+    @classmethod
+    def to_dao(cls, TutorTagDto):
+        return TutorTagDao(
+            tutor_id=TutorTagDto.tutor_id,
+            tag_id=TutorTagDto.tag_id,
+        )

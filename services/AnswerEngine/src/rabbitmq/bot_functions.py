@@ -1,7 +1,9 @@
+from typing import List
+
 from AnswerEngine.src.TelegramBot.botStudent import bot_student
 from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
 from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard
-from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto
+from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto
 
 from AnswerEngine.src.config.settings import settings
 
@@ -12,6 +14,14 @@ async def proceed_order(order_create: NewOrderDto) -> None:
     )
 
     await bot_student.send_message(chat_id=str(order_create.student_id), text=message, parse_mode="html")
+
+async def proceed_order_to_tutors(order_create: NewOrderDto, tutors_id: List[int]) -> None:
+    message = (
+        f"<b>Заказ подходит вашим тегам!: {order_create.order_name}!</b>\n\n"
+    )
+
+    for tutor_id in tutors_id:
+        await bot_tutor.send_message(chat_id=str(tutor_id), text=message, parse_mode="html", reply_markup=suggest_keyboard(order_create.order_id))
 
 
 async def proceed_response(response: ResponseDto) -> None:

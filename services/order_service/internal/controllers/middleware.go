@@ -32,14 +32,24 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 			})
 		}
 
+		if userType != "Student" && userType != "Tutor" && userType != "Admin" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": true,
+				"msg":   "Bad auth data provided. Role forbidden",
+			})
+		}
+
 		if userType == "Student" && UserClaims.Role != "Student" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,
 				"msg":   "Bad auth data provided. Role mismatch",
 			})
-		}
-
-		if userType == "Tutor" && UserClaims.Role != "Tutor" {
+		} else if userType == "Tutor" && UserClaims.Role != "Tutor" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"error": true,
+				"msg":   "Bad auth data provided. Role mismatch",
+			})
+		} else if userType == "Admin" && UserClaims.Role != "Admin" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,
 				"msg":   "Bad auth data provided. Role mismatch",

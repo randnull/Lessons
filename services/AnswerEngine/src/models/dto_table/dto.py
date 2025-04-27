@@ -33,6 +33,10 @@ class SuggestDto(BaseModel):
     min_price: int
     max_price: int
 
+class TagChangeDto(BaseModel):
+    tutor_telegram_id: int
+    tags: List[str]
+
 class TagDto(BaseModel):
     id: Optional[UUID4]
     tag_name: str
@@ -55,5 +59,5 @@ class OrderTagDto(BaseModel):
 
 
 class TutorTagDto(BaseModel):
-    tutor_id: UUID4
+    tutor_id: int
     tag_id: UUID4

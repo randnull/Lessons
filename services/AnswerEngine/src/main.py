@@ -10,7 +10,7 @@ from AnswerEngine.src.config.settings import settings
 from AnswerEngine.src.TelegramBot.botStudent import dp_student, bot_student, start_student, stop_student
 from AnswerEngine.src.TelegramBot.botTutor import dp_tutor, bot_tutor, start_tutor, stop_tutor
 from AnswerEngine.src.controllers.webhook import webhook_router
-from AnswerEngine.src.rabbitmq.rabbitmq_consumer import OrderConsumer, ResponseConsumer, SuggestConsumer
+from AnswerEngine.src.rabbitmq.rabbitmq_consumer import OrderConsumer, ResponseConsumer, SuggestConsumer, TagsChangeConsumer, SelectedConsumer
 
 tags = [
     {
@@ -29,21 +29,26 @@ async def lifespan(app: FastAPI):
     await start_tutor()
     print("Student bot started.")
     print("Tutor bot started.")
-
-    await bot_student.set_webhook(url=webhook_url_student, allowed_updates=dp_student.resolve_used_update_types(), drop_pending_updates=True)
-    await bot_tutor.set_webhook(url=webhook_url_tutor, allowed_updates=dp_tutor.resolve_used_update_types(), drop_pending_updates=True)
+    # await bot_student.set_webhook(url=webhook_url_student, allowed_updates=dp_student.resolve_used_update_types(), drop_pending_updates=True)
+    # await bot_tutor.set_webhook(url=webhook_url_tutor, allowed_updates=dp_tutor.resolve_used_update_types(), drop_pending_updates=True)
     print("Student: ", webhook_url_student)
     print("Tutor: ", webhook_url_tutor)
     await OrderConsumer.connect()
     await ResponseConsumer.connect()
     await SuggestConsumer.connect()
+    await TagsChangeConsumer.connect()
+    await SelectedConsumer.connect()
     asyncio.create_task(OrderConsumer.consume())
     asyncio.create_task(ResponseConsumer.consume())
     asyncio.create_task(SuggestConsumer.consume())
+    asyncio.create_task(TagsChangeConsumer.consume())
+    asyncio.create_task(SelectedConsumer.consume())
     yield
     await OrderConsumer.disconnect()
     await ResponseConsumer.disconnect()
     await SuggestConsumer.disconnect()
+    await TagsChangeConsumer.disconnect()
+    await SelectedConsumer.disconnect()
     await stop_student()
     await stop_tutor()
     await bot_student.delete_webhook()

@@ -51,6 +51,10 @@ type UpdateBioTutor struct {
 type UpdateTagsTutor struct {
 	Tags []string `json:"tags"`
 }
+type ChangeTagsTutorToBroker struct {
+	TutorTelegramID int64    `json:"tutor_telegram_id"`
+	Tags            []string `json:"tags"`
+}
 
 type ChangeActive struct {
 	IsActive bool `json:"is_active"`

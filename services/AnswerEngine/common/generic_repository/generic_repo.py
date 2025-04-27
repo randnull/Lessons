@@ -1,7 +1,7 @@
 from typing import TypeVar, Generic, List, Any, Sequence
 from uuid import UUID
 
-from sqlalchemy import select, and_, update, func, Row, RowMapping
+from sqlalchemy import select, and_, update, func, Row, RowMapping, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import BaseModel
@@ -29,14 +29,24 @@ class Repository(Generic[Model]):
         await self.__session.flush()
         await self.__session.commit()
 
-
     async def get_tags_ids_by_name(self, tags: List[str]):
         resp = await self.__session.execute(select(self.__model).where(self.__model.tag_name.in_(tags)))
         return resp.scalars().all()
 
-        # stmt = select(self.__model).where(TagDao.tag_name.in_(order_data.tags))
-        # result = await session.execute(stmt)
-        # existing_tags = result.scalars().all()
+    async def get_tags_from_tutor(self, tutor_id):
+        result = await self.__session.execute(select(self.__model).where(self.__model.tutor_id == tutor_id))
+        return result.scalars().all()
+
+    async def get_tutors_by_tags(self, tags: List[UUID]):
+        resp = await self.__session.execute(select(self.__model).where(self.__model.tag_id.in_(tags)))
+        return resp.scalars().all()
+
+    async def delete_many_by_conditions(self, tutor_id, tag_ids) -> None:
+         await self.__session.execute(delete(self.__model).where(
+            self.__model.tutor_id == tutor_id,
+            self.__model.tag_id.in_(tag_ids)
+         ))
+         await self.__session.commit()
 
     # async def get_by_code(self, code: str) -> Model:
     #     resp = await self.__session.execute(select(self.__model).where(self.__model.code == code))
