@@ -12,6 +12,8 @@ from AnswerEngine.src.TelegramBot.botTutor import dp_tutor, bot_tutor, start_tut
 from AnswerEngine.src.controllers.webhook import webhook_router
 from AnswerEngine.src.rabbitmq.rabbitmq_consumer import OrderConsumer, ResponseConsumer, SuggestConsumer, TagsChangeConsumer, SelectedConsumer
 
+from AnswerEngine.src.logger.logger import logger
+
 tags = [
     {
         "name": "Telegram Bot",
@@ -26,13 +28,22 @@ async def lifespan(app: FastAPI):
     webhook_url_student = f"{webhook_url}/student"
     webhook_url_tutor = f"{webhook_url}/tutor"
     await start_student()
+    logger.info("student bot init")
     await start_tutor()
-    print("Student bot started.")
-    print("Tutor bot started.")
-    await bot_student.set_webhook(url=webhook_url_student, allowed_updates=dp_student.resolve_used_update_types(), drop_pending_updates=True)
-    await bot_tutor.set_webhook(url=webhook_url_tutor, allowed_updates=dp_tutor.resolve_used_update_types(), drop_pending_updates=True)
-    print("Student: ", webhook_url_student)
-    print("Tutor: ", webhook_url_tutor)
+    logger.info("tutors bot init")
+    try:
+        await bot_student.set_webhook(url=webhook_url_student, allowed_updates=dp_student.resolve_used_update_types(),
+                                      drop_pending_updates=True)
+    except Exception as ex:
+        logger.error("student bot webhook failed: %s", str(ex))
+        logger.info("student bot webhook ok: %s", webhook_url_student)
+
+    try:
+        await bot_tutor.set_webhook(url=webhook_url_tutor, allowed_updates=dp_tutor.resolve_used_update_types(),
+                                drop_pending_updates=True)
+        logger.info("tutors bot webhook ok: %s", webhook_url_tutor)
+    except Exception as ex:
+        logger.error("tutor bot webhook ok: %s", str(ex))
     await OrderConsumer.connect()
     await ResponseConsumer.connect()
     await SuggestConsumer.connect()
@@ -59,5 +70,5 @@ app = FastAPI(openapi_tags=tags, lifespan=lifespan)
 app.include_router(webhook_router)
 
 if __name__ == "__main__":
-    print("Starting AnswerEngine1")
+    logger.info(f"Starting AnswerEngine server. Port: {settings.SERVER_PORT}")
     uvicorn.run("main:app", host="0.0.0.0", port=settings.SERVER_PORT) # , workers=5

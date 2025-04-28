@@ -2,6 +2,7 @@ import grpc
 
 from AnswerEngine.src.config.settings import settings
 from AnswerEngine.src.gRPC import tutors_pb2, tutors_pb2_grpc
+from AnswerEngine.src.logger.logger import logger
 
 grpc_host = settings.GRPC_HOST
 grpc_port = settings.GRPC_PORT
@@ -19,5 +20,5 @@ async def add_tutor_responses(tutor_id: int, response_count: int) -> tuple[int, 
             )
             return response.response_count, response.success
         except grpc.RpcError as e:
-            print(f"gRPC error while adding responses for tutor {tutor_id}: {e}")
+            logger.error("gRPC error: %s", e)
             return 0, False

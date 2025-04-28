@@ -2,6 +2,7 @@ from typing import List
 
 from AnswerEngine.common.generic_repository.generic_repo import Repository
 from AnswerEngine.common.database_connection.base import async_session
+from AnswerEngine.src.logger.logger import logger
 from AnswerEngine.src.models.dao_table.dao import OrderDao, TagDao, OrderTagDao, TutorTagDao
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, OrderDto, TagDto, OrderTagDto, NewTagDto
 
@@ -19,13 +20,15 @@ async def create_new_order(order_data: NewOrderDto) -> List[int]:
         existing_tag = await tags_repository.get_tags_ids_by_name(order_data.tags)
         existing_tag_names = [tag.tag_name for tag in existing_tag]
 
-        NoExistTags = [
+        tags_to_add = [
             NewTagDto(tag_name=tag)
             for tag in order_data.tags
             if tag not in existing_tag_names
         ]
 
-        await tags_repository.create_many(NoExistTags)
+        if tags_to_add:
+            logger.info(f"add {tags_to_add} to database")
+            await tags_repository.create_many(tags_to_add)
 
     async with async_session() as session:
         order = OrderDto(
@@ -38,14 +41,18 @@ async def create_new_order(order_data: NewOrderDto) -> List[int]:
         order_repository = Repository[OrderDao](OrderDao, session)
         tags_order_tags_repository = Repository[OrderTagDao](OrderTagDao, session)
 
-        await order_repository.create(order)
+        try:
+            await order_repository.create(order)
+            logger.info(f"create order {order.order_id}")
+        except Exception as ex:
+            logger.error(f"error creating new order: {order_data.order_id}. Error: {ex}")
 
         existing_tag = await tags_repository.get_tags_ids_by_name(order_data.tags)
 
-        OrderTagsDtos = list()
+        order_tags_dtos = list()
 
         for tag in existing_tag:
-            OrderTagsDtos.append(
+            order_tags_dtos.append(
                 OrderTagDto(
                     order_id=order_data.order_id,
                     tag_id=tag.id,
@@ -53,7 +60,9 @@ async def create_new_order(order_data: NewOrderDto) -> List[int]:
             )
             final_tags.append(tag.id)
 
-        await tags_order_tags_repository.create_many(OrderTagsDtos)
+        if tags_order_tags_repository:
+            logger.info(f"add tags {final_tags} to order: {order_data.order_id}")
+            await tags_order_tags_repository.create_many(order_tags_dtos)
 
     async with async_session() as session:
         tutor_tags_repository = Repository[TutorTagDao](TutorTagDao, session)

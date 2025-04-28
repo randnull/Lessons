@@ -11,11 +11,11 @@ class OrderDto(BaseModel):
 
 
 class NewOrderDto(BaseModel):
-    order_id: UUID4 = Field(..., title="Order ID")
-    student_id: int = Field(..., title="Student ID")
-    order_name: str = Field(..., title="Order title")
-    tags: list = Field(..., title="Order Tags")
-    status: str = Field(..., title="Order Status")
+    order_id: UUID4
+    student_id: int
+    order_name: str
+    tags: list
+    status: str
 
 
 class ResponseDto(BaseModel):
@@ -40,13 +40,13 @@ class TagChangeDto(BaseModel):
 class TagDto(BaseModel):
     id: Optional[UUID4]
     tag_name: str
-
-    @classmethod
-    def to_dto(cls, TagDao):
-        return TagDto(
-            id=TagDao.id,
-            tag_name=TagDao.tag_name
-        )
+    #
+    # @classmethod
+    # def to_dto(cls, TagDao):
+    #     return TagDto(
+    #         id=TagDao.id,
+    #         tag_name=TagDao.tag_name
+    #     )
 
 
 class NewTagDto(BaseModel):

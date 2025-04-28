@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     SERVER_PORT: int = os.getenv('ANSWER_SERVER_PORT', "7090")
     GRPC_HOST: str = os.getenv('GRPCUSERHOST', '127.0.0.1')
     GRPC_PORT: str = os.getenv('GRPCUSERPORT', '2000')
+    MQUSER: str = os.getenv('RABBITMQ_USER', "guest")
+    MQPASSWORD: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
+    MQHOST: str = os.getenv('RABBITMQ_HOST', '127.0.0.1')
+    MQPORT: int = int(os.getenv('RABBITMQ_PORT', 5672))
 
     def get_webhook_url(self) -> str:
             return f"https://{self.FQND_HOST}/webhook"
