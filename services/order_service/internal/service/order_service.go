@@ -45,6 +45,14 @@ func NewOrderService(orderRepo repository.OrderRepository, producerBroker rabbit
 }
 
 func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error) {
+	if order.MinPrice > order.MaxPrice {
+		return "", errors.New("max price less than min")
+	}
+
+	if order.Grade == "" {
+		return "", errors.New("grade is null")
+	}
+
 	_, err := orderServ.GRPCClient.GetStudent(context.Background(), UserData.UserID)
 
 	if err != nil {

@@ -31,9 +31,14 @@
 
             <column name="comment" type="TEXT" remarks="comment"/>
 
+            <column name="is_active" type="BOOLEAN" remarks="is review active">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="created_at" type="TIMESTAMP" remarks="creation date">
                 <constraints nullable="false"/>
             </column>
+
         </createTable>
     </changeSet>
 

@@ -54,6 +54,7 @@ service UserService {
   rpc CreateReview(CreateReviewRequest) returns (CreateReviewResponse);
   rpc GetReview(GetReviewRequest) returns (Review);
   rpc GetReviews(GetReviewsRequest) returns (GetReviewsResponse);
+  rpc SetReviewActive(SetReviewsActiveRequest) returns (Success)
 }
 
 message GetAllTutorsPaginationRequest {
@@ -154,4 +155,8 @@ message GetReviewsRequest {
 
 message GetReviewsResponse {
   repeated Review reviews = 1;
+}
+
+message SetReviewsActiveRequest {
+  string review_id = 1;
 }

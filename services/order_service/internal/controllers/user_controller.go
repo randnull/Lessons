@@ -152,7 +152,7 @@ func (u *UserController) CreateReview(ctx *fiber.Ctx) error {
 
 	UserData, _ := ctx.Locals("user_data").(models.UserData)
 
-	id, err := u.UserService.CreateReview(ReviewRequest.OrderID, ReviewRequest.TutorID, ReviewRequest.Comment, ReviewRequest.Rating, UserData)
+	id, err := u.UserService.CreateReview(ReviewRequest, UserData)
 	if err != nil {
 		logger.Error("CreateReview failed: " + err.Error())
 

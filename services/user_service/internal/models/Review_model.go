@@ -8,5 +8,6 @@ type Review struct {
 	OrderID   string    `json:"order_id"`
 	Rating    int       `json:"rating"`
 	Comment   string    `json:"comment"`
+	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 }

@@ -41,7 +41,7 @@ func NewApp(cfg *config.Config) *App {
 	responsesService := service.NewResponseService(orderRepo, orderBrokerProducer, ordergRPC)
 	responseControllers := controllers.NewResponseController(responsesService)
 
-	usersService := service.NewUSerService(ordergRPC, orderBrokerProducer)
+	usersService := service.NewUSerService(ordergRPC, orderBrokerProducer, orderRepo)
 	usersControllers := controllers.NewUserController(usersService)
 
 	return &App{

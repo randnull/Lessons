@@ -12,8 +12,15 @@ type Review struct {
 }
 
 type ReviewRequest struct {
-	OrderID string `json:"order_id"`
-	TutorID string `json:"tutor_id"`
-	Comment string `json:"comment"`
-	Rating  int    `json:"rating"`
+	ResponseID string `json:"response_id"`
+	Comment    string `json:"comment"`
+	Rating     int    `json:"rating"`
+}
+
+type ReviewToBroker struct {
+	ReviewID        string `json:"review_id"`
+	ResponseID      string `json:"response_id"`
+	OrderID         string `json:"order_id"`
+	OrderName       string `json:"order_name"`
+	TutorTelegramID int64  `json:"tutor_telegram_id"`
 }

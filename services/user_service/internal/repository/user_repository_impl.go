@@ -13,6 +13,7 @@ import (
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
 	"log"
+	"strings"
 	"time"
 )
 
@@ -119,7 +120,14 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error) {
 	user := &models.UserDB{}
 
-	query := `SELECT id, telegram_id, name, role, created_at FROM users WHERE telegram_id = $1 AND role = $2`
+	query := `
+		SELECT 
+		    id,
+		    telegram_id,
+		    name, 
+		    role, 
+		    created_at 
+		FROM users WHERE telegram_id = $1 AND role = $2`
 
 	err := r.db.QueryRow(query, telegramID, userRole).Scan(
 		&user.Id,
@@ -143,7 +151,14 @@ func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*mo
 func (r *Repository) GetStudentById(userID string) (*models.UserDB, error) {
 	user := &models.UserDB{}
 
-	query := `SELECT id, telegram_id, name, role, created_at FROM users WHERE id = $1 AND role = $2`
+	query := `
+		SELECT
+		    id,
+		    telegram_id,
+		    name,
+		    role,
+		    created_at
+		FROM users WHERE id = $1 AND role = $2`
 
 	err := r.db.QueryRow(query, userID, "Student").Scan(
 		&user.Id,
@@ -316,7 +331,8 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 	var total int
 
 	queryCount := `
-		SELECT COUNT(*) 
+		SELECT
+		    COUNT(*) 
 		FROM users u
 		JOIN tutors t ON u.id = t.id
 		WHERE u.role = $1 AND t.is_active = true`
@@ -347,6 +363,7 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 	argsPagination := []interface{}{"Tutor", limit, offset}
 
 	if tag != "" {
+		tag = strings.ToLower(tag)
 		queryGetAllPagination += ` AND $4 = ANY(t.tags)`
 		argsPagination = append(argsPagination, tag)
 	}
@@ -412,18 +429,20 @@ func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
 func (r *Repository) CreateReview(tutorID, orderID string, rating int, comment string) (string, error) {
 	timestamp := time.Now()
 
-	queryInsertReview := `INSERT INTO reviews (
-                     tutor_id,
-                     order_id,
-                     rating,
-                     comment,
-                     created_at
+	queryInsertReview := `
+		INSERT INTO reviews (
+            tutor_id,
+            order_id,
+            rating,
+            comment,
+		    is_active,
+            created_at
         )
-		VALUES ($1, $2, $3, $4, $5) RETURNING id
-	`
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id`
 
 	var reviewID string
-	err := r.db.QueryRow(queryInsertReview, tutorID, orderID, rating, comment, timestamp).Scan(&reviewID)
+	err := r.db.QueryRow(queryInsertReview, tutorID, orderID, rating, comment, false, timestamp).Scan(&reviewID)
 	if err != nil {
 		log.Printf("Failed create review ((: %v", err)
 		return "", err
@@ -474,16 +493,16 @@ func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
 }
 
 func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
-	query := `SELECT 
-    			id,
-       			tutor_id,
-       			order_id,
-       			rating,
-       			comment,
-       			created_at
+	query := `
+		SELECT 
+    		id,
+       		tutor_id,
+       		order_id,
+       		rating,
+       		comment,
+       		created_at
 		FROM reviews
-		WHERE id = $1
-	`
+		WHERE id = $1`
 
 	var review models.Review
 	err := r.db.QueryRow(query, reviewID).Scan(
@@ -499,9 +518,10 @@ func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
 }
 
 func (r *Repository) GetTagsByTutorID(tutorID string) ([]string, error) {
-	query := `SELECT
-    			tags
-			FROM tutors WHERE id = $1`
+	query := `
+		SELECT
+    		tags
+		FROM tutors WHERE id = $1`
 	rows, err := r.db.Query(query, tutorID)
 	if err != nil {
 		return nil, err
@@ -521,9 +541,10 @@ func (r *Repository) GetTagsByTutorID(tutorID string) ([]string, error) {
 }
 
 func (r *Repository) SetNewIsActiveTutor(tutorID string, isActive bool) error {
-	query := `UPDATE tutors SET
-                is_active = $1
-              WHERE id = $2`
+	query := `
+		UPDATE tutors SET
+            is_active = $1
+        WHERE id = $2`
 
 	_, err := r.db.Exec(query, isActive, tutorID)
 	if err != nil {
@@ -535,10 +556,11 @@ func (r *Repository) SetNewIsActiveTutor(tutorID string, isActive bool) error {
 }
 
 func (r *Repository) RemoveOneResponse(tutorID string) error {
-	query := `UPDATE tutors SET
-                response_count = response_count - 1
-              WHERE id = $1 AND response_count > 0
-              RETURNING response_count`
+	query := `
+		UPDATE tutors SET
+            response_count = response_count - 1
+        WHERE id = $1 AND response_count > 0
+        RETURNING response_count`
 
 	var newCount int64
 	err := r.db.QueryRow(query, tutorID).Scan(&newCount)
@@ -561,12 +583,12 @@ func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int
 	}
 
 	query := `
-         	UPDATE tutors
-			SET response_count = response_count + $1
-			WHERE id = (
-				SELECT id FROM users WHERE telegram_id = $2 AND role = $3
-			)
-			RETURNING response_count`
+        UPDATE tutors
+		SET response_count = response_count + $1
+		WHERE id = (
+			SELECT id FROM users WHERE telegram_id = $2 AND role = $3
+		)
+		RETURNING response_count`
 
 	var newCount int64
 	err := r.db.QueryRow(query, responseCount, tutorTelegramID, "Tutor").Scan(&newCount)

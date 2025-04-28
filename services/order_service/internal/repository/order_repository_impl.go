@@ -125,6 +125,12 @@ func (o *Repository) UpdateOrder(orderID string, order *models.UpdateOrder) erro
 		index += 1
 	}
 
+	currentTime := time.Now()
+
+	query += fmt.Sprintf(`updated_at = $%v, `, strconv.Itoa(index))
+	values = append(values, currentTime)
+	index += 1
+
 	if index == 1 {
 		return nil
 	}
@@ -135,6 +141,7 @@ func (o *Repository) UpdateOrder(orderID string, order *models.UpdateOrder) erro
 	_, err := o.db.Exec(query, values...)
 
 	if err != nil {
+		logger.Error("[Postgres] UpdateOrder error" + err.Error())
 		return err
 	}
 
