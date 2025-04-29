@@ -244,3 +244,5 @@ func (u *UserController) UpdateNameTutor(ctx *fiber.Ctx) error {
 
 	return ctx.SendStatus(fiber.StatusCreated)
 }
+
+// ВОТ ЗДЕСЬ НОВАЯ РУЧКА!!!!!!!!!!!!!! - про отклики

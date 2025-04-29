@@ -8,7 +8,7 @@ import (
 type UserRepository interface {
 	CreateUser(user *models.CreateUser) (string, error)
 	GetStudentById(userID string) (*models.UserDB, error)
-	GetUserById(userID string) (*models.UserDB, error)
+	//GetUserById(userID string) (*models.UserDB, error)
 	GetTutorByID(userID string) (*models.TutorDB, error)
 	GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error)
 	GetAllTutors() ([]*pb.Tutor, error)
@@ -23,4 +23,5 @@ type UserRepository interface {
 	SetNewIsActiveTutor(tutorID string, IsActive bool) error
 	AddResponses(tutorTelegramID int64, responseCount int) (int, error)
 	RemoveOneResponse(tutorID string) error
+	SetReviewActive(reviewID string) error
 }

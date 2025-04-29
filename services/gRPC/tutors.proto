@@ -20,10 +20,10 @@ message Tutor {
 message TutorDetails {
   Tutor tutor = 1;
   string bio = 2;
-  int32 response_count = 3; // это только для своего профиля
+  int32 response_count = 3;
   repeated Review review = 4;
   repeated string tags = 5;
-  bool is_active = 6; // это только для своего профиля
+  bool is_active = 6;
   google.protobuf.Timestamp created_at = 7;
 }
 
@@ -38,23 +38,32 @@ message Review {
 
 service UserService {
   rpc CreateUser(CreateUserRequest) returns (CreateResponse);
-  rpc AddResponsesToTutor(AddResponseToTutorRequest) returns (AddResponseToTutorResponse);
-  rpc CreateNewResponse(CreateResponseRequest) returns (Success);
+
   rpc GetUserById(GetById) returns (User);
   rpc GetTutorById(GetById) returns (Tutor);
   rpc GetTutorInfoById(GetById) returns (TutorDetails);
   rpc GetStudentById(GetById) returns (User);
   rpc GetUserByTelegramId(GetByTelegramId) returns (User);
+
   rpc GetAllUsers(GetAllRequest) returns (GetAllResponse);
   rpc GetAllTutorsPagination(GetAllTutorsPaginationRequest) returns (GetTutorsPaginationResponse);
-  rpc UpdateBioTutor(UpdateBioRequest) returns (UpdateBioResponse);
+
+  rpc UpdateBioTutor(UpdateBioRequest) returns (Success);
   rpc UpdateTags(UpdateTagsRequest) returns (Success);
   rpc ChangeTutorActive(SetActiveTutorById) returns (Success);
   rpc ChangeTutorName(ChangeNameRequest) returns (Success);
+
+  rpc CreateNewResponse(CreateResponseRequest) returns (Success);
+  rpc AddResponsesToTutor(AddResponseToTutorRequest) returns (AddResponseToTutorResponse);
+
   rpc CreateReview(CreateReviewRequest) returns (CreateReviewResponse);
   rpc GetReview(GetReviewRequest) returns (Review);
   rpc GetReviews(GetReviewsRequest) returns (GetReviewsResponse);
-  rpc SetReviewActive(SetReviewsActiveRequest) returns (Success)
+  rpc SetReviewActive(SetReviewsActiveRequest) returns (Success);
+}
+
+message Success {
+  bool success = 1;
 }
 
 message GetAllTutorsPaginationRequest {
@@ -73,22 +82,18 @@ message ChangeNameRequest {
   string name = 2;
 }
 
-message UpdateBioResponse {
-  bool success = 1;
-}
-
 message CreateUserRequest {
   int64 telegram_id = 1;
   string name = 2;
   string role = 3;
 }
 
-message CreateResponse {
-  string id = 1;
-}
-
 message CreateResponseRequest {
   string tutor_id = 1;
+}
+
+message CreateResponse {
+  string id = 1;
 }
 
 message AddResponseToTutorRequest {
@@ -103,6 +108,7 @@ message AddResponseToTutorResponse {
 
 message GetByTelegramId {
   int64 id = 1;
+  string role = 2;
 }
 
 message SetActiveTutorById {
@@ -128,10 +134,6 @@ message GetTutorsPaginationResponse {
 message UpdateTagsRequest {
   string tutor_id = 1;
   repeated string tags = 2;
-}
-
-message Success {
-  bool success = 1;
 }
 
 message CreateReviewRequest {

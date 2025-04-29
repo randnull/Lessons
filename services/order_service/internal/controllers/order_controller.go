@@ -24,6 +24,8 @@ func (c *OrderController) HealtzHandler(ctx *fiber.Ctx) error {
 }
 
 func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
+	// если custom_error == Service Error - кидаем 500
+	// иначе кидаем 400
 	UserData, _ := ctx.Locals("user_data").(models.UserData)
 
 	var order models.NewOrder

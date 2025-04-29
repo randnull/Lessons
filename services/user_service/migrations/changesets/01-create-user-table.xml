@@ -35,4 +35,11 @@
         </createTable>
     </changeSet>
 
+    <changeSet author="k.goryunov" id="add-unique-telegram-role-index">
+        <createIndex indexName="index_tutor_telegram_id_role" tableName="users" unique="true">
+            <column name="telegram_id"/>
+            <column name="role"/>
+        </createIndex>
+    </changeSet>
+
 </databaseChangeLog>

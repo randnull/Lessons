@@ -70,7 +70,7 @@ func (r *RabbitMQ) Publish(queueName string, messageData interface{}) error {
 	)
 
 	if err != nil {
-		logger.Error("[RabbitMQ] error init queue" + err.Error())
+		logger.Error("[RabbitMQ] error init queue: " + err.Error())
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -88,7 +88,7 @@ func (r *RabbitMQ) Publish(queueName string, messageData interface{}) error {
 	)
 
 	if err != nil {
-		logger.Error("[RabbitMQ] failed to publish a message" + err.Error())
+		logger.Error("[RabbitMQ] failed to publish a message: " + err.Error())
 		return err
 	}
 

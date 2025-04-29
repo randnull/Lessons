@@ -88,13 +88,14 @@ func (o *Repository) CreateOrder(NewOrder *models.CreateOrder) (string, error) {
 		tags,
 		NewOrder.Order.MinPrice,
 		NewOrder.Order.MaxPrice,
-		"New",
+		models.StatusNew,
 		0,
 		timestamp,
 		timestamp,
 	).Scan(&orderID)
 
 	if err != nil {
+		logger.Error("[Postgres] SetTutorToOrder error" + err.Error())
 		return "", err
 	}
 
@@ -103,7 +104,8 @@ func (o *Repository) CreateOrder(NewOrder *models.CreateOrder) (string, error) {
 
 func (o *Repository) UpdateOrder(orderID string, order *models.UpdateOrder) error {
 	query := `UPDATE orders SET `
-	values := []interface{}{}
+
+	var values []interface{}
 
 	index := 1
 
@@ -141,7 +143,7 @@ func (o *Repository) UpdateOrder(orderID string, order *models.UpdateOrder) erro
 	_, err := o.db.Exec(query, values...)
 
 	if err != nil {
-		logger.Error("[Postgres] UpdateOrder error" + err.Error())
+		logger.Error("[Postgres] UpdateOrder error: " + err.Error())
 		return err
 	}
 
@@ -286,208 +288,99 @@ func (o *Repository) GetOrders() ([]*models.Order, error) {
 }
 
 func (o *Repository) GetOrdersPagination(limit int, offset int, tags string) ([]*models.Order, int, error) {
-	tx, err := o.db.Begin()
+	query := `
+		SELECT 
+			id, 
+			name,
+			student_id, 
+			title, 
+			description,
+			grade,
+			tags, 
+			min_price, 
+			max_price, 
+			status,
+			response_count,
+			created_at, 
+			updated_at 
+		FROM orders 
+		WHERE status = 'New'`
 
-	if err != nil {
-		logger.Error("[Postgres] GetOrdersPagination error" + err.Error())
-		return nil, 0, err
-	}
-
-	defer tx.Rollback()
-
-	var total int
-
-	queryCount := `SELECT 
-    					COUNT(*) 
-					FROM orders WHERE status = $1`
-
-	countArgs := []interface{}{"New"}
+	var args []interface{}
+	args = append(args, tags)
 
 	if tags != "" {
-		queryCount += ` AND $2 = ANY(tags)`
-		countArgs = append(countArgs, tags)
+		query += ` AND $1 = ANY(tags)`
+		args = append(args, tags)
 	}
 
-	err = tx.QueryRow(queryCount, countArgs...).Scan(&total)
-
-	if err != nil {
-		logger.Error("[Postgres] GetOrdersPagination error" + err.Error())
-		return nil, 0, err
-	}
+	query += ` ORDER BY created_at DESC LIMIT $` + strconv.Itoa(len(args)+1) + ` OFFSET $` + strconv.Itoa(len(args)+2)
+	args = append(args, limit, offset)
 
 	var orders []*models.Order
 
-	query := `SELECT 
-                id, 
-                name,
-                student_id, 
-                title, 
-                description,
-                grade,
-                tags, 
-                min_price, 
-                max_price, 
-                status,
-                response_count,
-                created_at, 
-                updated_at 
-            FROM orders WHERE status = $1`
+	err := o.db.Select(&orders, query, args...)
 
-	queryArgs := []interface{}{"New"}
-
-	if tags != "" {
-		query += ` AND $2 = ANY(tags)`
-		queryArgs = append(queryArgs, tags)
-	}
-
-	query += ` ORDER BY created_at DESC LIMIT $` + strconv.Itoa(len(queryArgs)+1) + ` OFFSET $` + strconv.Itoa(len(queryArgs)+2)
-	queryArgs = append(queryArgs, limit, offset)
-
-	rows, err := tx.Query(query, queryArgs...)
 	if err != nil {
-		return nil, 0, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var order models.Order
-		err := rows.Scan(
-			&order.ID,
-			&order.Name,
-			&order.StudentID,
-			&order.Title,
-			&order.Description,
-			&order.Grade,
-			&order.Tags,
-			&order.MinPrice,
-			&order.MaxPrice,
-			&order.Status,
-			&order.ResponseCount,
-			&order.CreatedAt,
-			&order.UpdatedAt,
-		)
-		if err != nil {
-			logger.Error("[Postgres] GetOrdersPagination error" + err.Error())
-			return nil, 0, err
-		}
-		orders = append(orders, &order)
-	}
-
-	if err = rows.Err(); err != nil {
-		logger.Error("[Postgres] GetOrdersPagination error" + err.Error())
+		logger.Error("[Postgres] GetOrdersPagination select error: " + err.Error())
 		return nil, 0, err
 	}
 
-	if err = tx.Commit(); err != nil {
-		logger.Error("[Postgres] GetOrdersPagination error" + err.Error())
-		return nil, 0, err
-	}
-
-	return orders, total, nil
+	return orders, len(orders), nil
 }
 
 func (o *Repository) GetStudentOrdersPagination(limit int, offset int, studentID string) ([]*models.Order, int, error) {
-	tx, err := o.db.Begin()
-
-	if err != nil {
-		return nil, 0, err
-	}
-
-	defer tx.Rollback()
-
-	var total int
-
-	queryCount := `SELECT 
-    					COUNT(*) 
-					FROM orders WHERE student_id = $1`
-
-	err = tx.QueryRow(queryCount, studentID).Scan(&total)
-
-	if err != nil {
-		logger.Error("[Postgres] GetStudentOrdersPagination error" + err.Error())
-		return nil, 0, err
-	}
-
 	var orders []*models.Order
 
-	query := `SELECT 
-    			id, 
-    			name,
-    			student_id, 
-    			title, 
-    			description,
-    			grade,
-    			tags, 
-    			min_price, 
-    			max_price, 
-    			status,
-    			response_count,
-    			created_at, 
-    			updated_at 
-			FROM orders WHERE student_id = $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3`
+	const querySelectOrders = `
+		SELECT 
+			id, 
+			name,
+			student_id, 
+			title, 
+			description,
+			grade,
+			tags, 
+			min_price, 
+			max_price, 
+			status,
+			response_count,
+			created_at, 
+			updated_at 
+		FROM orders 
+		WHERE student_id = $1 
+		ORDER BY created_at DESC 
+		LIMIT $2 OFFSET $3`
 
-	rows, err := tx.Query(query, studentID, limit, offset)
+	err := o.db.Select(&orders, querySelectOrders, studentID, limit, offset)
+
 	if err != nil {
-		logger.Error("[Postgres] GetStudentOrdersPagination error" + err.Error())
-		return nil, 0, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var order models.Order
-		err := rows.Scan(
-			&order.ID,
-			&order.Name,
-			&order.StudentID,
-			&order.Title,
-			&order.Description,
-			&order.Grade,
-			&order.Tags,
-			&order.MinPrice,
-			&order.MaxPrice,
-			&order.Status,
-			&order.ResponseCount,
-			&order.CreatedAt,
-			&order.UpdatedAt,
-		)
-		if err != nil {
-			logger.Error("[Postgres] GetStudentOrdersPagination error" + err.Error())
-			return nil, 0, err
-		}
-		orders = append(orders, &order)
-	}
-
-	if err = rows.Err(); err != nil {
-		logger.Error("[Postgres] GetStudentOrdersPagination error" + err.Error())
+		logger.Error("[Postgres] GetStudentOrdersPagination select error: " + err.Error())
 		return nil, 0, err
 	}
 
-	if err = tx.Commit(); err != nil {
-		logger.Error("[Postgres] GetStudentOrdersPagination error" + err.Error())
-		return nil, 0, err
-	}
-
-	return orders, total, nil
+	return orders, len(orders), nil
 }
 
 func (o *Repository) GetStudentOrders(studentID string) ([]*models.Order, error) {
 	var orders []*models.Order
 
-	query := `SELECT 
-    			id, 
-    			name,
-    			student_id, 
-    			title, 
-    			description, 
-    			grade,
-    			tags, 
-    			min_price, 
-    			max_price, 
-    			status, 
-    			response_count,
-    			created_at, 
-    			updated_at 
-			FROM orders WHERE student_id = $1 ORDER BY created_at DESC`
+	query := `
+		SELECT 
+    		id, 
+    		name,
+    		student_id, 
+    		title, 
+    		description, 
+    		grade,
+    		tags, 
+    		min_price, 
+    		max_price, 
+    		status, 
+    		response_count,
+    		created_at, 
+    		updated_at 
+		FROM orders WHERE student_id = $1 ORDER BY created_at DESC`
 
 	err := o.db.Select(&orders, query, studentID)
 
@@ -650,8 +543,7 @@ func (o *Repository) GetTutorIsRespond(orderID string, tutorID string) (bool, er
 	const query = `
         SELECT EXISTS (
             SELECT 1 FROM responses WHERE order_id = $1 AND tutor_id = $2
-        )
-    `
+        )`
 
 	var isExist = false
 
@@ -702,8 +594,7 @@ func (o *Repository) CheckOrderByStudentID(orderID string, studentID string) (bo
 	query := `
         SELECT EXISTS (
             SELECT 1 FROM orders WHERE id = $1 AND student_id = $2
-        )
-    `
+        )`
 
 	err := o.db.QueryRow(query, orderID, studentID).Scan(&isExist)
 

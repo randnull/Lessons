@@ -1,16 +1,17 @@
 package service
 
 import (
+	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/repository"
 )
 
 type UserServiceInt interface {
-	GetUserById(UserId string) (*models.UserDB, error)
+	//GetUserById(UserId string) (*models.UserDB, error)
 	GetStudentById(UserId string) (*models.UserDB, error)
 	GetTutorById(TutorID string) (*models.TutorDB, error)
-	//GetUserByTelegramId(TelegramId int64) (*models.UserDB, error)
+	GetUserByTelegramId(TelegramId int64, userRole string) (*models.UserDB, error)
 	UpdateNameTutor(tutorID string, name string) error
 	CreateUser(user models.CreateUser) (string, error)
 	GetTutors() ([]*pb.Tutor, error)
@@ -24,6 +25,7 @@ type UserServiceInt interface {
 	ChangeTutorActive(tutorID string, IsActive bool) error
 	CreateNewResponse(tutorID string) error
 	AddResponses(tutorID int64, responseCount int) (int, error)
+	SetReviewActive(reviewID string) error
 }
 
 type UserService struct {
@@ -36,20 +38,23 @@ func NewUserService(userRepo repository.UserRepository) UserServiceInt {
 	}
 }
 
-func (s *UserService) GetUserById(UserId string) (*models.UserDB, error) {
-	return s.userRepository.GetUserById(UserId)
-}
+//func (s *UserService) GetUserById(UserId string) (*models.UserDB, error) {
+//	return s.userRepository.GetUserById(UserId)
+//}
 
 func (s *UserService) GetStudentById(UserId string) (*models.UserDB, error) {
 	return s.userRepository.GetStudentById(UserId)
 }
 
-//
-//func (s *UserService) GetUserByTelegramId(TelegramId int64) (*models.UserDB, error) {
-//	return s.userRepository.GetUserByTelegramId(TelegramId)
-//}
+func (s *UserService) GetUserByTelegramId(TelegramId int64, userRole string) (*models.UserDB, error) {
+	return s.userRepository.GetUserByTelegramId(TelegramId, userRole)
+}
 
 func (s *UserService) CreateUser(user models.CreateUser) (string, error) {
+	if (user.Role != models.RoleStudent) && (user.Role != models.RoleTutor) {
+		return "", custom_errors.ErrorIncorrectRole
+	}
+
 	return s.userRepository.CreateUser(&user)
 }
 
@@ -138,5 +143,13 @@ func (s *UserService) CreateNewResponse(tutorID string) error {
 }
 
 func (s *UserService) AddResponses(tutorID int64, responseCount int) (int, error) {
+	if responseCount < 1 {
+		return 0, custom_errors.ErrorCountLessZero
+	}
+
 	return s.userRepository.AddResponses(tutorID, responseCount)
+}
+
+func (s *UserService) SetReviewActive(reviewID string) error {
+	return s.userRepository.SetReviewActive(reviewID)
 }

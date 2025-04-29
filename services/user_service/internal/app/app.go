@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/controllers"
 	pb "github.com/randnull/Lessons/internal/gRPC"
@@ -33,17 +34,18 @@ func NewApp(cfg *config.Config) *App {
 }
 
 func (a *App) Run() {
-	lis, err := net.Listen("tcp", ":2000")
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%v", a.cfg.ServerPort))
+
 	if err != nil {
-		log.Fatal("server failed")
+		log.Fatal("server failed listen port " + a.cfg.ServerPort + " Error: " + err.Error())
 	}
 
 	s := grpc.NewServer()
 	pb.RegisterUserServiceServer(s, a.userControllers)
 
-	log.Printf("server listening : %s", "2000")
+	log.Printf("server listening : %s", a.cfg.ServerPort)
 
 	if err := s.Serve(lis); err != nil {
-		log.Fatal("server failed")
+		log.Fatal("server failed!" + a.cfg.ServerPort + " Error: " + err.Error())
 	}
 }

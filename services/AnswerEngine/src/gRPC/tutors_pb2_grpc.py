@@ -19,16 +19,6 @@ class UserServiceStub(object):
                 request_serializer=gRPC_dot_tutors__pb2.CreateUserRequest.SerializeToString,
                 response_deserializer=gRPC_dot_tutors__pb2.CreateResponse.FromString,
                 )
-        self.AddResponsesToTutor = channel.unary_unary(
-                '/users.UserService/AddResponsesToTutor',
-                request_serializer=gRPC_dot_tutors__pb2.AddResponseToTutorRequest.SerializeToString,
-                response_deserializer=gRPC_dot_tutors__pb2.AddResponseToTutorResponse.FromString,
-                )
-        self.CreateNewResponse = channel.unary_unary(
-                '/users.UserService/CreateNewResponse',
-                request_serializer=gRPC_dot_tutors__pb2.CreateResponseRequest.SerializeToString,
-                response_deserializer=gRPC_dot_tutors__pb2.Success.FromString,
-                )
         self.GetUserById = channel.unary_unary(
                 '/users.UserService/GetUserById',
                 request_serializer=gRPC_dot_tutors__pb2.GetById.SerializeToString,
@@ -67,7 +57,7 @@ class UserServiceStub(object):
         self.UpdateBioTutor = channel.unary_unary(
                 '/users.UserService/UpdateBioTutor',
                 request_serializer=gRPC_dot_tutors__pb2.UpdateBioRequest.SerializeToString,
-                response_deserializer=gRPC_dot_tutors__pb2.UpdateBioResponse.FromString,
+                response_deserializer=gRPC_dot_tutors__pb2.Success.FromString,
                 )
         self.UpdateTags = channel.unary_unary(
                 '/users.UserService/UpdateTags',
@@ -84,6 +74,16 @@ class UserServiceStub(object):
                 request_serializer=gRPC_dot_tutors__pb2.ChangeNameRequest.SerializeToString,
                 response_deserializer=gRPC_dot_tutors__pb2.Success.FromString,
                 )
+        self.CreateNewResponse = channel.unary_unary(
+                '/users.UserService/CreateNewResponse',
+                request_serializer=gRPC_dot_tutors__pb2.CreateResponseRequest.SerializeToString,
+                response_deserializer=gRPC_dot_tutors__pb2.Success.FromString,
+                )
+        self.AddResponsesToTutor = channel.unary_unary(
+                '/users.UserService/AddResponsesToTutor',
+                request_serializer=gRPC_dot_tutors__pb2.AddResponseToTutorRequest.SerializeToString,
+                response_deserializer=gRPC_dot_tutors__pb2.AddResponseToTutorResponse.FromString,
+                )
         self.CreateReview = channel.unary_unary(
                 '/users.UserService/CreateReview',
                 request_serializer=gRPC_dot_tutors__pb2.CreateReviewRequest.SerializeToString,
@@ -99,24 +99,17 @@ class UserServiceStub(object):
                 request_serializer=gRPC_dot_tutors__pb2.GetReviewsRequest.SerializeToString,
                 response_deserializer=gRPC_dot_tutors__pb2.GetReviewsResponse.FromString,
                 )
+        self.SetReviewActive = channel.unary_unary(
+                '/users.UserService/SetReviewActive',
+                request_serializer=gRPC_dot_tutors__pb2.SetReviewsActiveRequest.SerializeToString,
+                response_deserializer=gRPC_dot_tutors__pb2.Success.FromString,
+                )
 
 
 class UserServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def CreateUser(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def AddResponsesToTutor(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def CreateNewResponse(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -188,6 +181,18 @@ class UserServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def CreateNewResponse(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def AddResponsesToTutor(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
     def CreateReview(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -206,6 +211,12 @@ class UserServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SetReviewActive(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_UserServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -213,16 +224,6 @@ def add_UserServiceServicer_to_server(servicer, server):
                     servicer.CreateUser,
                     request_deserializer=gRPC_dot_tutors__pb2.CreateUserRequest.FromString,
                     response_serializer=gRPC_dot_tutors__pb2.CreateResponse.SerializeToString,
-            ),
-            'AddResponsesToTutor': grpc.unary_unary_rpc_method_handler(
-                    servicer.AddResponsesToTutor,
-                    request_deserializer=gRPC_dot_tutors__pb2.AddResponseToTutorRequest.FromString,
-                    response_serializer=gRPC_dot_tutors__pb2.AddResponseToTutorResponse.SerializeToString,
-            ),
-            'CreateNewResponse': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateNewResponse,
-                    request_deserializer=gRPC_dot_tutors__pb2.CreateResponseRequest.FromString,
-                    response_serializer=gRPC_dot_tutors__pb2.Success.SerializeToString,
             ),
             'GetUserById': grpc.unary_unary_rpc_method_handler(
                     servicer.GetUserById,
@@ -262,7 +263,7 @@ def add_UserServiceServicer_to_server(servicer, server):
             'UpdateBioTutor': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateBioTutor,
                     request_deserializer=gRPC_dot_tutors__pb2.UpdateBioRequest.FromString,
-                    response_serializer=gRPC_dot_tutors__pb2.UpdateBioResponse.SerializeToString,
+                    response_serializer=gRPC_dot_tutors__pb2.Success.SerializeToString,
             ),
             'UpdateTags': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateTags,
@@ -279,6 +280,16 @@ def add_UserServiceServicer_to_server(servicer, server):
                     request_deserializer=gRPC_dot_tutors__pb2.ChangeNameRequest.FromString,
                     response_serializer=gRPC_dot_tutors__pb2.Success.SerializeToString,
             ),
+            'CreateNewResponse': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateNewResponse,
+                    request_deserializer=gRPC_dot_tutors__pb2.CreateResponseRequest.FromString,
+                    response_serializer=gRPC_dot_tutors__pb2.Success.SerializeToString,
+            ),
+            'AddResponsesToTutor': grpc.unary_unary_rpc_method_handler(
+                    servicer.AddResponsesToTutor,
+                    request_deserializer=gRPC_dot_tutors__pb2.AddResponseToTutorRequest.FromString,
+                    response_serializer=gRPC_dot_tutors__pb2.AddResponseToTutorResponse.SerializeToString,
+            ),
             'CreateReview': grpc.unary_unary_rpc_method_handler(
                     servicer.CreateReview,
                     request_deserializer=gRPC_dot_tutors__pb2.CreateReviewRequest.FromString,
@@ -293,6 +304,11 @@ def add_UserServiceServicer_to_server(servicer, server):
                     servicer.GetReviews,
                     request_deserializer=gRPC_dot_tutors__pb2.GetReviewsRequest.FromString,
                     response_serializer=gRPC_dot_tutors__pb2.GetReviewsResponse.SerializeToString,
+            ),
+            'SetReviewActive': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetReviewActive,
+                    request_deserializer=gRPC_dot_tutors__pb2.SetReviewsActiveRequest.FromString,
+                    response_serializer=gRPC_dot_tutors__pb2.Success.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -318,40 +334,6 @@ class UserService(object):
         return grpc.experimental.unary_unary(request, target, '/users.UserService/CreateUser',
             gRPC_dot_tutors__pb2.CreateUserRequest.SerializeToString,
             gRPC_dot_tutors__pb2.CreateResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def AddResponsesToTutor(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/users.UserService/AddResponsesToTutor',
-            gRPC_dot_tutors__pb2.AddResponseToTutorRequest.SerializeToString,
-            gRPC_dot_tutors__pb2.AddResponseToTutorResponse.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def CreateNewResponse(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/users.UserService/CreateNewResponse',
-            gRPC_dot_tutors__pb2.CreateResponseRequest.SerializeToString,
-            gRPC_dot_tutors__pb2.Success.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -487,7 +469,7 @@ class UserService(object):
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/users.UserService/UpdateBioTutor',
             gRPC_dot_tutors__pb2.UpdateBioRequest.SerializeToString,
-            gRPC_dot_tutors__pb2.UpdateBioResponse.FromString,
+            gRPC_dot_tutors__pb2.Success.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -543,6 +525,40 @@ class UserService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
+    def CreateNewResponse(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/users.UserService/CreateNewResponse',
+            gRPC_dot_tutors__pb2.CreateResponseRequest.SerializeToString,
+            gRPC_dot_tutors__pb2.Success.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def AddResponsesToTutor(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/users.UserService/AddResponsesToTutor',
+            gRPC_dot_tutors__pb2.AddResponseToTutorRequest.SerializeToString,
+            gRPC_dot_tutors__pb2.AddResponseToTutorResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
     def CreateReview(request,
             target,
             options=(),
@@ -590,5 +606,22 @@ class UserService(object):
         return grpc.experimental.unary_unary(request, target, '/users.UserService/GetReviews',
             gRPC_dot_tutors__pb2.GetReviewsRequest.SerializeToString,
             gRPC_dot_tutors__pb2.GetReviewsResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def SetReviewActive(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/users.UserService/SetReviewActive',
+            gRPC_dot_tutors__pb2.SetReviewsActiveRequest.SerializeToString,
+            gRPC_dot_tutors__pb2.Success.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

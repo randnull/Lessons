@@ -3,35 +3,35 @@ package models
 import "time"
 
 type User struct {
-	Id   string `json:"user_id"`
-	Name string `json:"name"`
+	Id   string `json:"user_id" db:"user_id"`
+	Name string `json:"name" db:"name"`
 }
 
 type UserDB struct {
-	Id         string    `json:"id"`
-	TelegramID int64     `json:"telegram_id"`
-	Name       string    `json:"name"`
-	Role       string    `json:"role"`
-	CreatedAt  time.Time `json:"created_at"`
+	Id         string    `json:"id" db:"id"`
+	TelegramID int64     `json:"telegram_id" db:"telegram_id"`
+	Name       string    `json:"name" db:"name"`
+	Role       string    `json:"role" db:"role"`
+	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 }
 
 type TutorDB struct {
-	Id             string
-	TelegramID     int64
-	Name           string
-	Role           string
-	CreatedAt      time.Time
-	Bio            string
-	ResponseCount  int32
-	Tags           []string
-	IsActive       bool
-	TutorCreatedAt time.Time
+	Id             string    `db:"id"`
+	TelegramID     int64     `db:"telegram_id"`
+	Name           string    `db:"name"`
+	Role           string    `db:"role"`
+	CreatedAt      time.Time `db:"created_at"`
+	Bio            string    `db:"bio"`
+	ResponseCount  int32     `db:"response_count"`
+	Tags           []string  `db:"tags"`
+	IsActive       bool      `db:"is_active"`
+	TutorCreatedAt time.Time `db:"tutor_created_at"`
 }
 
 type CreateUser struct {
-	Name       string `json:"name"`
-	TelegramId int64  `json:"telegram_id"`
-	Role       string `json:"role"`
+	Name       string `json:"name" db:"name"`
+	TelegramId int64  `json:"telegram_id" db:"telegram_id"`
+	Role       string `json:"role" db:"role"`
 }
 
 type TutorDetails struct {

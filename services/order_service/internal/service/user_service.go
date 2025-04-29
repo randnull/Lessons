@@ -14,7 +14,6 @@ import (
 )
 
 type UserServiceInt interface {
-	GetUser(UserID string) (*models.User, error)
 	GetTutor(TutorID string) (*models.Tutor, error)
 
 	GetAllTutorsPagination(page int, size int, tag string) (*models.TutorsPagination, error)
@@ -45,10 +44,6 @@ func NewUSerService(grpcClient gRPC_client.GRPCClientInt, producerBroker rabbitm
 
 func (u *UserService) GetTutor(TutorID string) (*models.Tutor, error) {
 	return u.GRPCClient.GetTutor(context.Background(), TutorID)
-}
-
-func (u *UserService) GetUser(UserID string) (*models.User, error) {
-	return u.GRPCClient.GetUser(context.Background(), UserID)
 }
 
 func (u *UserService) GetAllUsers() ([]*models.TutorForList, error) {
@@ -177,9 +172,9 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 
 	TimeDiff := currentTimestamp.Sub(response.CreatedAt)
 
-	if TimeDiff < 72*time.Hour {
+	if TimeDiff < 1*time.Second {
 		logger.Info("[UserService] Review time bad. Diff: " + TimeDiff.String())
-		return "", custom_errors.ErrNotAllowed
+		return "", custom_errors.ErrorLowTimeFromResponse
 	}
 
 	reviewID, err := u.GRPCClient.CreateReview(context.Background(), order.ID, response.TutorID, ReviewRequest.Comment, ReviewRequest.Rating)

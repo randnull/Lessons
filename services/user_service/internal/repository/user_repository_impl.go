@@ -11,8 +11,10 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
+	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -39,16 +41,16 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	db, err := sqlx.Open("postgres", link)
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[Postgres] failed to connect" + err.Error())
 	}
 
 	err = db.PingContext(context.Background())
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("[Postgres] failed to ping" + err.Error())
 	}
 
-	log.Print("Database is ready")
+	log.Print("[Postgres] Database is ready")
 
 	return &Repository{
 		db: db,
@@ -56,13 +58,12 @@ func NewRepository(cfg config.DBConfig) *Repository {
 }
 
 func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
-	if (user.Role != models.RoleStudent) && (user.Role != models.RoleTutor) {
-		return "", custom_errors.ErrorIncorrectRole
-	}
+	lg.Info("[Postgres] CreateUser called. UserID: " + fmt.Sprint(user.TelegramId) + " Role: " + user.Role)
 
 	ExistedUser, err := r.GetUserByTelegramId(user.TelegramId, user.Role)
+
 	if err == nil {
-		log.Println("exist")
+		lg.Info("[Postgres] CreateUser User exist. Authorization UserID: " + fmt.Sprint(user.TelegramId) + " UserID " + ExistedUser.Id)
 		return ExistedUser.Id, nil
 	}
 
@@ -70,12 +71,18 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 	defer tx.Rollback()
 
 	if err != nil {
-		log.Println("err:", err)
+		lg.Info("[Postgres] CreateUser TX failed " + fmt.Sprint(user.TelegramId) + " Error: " + err.Error())
 		tx.Rollback()
 		return "", err
 	}
 
-	query := `INSERT INTO users (telegram_id, name, role, created_at) VALUES ($1, $2, $3, $4) RETURNING id`
+	const query = `
+		INSERT INTO users (
+            telegram_id,
+            name,
+            role,
+            created_at)
+		VALUES ($1, $2, $3, $4) RETURNING id`
 
 	var UserId string
 
@@ -88,19 +95,23 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 		currentTime,
 	).Scan(&UserId)
 
-	log.Println(err)
 	if err != nil {
-		log.Println("err 2:", err)
+		lg.Info("[Postgres] CreateUser Insert failed for userTelegramID: " + fmt.Sprint(user.TelegramId) + " Error: " + err.Error())
 		tx.Rollback()
 		return "", custom_errors.ErrorWithCreate
 	}
 
 	if user.Role == models.RoleTutor {
-		queryInsertTutor := `INSERT INTO tutors (id, created_at) VALUES ($1, $2)`
+		const queryInsertTutor = `
+				INSERT INTO tutors (
+                    id,
+                    created_at)
+				VALUES ($1, $2)`
+
 		_, err = tx.Exec(queryInsertTutor, UserId, currentTime)
 
 		if err != nil {
-			log.Println("err 3:", err)
+			lg.Info("[Postgres] CreateUser Insert Tutor failed for userTelegramID: " + fmt.Sprint(user.TelegramId) + " Error: " + err.Error())
 
 			tx.Rollback()
 			return "", custom_errors.ErrorWithCreate
@@ -109,8 +120,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 
 	err = tx.Commit()
 	if err != nil {
-		log.Println(err)
-
+		lg.Info("[Postgres] CreateUser TX failed " + fmt.Sprint(user.TelegramId) + " Error: " + err.Error())
 		return "", err
 	}
 
@@ -118,68 +128,69 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 }
 
 func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error) {
-	user := &models.UserDB{}
+	lg.Info("[Postgres] GetUserByTelegramId called. UserID: " + fmt.Sprint(telegramID) + " Role: " + userRole)
 
-	query := `
+	var user models.UserDB
+
+	const query = `
 		SELECT 
 		    id,
 		    telegram_id,
 		    name, 
 		    role, 
 		    created_at 
-		FROM users WHERE telegram_id = $1 AND role = $2`
+		FROM users 
+		WHERE telegram_id = $1 AND role = $2`
 
-	err := r.db.QueryRow(query, telegramID, userRole).Scan(
-		&user.Id,
-		&user.TelegramID,
-		&user.Name,
-		&user.Role,
-		&user.CreatedAt,
-	)
+	err := r.db.Get(&user, query, telegramID, userRole)
 
 	if err != nil {
-		log.Println('0', err)
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, custom_errors.UserNotFound
 		}
+		lg.Error("[Postgres] GetUserByTelegramId error: " + err.Error())
 		return nil, err
 	}
 
-	return user, nil
+	lg.Info("[Postgres] GetUserByTelegramId success. UserTelegramID: " + fmt.Sprint(telegramID) + " Role: " + userRole + " UserID: " + user.Id)
+
+	return &user, nil
 }
 
 func (r *Repository) GetStudentById(userID string) (*models.UserDB, error) {
-	user := &models.UserDB{}
+	lg.Info("[Postgres] GetStudentById called. UserID: " + userID)
 
-	query := `
-		SELECT
+	var user models.UserDB
+
+	const query = `
+		SELECT 
 		    id,
 		    telegram_id,
-		    name,
-		    role,
-		    created_at
-		FROM users WHERE id = $1 AND role = $2`
+		    name, 
+		    role, 
+		    created_at 
+		FROM users 
+		WHERE id = $1 AND role = $2`
 
-	err := r.db.QueryRow(query, userID, "Student").Scan(
-		&user.Id,
-		&user.TelegramID,
-		&user.Name,
-		&user.Role,
-		&user.CreatedAt,
-	)
+	err := r.db.Get(&user, query, userID, models.RoleStudent)
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, custom_errors.UserNotFound
 		}
+		lg.Error("[Postgres] GetStudentById error: " + err.Error())
 		return nil, err
 	}
 
-	return user, nil
+	lg.Info("[Postgres] GetStudentById success. UserID: " + userID)
+
+	return &user, nil
 }
 
 func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
-	query := `
+	lg.Info("[Postgres] GetTutorByID called. UserID: " + userID)
+
+	const query = `
         SELECT 
             u.id, 
             u.telegram_id, 
@@ -202,7 +213,7 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 	var isActive sql.NullBool
 	var tutorCreatedAt sql.NullTime
 
-	err := r.db.QueryRow(query, userID, "Tutor").Scan(
+	err := r.db.QueryRow(query, userID, models.RoleTutor).Scan(
 		&tutor.Id,
 		&tutor.TelegramID,
 		&tutor.Name,
@@ -219,7 +230,8 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, custom_errors.UserNotFound
 		}
-		return nil, fmt.Errorf("failed to query tutor: %w", err)
+		lg.Error("[Postgres] GetTutorByID failed. UserID: " + userID + " Error: " + err.Error())
+		return nil, err
 	}
 
 	if bio.Valid {
@@ -227,48 +239,55 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 	}
 
 	if responseCount.Valid {
-		tutor.ResponseCount = int32(responseCount.Int32)
+		tutor.ResponseCount = responseCount.Int32
 	}
+
 	if tags != nil {
 		tutor.Tags = tags
 	} else {
 		tutor.Tags = []string{}
 	}
+
 	if isActive.Valid {
 		tutor.IsActive = isActive.Bool
 	}
+
 	if tutorCreatedAt.Valid {
 		tutor.TutorCreatedAt = tutorCreatedAt.Time
 	}
 
+	lg.Info("[Postgres] GetTutorByID succss. UserID: " + userID)
+
 	return &tutor, nil
 }
 
-func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
-	user := &models.UserDB{}
-
-	query := `SELECT id, telegram_id, name, role, created_at FROM users WHERE id = $1 AND role = $2`
-
-	err := r.db.QueryRow(query, userID, "Tutor").Scan(
-		&user.Id,
-		&user.TelegramID,
-		&user.Name,
-		&user.Role,
-		&user.CreatedAt,
-	)
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, custom_errors.UserNotFound
-		}
-		return nil, err
-	}
-
-	return user, nil
-}
+//func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
+//	user := &models.UserDB{}
+//
+//	query := `SELECT id, telegram_id, name, role, created_at FROM users WHERE id = $1 AND role = $2`
+//
+//	err := r.db.QueryRow(query, userID, "Tutor").Scan(
+//		&user.Id,
+//		&user.TelegramID,
+//		&user.Name,
+//		&user.Role,
+//		&user.CreatedAt,
+//	)
+//
+//	if err != nil {
+//		if errors.Is(err, sql.ErrNoRows) {
+//			return nil, custom_errors.UserNotFound
+//		}
+//		return nil, err
+//	}
+//
+//	return user, nil
+//}
 
 func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
-	query := `
+	lg.Info("[Postgres] GetAllTutors called")
+
+	const query = `
 		SELECT 
 			u.id, 
 			u.name, 
@@ -279,21 +298,25 @@ func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
 		WHERE u.role = $1 AND t.is_active = true
 		ORDER BY u.created_at DESC`
 
-	rows, err := r.db.Query(query, "Tutor")
+	rows, err := r.db.Query(query, models.RoleTutor)
 	if err != nil {
-		return nil, errors.New("error with query")
+		lg.Error("[Postgres] GetAllTutors failed. Query error: " + err.Error())
+		return nil, err
 	}
 	defer rows.Close()
 
 	var tutors []*pb.Tutor
+
 	for rows.Next() {
 		var id, name string
 		var telegramID int64
 		var tags pq.StringArray
 
 		err := rows.Scan(&id, &name, &telegramID, &tags)
+
 		if err != nil {
-			return nil, errors.New("error with scan")
+			lg.Error("[Postgres] GetAllTutors error: " + err.Error())
+			return nil, err
 		}
 
 		tutor := &pb.Tutor{
@@ -307,26 +330,93 @@ func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
 		tutors = append(tutors, tutor)
 	}
 
-	if err = rows.Err(); err != nil {
-		return nil, errors.New("error with rows")
+	if rows.Err() != nil {
+		lg.Error("[Postgres] GetAllTutors error after rows scan")
+		return nil, custom_errors.ErrorAfterRowScan
 	}
+
+	lg.Info("[Postgres] GetAllTutors success")
 
 	return tutors, nil
 }
 
 func (r *Repository) UpdateTutorBio(userID string, bio string) error {
-	queryUpdateBioTutor := `UPDATE tutors SET bio = $1 WHERE id = $2`
+	lg.Info("[Postgres] UpdateTutorBio called")
 
-	_, err := r.db.Exec(queryUpdateBioTutor, bio, userID)
+	const query = `
+		UPDATE tutors SET
+            bio = $1 
+        WHERE id = $2`
+
+	_, err := r.db.Exec(query, bio, userID)
 
 	if err != nil {
-		log.Println(err)
-		return custom_errors.ErrorUpdateBio
+		lg.Error("[Postgres] UpdateTutorBio failed. Error: " + err.Error())
+		return err
 	}
 
+	lg.Info("[Postgres] UpdateTutorBio success")
 	return nil
 }
 
+func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
+	lg.Info("[Postgres] UpdateTutorTags called. TutorID: " + tutorID)
+
+	const query = `
+		UPDATE tutors SET 
+		    tags = $1
+		WHERE id = $2`
+
+	_, err := r.db.Exec(query, pq.Array(tags), tutorID)
+
+	if err != nil {
+		lg.Error("[Postgres] UpdateTutorTags failed. Error: " + err.Error())
+		return err
+	}
+
+	lg.Info("[Postgres] UpdateTutorTags success")
+	return nil
+}
+
+func (r *Repository) SetNewIsActiveTutor(tutorID string, isActive bool) error {
+	lg.Info("[Postgres] SetNewIsActiveTutor called. TutorID: " + tutorID)
+
+	const query = `
+		UPDATE tutors SET
+            is_active = $1
+        WHERE id = $2`
+
+	_, err := r.db.Exec(query, isActive, tutorID)
+
+	if err != nil {
+		lg.Error("[Postgres] SetNewIsActiveTutor failed. Error: " + err.Error())
+		return err
+	}
+
+	lg.Info("[Postgres] SetNewIsActiveTutor success")
+	return nil
+}
+
+func (r *Repository) UpdateTutorName(tutorID string, name string) error {
+	lg.Info("[Postgres] UpdateTutorName called. TutorID: " + tutorID + " Name: " + name)
+
+	const query = `
+		UPDATE users SET
+		    name = $1
+		WHERE id = $2 AND role = $3`
+
+	_, err := r.db.Exec(query, name, tutorID, models.RoleTutor)
+
+	if err != nil {
+		lg.Error("[Postgres] UpdateTutorName failed. Error: " + err.Error())
+		return err
+	}
+
+	lg.Info("[Postgres] UpdateTutorName success")
+	return nil
+}
+
+// этого монстра нужно отрефакторить
 func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) ([]*pb.Tutor, int, error) {
 	var total int
 
@@ -410,23 +500,9 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 	return tutors, total, nil
 }
 
-func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
-	queryUpdateTutorTags := `
-		UPDATE tutors
-		SET tags = $1
-		WHERE id = $2
-	`
-
-	_, err := r.db.Exec(queryUpdateTutorTags, pq.Array(tags), tutorID)
-	if err != nil {
-		log.Printf("Failed to update tags for tutor")
-		return err //custom_errors.ErrorTagsTutor
-	}
-
-	return nil
-}
-
 func (r *Repository) CreateReview(tutorID, orderID string, rating int, comment string) (string, error) {
+	lg.Info("[Postgres] CreateReview called. TutorID: " + tutorID + " orderID: " + orderID)
+
 	timestamp := time.Now()
 
 	queryInsertReview := `
@@ -443,87 +519,84 @@ func (r *Repository) CreateReview(tutorID, orderID string, rating int, comment s
 
 	var reviewID string
 	err := r.db.QueryRow(queryInsertReview, tutorID, orderID, rating, comment, false, timestamp).Scan(&reviewID)
+
 	if err != nil {
-		log.Printf("Failed create review ((: %v", err)
+		lg.Info("[Postgres] CreateReview failed. TutorID: " + tutorID + " orderID: " + orderID + " Error: " + err.Error())
 		return "", err
 	}
+
+	lg.Info("[Postgres] CreateReview success. TutorID: " + tutorID + " orderID: " + orderID)
 
 	return reviewID, nil
 }
 
 func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
-	query := `SELECT 
-    			id, 
-    			tutor_id, 
-    			order_id, 
-    			rating, 
-    			comment, 
-    			created_at
-		FROM reviews
-		WHERE tutor_id = $1
-	`
+	lg.Info("[Postgres] GetReviews called. tutorID: " + tutorID)
 
-	rows, err := r.db.Query(query, tutorID)
-	if err != nil {
-		log.Printf("Failed get reviews for tutor %s: %v", tutorID, err)
-		return nil, err
-	}
-	defer rows.Close()
+	const query = `
+		SELECT 
+			id, 
+			tutor_id, 
+			order_id, 
+			rating, 
+			comment, 
+			is_active,
+			created_at
+		FROM reviews
+		WHERE tutor_id = $1 AND is_active = $2`
 
 	var reviews []models.Review
-
-	for rows.Next() {
-		var review models.Review
-		err := rows.Scan(&review.ID, &review.TutorID, &review.OrderID, &review.Rating, &review.Comment, &review.CreatedAt)
-		if err != nil {
-			log.Println(err)
-			continue
-		}
-		reviews = append(reviews, review)
-	}
-
-	err = rows.Err()
+	err := r.db.Select(&reviews, query, tutorID, true)
 
 	if err != nil {
-		log.Println(err)
+		lg.Error("[Postgres] GetReviews failed. tutorID:" + tutorID + " Error: " + err.Error())
 		return nil, err
 	}
+
+	lg.Info("[Postgres] GetReviews success. tutorID: " + tutorID)
 
 	return reviews, nil
 }
 
 func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
-	query := `
+	lg.Info("[Postgres] GetReviewById called. reviewID: " + reviewID)
+
+	const query = `
 		SELECT 
-    		id,
-       		tutor_id,
-       		order_id,
-       		rating,
-       		comment,
-       		created_at
+			id,
+			tutor_id,
+			order_id,
+			rating,
+			comment,
+			created_at
 		FROM reviews
 		WHERE id = $1`
 
 	var review models.Review
-	err := r.db.QueryRow(query, reviewID).Scan(
-		&review.ID, &review.TutorID, &review.OrderID, &review.Rating, &review.Comment, &review.CreatedAt,
-	)
+	err := r.db.Get(&review, query, reviewID)
 
 	if err != nil {
-		log.Println(err)
+		lg.Error("[Postgres] GetReviewById failed. reviewID:" + reviewID + " Error: " + err.Error())
 		return nil, err
 	}
+
+	lg.Info("[Postgres] GetReviewById success. reviewID: " + reviewID)
 
 	return &review, nil
 }
 
 func (r *Repository) GetTagsByTutorID(tutorID string) ([]string, error) {
-	query := `
+	lg.Info("[Postgres] GetTagsByTutorID called. tutorID: " + tutorID)
+
+	const query = `
 		SELECT
     		tags
 		FROM tutors WHERE id = $1`
+
 	rows, err := r.db.Query(query, tutorID)
+
 	if err != nil {
+		lg.Error("[Postgres] GetTagsByTutorID failed.  tutorID: " + tutorID + " Error: " + err.Error())
 		return nil, err
 	}
 	defer rows.Close()
@@ -533,30 +606,20 @@ func (r *Repository) GetTagsByTutorID(tutorID string) ([]string, error) {
 		var tagArray []string
 		err := rows.Scan(pq.Array(&tagArray))
 		if err != nil {
+			lg.Error("[Postgres] GetTagsByTutorID failed. tutorID: " + tutorID + " Error: " + err.Error())
 			return nil, err
 		}
 		tags = append(tags, tagArray...)
 	}
+
+	lg.Info("[Postgres] GetTagsByTutorID success. tutorID: " + tutorID)
 	return tags, nil
 }
 
-func (r *Repository) SetNewIsActiveTutor(tutorID string, isActive bool) error {
-	query := `
-		UPDATE tutors SET
-            is_active = $1
-        WHERE id = $2`
-
-	_, err := r.db.Exec(query, isActive, tutorID)
-	if err != nil {
-		log.Println(err)
-		return err
-	}
-
-	return nil
-}
-
 func (r *Repository) RemoveOneResponse(tutorID string) error {
-	query := `
+	lg.Info("[Postgres] RemoveOneResponse called. tutorID: " + tutorID)
+
+	const query = `
 		UPDATE tutors SET
             response_count = response_count - 1
         WHERE id = $1 AND response_count > 0
@@ -564,25 +627,23 @@ func (r *Repository) RemoveOneResponse(tutorID string) error {
 
 	var newCount int64
 	err := r.db.QueryRow(query, tutorID).Scan(&newCount)
-	log.Println(err)
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Println(err)
-			return errors.New(fmt.Sprintf("no responses or tutor not found %v", tutorID))
+		if errors.Is(err, sql.ErrNoRows) {
+			return custom_errors.ErrorNotFound
 		}
-		log.Println(err)
+		lg.Info("[Postgres] RemoveOneResponse failed. tutorID: " + tutorID + " Error: " + err.Error())
 		return err
 	}
 
+	lg.Info("[Postgres] RemoveOneResponse success. tutorID: " + tutorID)
 	return nil
 }
 
 func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int, error) {
-	if responseCount < 1 {
-		return 0, errors.New("responses less 0")
-	}
+	lg.Info("[Postgres] AddResponses called. tutorTelegramID: " + fmt.Sprint(tutorTelegramID) + " ResponseCount: " + strconv.Itoa(responseCount))
 
-	query := `
+	const query = `
         UPDATE tutors
 		SET response_count = response_count + $1
 		WHERE id = (
@@ -591,29 +652,36 @@ func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int
 		RETURNING response_count`
 
 	var newCount int64
-	err := r.db.QueryRow(query, responseCount, tutorTelegramID, "Tutor").Scan(&newCount)
+	err := r.db.QueryRow(query, responseCount, tutorTelegramID, models.RoleTutor).Scan(&newCount)
 
 	if err != nil {
-		if err == sql.ErrNoRows {
-			log.Println("cannot add responses", tutorTelegramID)
-			return 0, errors.New(fmt.Sprintf("tutor with telegram_id %d not found", tutorTelegramID))
+		if errors.Is(err, sql.ErrNoRows) {
+			lg.Error("[Postgres] AddResponses failed. tutorTelegramID: " + fmt.Sprint(tutorTelegramID) + " Not found.")
+			return 0, custom_errors.UserNotFound
 		}
-		log.Println("cannot add responses", tutorTelegramID)
+		lg.Error("[Postgres] AddResponses failed. tutorTelegramID: " + fmt.Sprint(tutorTelegramID) + " Error: " + err.Error())
 		return 0, err
 	}
 
+	lg.Info("[Postgres] AddResponses success. tutorTelegramID: " + fmt.Sprint(tutorTelegramID) + " NewCount: " + strconv.Itoa(int(newCount)))
 	return int(newCount), nil
 }
 
-func (r *Repository) UpdateTutorName(tutorID string, name string) error {
-	queryUpdateBioTutor := `UPDATE users SET name = $1 WHERE id = $2 AND role = $3`
+func (r *Repository) SetReviewActive(reviewID string) error {
+	lg.Info("[Postgres] SetReviewActive called. ReviewID: " + reviewID)
 
-	_, err := r.db.Exec(queryUpdateBioTutor, name, tutorID, "Tutor")
+	const query = `
+		UPDATE reviews SET
+            is_active = $1
+        WHERE id = $2`
+
+	_, err := r.db.Exec(query, true, reviewID)
 
 	if err != nil {
-		log.Println(err)
-		return errors.New("error update name") //custom_errors.ErrorUpdateBio
+		lg.Error("[Postgres] SetReviewActive failed. Error: " + err.Error())
+		return err
 	}
 
+	lg.Info("[Postgres] SetReviewActive success")
 	return nil
 }
