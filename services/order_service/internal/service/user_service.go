@@ -253,7 +253,9 @@ func (u *UserService) GetReviewsByID(reviewID string, UserData models.UserData) 
 }
 
 func (u *UserService) GetTutorInfoById(tutorID string, UserData models.UserData) (*models.TutorDetails, error) {
-	TutorDetails, err := u.GRPCClient.GetTutorInfoById(context.Background(), tutorID)
+	isOwn := UserData.UserID == tutorID
+
+	TutorDetails, err := u.GRPCClient.GetTutorInfoById(context.Background(), tutorID, isOwn)
 
 	if err != nil {
 		logger.Error("[UserService] GetTutorInfoById error GetTutorInfoById: " + err.Error())

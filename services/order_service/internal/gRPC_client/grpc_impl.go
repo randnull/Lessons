@@ -243,7 +243,7 @@ func (g *GRPCClient) GetReviewsByID(ctx context.Context, reviewID string) (*mode
 	}, nil
 }
 
-func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string) (*models.TutorDetails, error) {
+func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string, isOwn bool) (*models.TutorDetails, error) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -254,13 +254,14 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string) (*mod
 
 	var reviews []models.Review
 	for _, r := range resp.Review {
-		if r.IsActive {
+		if isOwn || r.IsActive {
 			reviews = append(reviews, models.Review{
 				ID:        r.Id,
 				TutorID:   r.TutorId,
 				OrderID:   r.OrderId,
 				Rating:    int(r.Rating),
 				Comment:   r.Comment,
+				IsActive:  r.IsActive,
 				CreatedAt: r.CreatedAt.AsTime(),
 			})
 		}
