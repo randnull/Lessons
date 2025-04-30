@@ -68,7 +68,7 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		return "", custom_errors.ErrResponseAlredyExist
 	}
 
-	TutorInfoRaw, err := s.GRPCClient.GetTutorInfoById(context.Background(), UserData.UserID)
+	TutorInfoRaw, err := s.GRPCClient.GetTutorInfoById(context.Background(), UserData.UserID, true)
 
 	if err != nil {
 		return "", custom_errors.ErrorGetUser

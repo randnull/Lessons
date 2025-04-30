@@ -543,10 +543,10 @@ func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
 			is_active,
 			created_at
 		FROM reviews
-		WHERE tutor_id = $1 AND is_active = $2`
+		WHERE tutor_id = $1`
 
 	var reviews []models.Review
-	err := r.db.Select(&reviews, query, tutorID, true)
+	err := r.db.Select(&reviews, query, tutorID)
 
 	if err != nil {
 		lg.Error("[Postgres] GetReviews failed. tutorID:" + tutorID + " Error: " + err.Error())
