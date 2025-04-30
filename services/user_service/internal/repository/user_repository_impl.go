@@ -676,11 +676,23 @@ func (r *Repository) SetReviewActive(reviewID string) error {
             is_active = $1
         WHERE id = $2`
 
-	_, err := r.db.Exec(query, true, reviewID)
+	res, err := r.db.Exec(query, true, reviewID)
 
 	if err != nil {
 		lg.Error("[Postgres] SetReviewActive failed. Error: " + err.Error())
 		return err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+
+	if err != nil {
+		lg.Error("[Postgres] SetReviewActive failed to get rows affected. Error: " + err.Error())
+		return err
+	}
+
+	if rowsAffected == 0 {
+		lg.Error("[Postgres] SetReviewActive failed: no review found with ID: " + reviewID)
+		return custom_errors.ErrorNotFound
 	}
 
 	lg.Info("[Postgres] SetReviewActive success")
