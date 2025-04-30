@@ -1,9 +1,11 @@
+from datetime import datetime
 from typing import List
+from uuid import UUID
 
 from AnswerEngine.common.generic_repository.generic_repo import Repository
 from AnswerEngine.common.database_connection.base import async_session
 from AnswerEngine.src.logger.logger import logger
-from AnswerEngine.src.models.dao_table.dao import OrderDao, TagDao, OrderTagDao, TutorTagDao
+from AnswerEngine.src.models.dao_table.dao import OrderDao, TagDao, OrderTagDao, TutorTagDao, OrderStatus
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, OrderDto, TagDto, OrderTagDto, NewTagDto
 
 
@@ -30,12 +32,12 @@ async def create_new_order(order_data: NewOrderDto) -> List[int]:
             logger.info(f"add {tags_to_add} to database")
             await tags_repository.create_many(tags_to_add)
 
-    async with async_session() as session:
         order = OrderDto(
             order_id=order_data.order_id,
             order_name=order_data.order_name,
             student_id=order_data.student_id,
-            status=order_data.status,
+            status=OrderStatus.NEW,
+            created_at=datetime.now(),
         )
 
         order_repository = Repository[OrderDao](OrderDao, session)
@@ -64,7 +66,6 @@ async def create_new_order(order_data: NewOrderDto) -> List[int]:
             logger.info(f"add tags {final_tags} to order: {order_data.order_id}")
             await tags_order_tags_repository.create_many(order_tags_dtos)
 
-    async with async_session() as session:
         tutor_tags_repository = Repository[TutorTagDao](TutorTagDao, session)
 
         tutors = await tutor_tags_repository.get_tutors_by_tags(final_tags)
@@ -72,3 +73,21 @@ async def create_new_order(order_data: NewOrderDto) -> List[int]:
         final_tutors_id = [tutor.tutor_id for tutor in tutors]
 
     return final_tutors_id
+
+
+async def change_order_status_to_selected(orderID: UUID):
+    async with async_session() as session:
+        order_repository = Repository[OrderDao](OrderDao, session)
+
+        order = await order_repository.get(orderID)
+
+        print(order)
+
+        orderDto = OrderDto.to_dto(order)
+
+        print(orderDto)
+        if orderDto.status != OrderStatus.NEW:
+            logger.error(f"error: cannot change order to selected from status: {orderDto.status}. OrderID: {orderID}")
+            return
+
+        await order_repository.change_status(orderID)

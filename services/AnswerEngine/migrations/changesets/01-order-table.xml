@@ -25,6 +25,9 @@ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         <column name="status" type="VARCHAR(255)">
             <constraints nullable="false"/>
         </column>
+        <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP" remarks="creation timestamp">
+            <constraints nullable="false"/>
+        </column>
     </createTable>
 </changeSet>
 

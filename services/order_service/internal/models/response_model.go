@@ -35,5 +35,9 @@ type ResponseToBrokerModel struct {
 }
 
 type SelectedResponseToBroker struct {
+	OrderID    string `json:"order_id"`
+	OrderName  string `json:"order_name"`
+	StudentID  int64  `json:"student_telegram_id"`
+	TutorID    int64  `json:"tutor_telegram_id"`
 	ResponseID string `json:"response_id"`
 }

@@ -2,9 +2,10 @@ from typing import List
 
 from AnswerEngine.src.TelegramBot.botStudent import bot_student
 from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
-from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard
+from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard, review_keyboard
 from AnswerEngine.src.logger.logger import logger
-from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto
+from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto, SelectedDto, \
+    ReviewDto
 
 from AnswerEngine.src.config.settings import settings
 
@@ -57,6 +58,30 @@ async def proceed_response(response: ResponseDto) -> None:
     except Exception as ex:
         logger.error(f"[NOTIFY-TUTOR] response: {response.response_id} to user: {response.tutor_id} failed!. Error: {ex}")
 
+async def proceed_selected(selected_order: SelectedDto) -> None:
+    messageStudent = (
+        f"<b>Вы успешно выбрали репетитора на заказ \"{selected_order.order_name}\"!</b>\n\n"
+        "👀 <i>Хороших занятий!</i>"
+    )
+
+    messageTutor = (
+        f"<b>Вас выбрали в качестве репетитора на заказ \"{selected_order.order_name}\"!</b>\n\n"
+        "✅ <i>Продуктивных занятий!</i>"
+    )
+
+    try:
+        await bot_student.send_message(chat_id=selected_order.student_telegram_id, text=messageStudent, parse_mode="html")
+        logger.info(f"[NOTIFY-STUDENT] selected: {selected_order.response_id} to user: {selected_order.student_telegram_id} send!")
+    except Exception as ex:
+        logger.error(f"[NOTIFY-STUDENT] selected: {selected_order.response_id} to user: {selected_order.student_telegram_id} failed!. Error: {ex}")
+
+    try:
+        await bot_tutor.send_message(chat_id=selected_order.tutor_telegram_id, text=messageTutor, parse_mode="html")
+        logger.info(f"[NOTIFY-TUTOR] selected: {selected_order.response_id} to user: {selected_order.tutor_telegram_id} send!")
+    except Exception as ex:
+        logger.error(f"[NOTIFY-TUTOR] selected: {selected_order.response_id} to user: {selected_order.tutor_telegram_id} failed!. Error: {ex}")
+
+
 async def proceed_suggest(suggest_order: SuggestDto) -> None:
     message = (
         f"<b>Новый заказ для вас: {suggest_order.order_name}</b>\n\n"
@@ -72,3 +97,15 @@ async def proceed_suggest(suggest_order: SuggestDto) -> None:
         logger.info(f"[NOTIFY-TUTOR] suggest order: {suggest_order.order_id} to user: {suggest_order.tutor_telegram_id} send!")
     except Exception as ex:
         logger.error(f"[NOTIFY-TUTOR] suggest order: {suggest_order.order_id} to user: {suggest_order.tutor_telegram_id} failed!. Error: {ex}!")
+
+async def proceed_review(new_review: ReviewDto) -> None:
+    message = (
+        f"<b>Ученик оставил отзыв по заказу: {new_review.order_name}</b>\n\n"
+        f"<b>Если вы занимались с учеником - подтвердите на странице отклика!</b>\n\n"
+    )
+
+    try:
+        await bot_tutor.send_message(chat_id=new_review.tutor_telegram_id, text=message, parse_mode="html", reply_markup=review_keyboard(new_review.order_id))
+        logger.info(f"[NOTIFY-TUTOR] approved review: {new_review.order_id} to user: {new_review.tutor_telegram_id} send!")
+    except Exception as ex:
+        logger.error(f"[NOTIFY-TUTOR] approved review: {new_review.order_id} to user: {new_review.tutor_telegram_id} failed!. Error: {ex}!")

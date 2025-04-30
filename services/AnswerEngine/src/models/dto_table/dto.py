@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, UUID4, Field
@@ -8,6 +9,17 @@ class OrderDto(BaseModel):
     order_name: str
     student_id: int
     status: str
+    created_at: datetime
+
+    @classmethod
+    def to_dto(cls, OrderDao):
+        return OrderDto(
+            order_id=OrderDao.order_id,
+            order_name=OrderDao.order_name,
+            student_id=OrderDao.student_id,
+            status=OrderDao.status,
+            created_at=OrderDao.created_at
+        )
 
 
 class NewOrderDto(BaseModel):
@@ -16,7 +28,6 @@ class NewOrderDto(BaseModel):
     order_name: str
     tags: list
     status: str
-
 
 class ResponseDto(BaseModel):
     response_id: UUID4
@@ -40,14 +51,20 @@ class TagChangeDto(BaseModel):
 class TagDto(BaseModel):
     id: Optional[UUID4]
     tag_name: str
-    #
-    # @classmethod
-    # def to_dto(cls, TagDao):
-    #     return TagDto(
-    #         id=TagDao.id,
-    #         tag_name=TagDao.tag_name
-    #     )
 
+class SelectedDto(BaseModel):
+    order_id: UUID4
+    order_name: str
+    student_telegram_id: int
+    tutor_telegram_id: int
+    response_id: UUID4
+
+class ReviewDto(BaseModel):
+    review_id: UUID4
+    response_id: UUID4
+    order_id: UUID4
+    order_name: str
+    tutor_telegram_id: int
 
 class NewTagDto(BaseModel):
     tag_name: str

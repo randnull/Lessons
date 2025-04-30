@@ -18,7 +18,7 @@ type OrderServiceInt interface {
 	DeleteOrder(orderID string, UserData models.UserData) error
 	SelectTutor(responseID string, UserData models.UserData) error
 	SuggestOrderToTutor(orderID, tutorID string, UserData models.UserData) error
-	ApproveSelectedOrderByTutor(responseID string, UserData models.UserData) error
+	//ApproveSelectedOrderByTutor(responseID string, UserData models.UserData) error
 	SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error
 
 	// order getting
@@ -230,11 +230,40 @@ func (orderServ *OrderService) SelectTutor(responseID string, UserData models.Us
 		return err
 	}
 
-	isUserRequest, err := orderServ.orderRepository.CheckOrderByStudentID(response.OrderID, UserData.UserID)
+	order, err := orderServ.orderRepository.GetOrderByID(response.OrderID)
 
-	if err != nil || !isUserRequest {
-		logger.Info("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + response.OrderID)
+	if err != nil {
+		logger.Error("[OrderService] SelectTutor Error GetOrderByID: " + err.Error())
+		return err
+	}
+
+	//isUserRequest, err := orderServ.orderRepository.CheckOrderByStudentID(response.OrderID, UserData.UserID)
+	//
+	//if err != nil || !isUserRequest {
+	//	logger.Info("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + response.OrderID)
+	//	return custom_errors.ErrNotAllowed
+	//}
+	if order.StudentID != UserData.UserID {
+		logger.Info("[OrderService] SelectTutor Not allowed. User: " + UserData.UserID + " Order: " + response.OrderID)
 		return custom_errors.ErrNotAllowed
+	}
+
+	if order.Status != models.StatusNew {
+		logger.Info("[OrderService] SelectTutor Order Not New. User: " + UserData.UserID + " Order: " + response.OrderID)
+		return custom_errors.ErrorBadStatus
+	}
+
+	tutor, err := orderServ.GRPCClient.GetTutor(context.Background(), response.TutorID)
+
+	if err != nil {
+		logger.Error("[OrderService] SelectTutor GetTutor Error + " + err.Error() + "  Order: " + response.OrderID)
+
+	}
+
+	student, err := orderServ.GRPCClient.GetStudent(context.Background(), order.StudentID)
+
+	if err != nil {
+		logger.Error("[OrderService] SelectTutor GetStudent Error + " + err.Error() + "  Order: " + response.OrderID)
 	}
 
 	err = orderServ.orderRepository.SetTutorToOrder(response, UserData)
@@ -245,7 +274,11 @@ func (orderServ *OrderService) SelectTutor(responseID string, UserData models.Us
 	}
 
 	err = orderServ.ProducerBroker.Publish("selected_orders", models.SelectedResponseToBroker{
+		OrderName:  order.Name,
+		OrderID:    order.ID,
 		ResponseID: responseID,
+		StudentID:  student.TelegramID,
+		TutorID:    tutor.TelegramID,
 	})
 
 	if err != nil {
@@ -255,41 +288,42 @@ func (orderServ *OrderService) SelectTutor(responseID string, UserData models.Us
 	return nil
 }
 
-func (orderServ *OrderService) ApproveSelectedOrderByTutor(responseID string, UserData models.UserData) error {
-	response, err := orderServ.orderRepository.GetResponseById(responseID)
-
-	if err != nil {
-		logger.Error("[OrderService] ApproveSelectedOrderByTutor Error GetResponseById: " + err.Error())
-		return custom_errors.ErrorGetResponse
-	}
-
-	if response.TutorID != UserData.UserID {
-		logger.Info("[OrderService] UpdateOrder Not allowed. Tutor: " + UserData.UserID + " Tutor-Order: " + response.TutorID)
-		return errors.New("error not allowed")
-	}
-
-	if !response.IsFinal {
-		logger.Info("[OrderService] UpdateOrder Not final. ResponseID: " + responseID)
-		return errors.New("error not final")
-	}
-
-	err = orderServ.orderRepository.SetOrderStatus(models.StatusApproved, response.OrderID)
-
-	if err != nil {
-		logger.Error("[OrderService] ApproveSelectedOrderByTutor Error SetOrderStatus: " + err.Error())
-		return custom_errors.ErrorSetStatus
-	}
-
-	err = orderServ.ProducerBroker.Publish("approved_orders", models.SelectedResponseToBroker{
-		ResponseID: responseID,
-	})
-
-	if err != nil {
-		logger.Error("[OrderService] ApproveSelectedOrderByTutor error with push response selected to broker. Error: " + err.Error())
-	}
-
-	return nil
-}
+//
+//func (orderServ *OrderService) ApproveSelectedOrderByTutor(responseID string, UserData models.UserData) error {
+//	response, err := orderServ.orderRepository.GetResponseById(responseID)
+//
+//	if err != nil {
+//		logger.Error("[OrderService] ApproveSelectedOrderByTutor Error GetResponseById: " + err.Error())
+//		return custom_errors.ErrorGetResponse
+//	}
+//
+//	if response.TutorID != UserData.UserID {
+//		logger.Info("[OrderService] UpdateOrder Not allowed. Tutor: " + UserData.UserID + " Tutor-Order: " + response.TutorID)
+//		return errors.New("error not allowed")
+//	}
+//
+//	if !response.IsFinal {
+//		logger.Info("[OrderService] UpdateOrder Not final. ResponseID: " + responseID)
+//		return errors.New("error not final")
+//	}
+//
+//	err = orderServ.orderRepository.SetOrderStatus(models.StatusApproved, response.OrderID)
+//
+//	if err != nil {
+//		logger.Error("[OrderService] ApproveSelectedOrderByTutor Error SetOrderStatus: " + err.Error())
+//		return custom_errors.ErrorSetStatus
+//	}
+//
+//	err = orderServ.ProducerBroker.Publish("approved_orders", models.SelectedResponseToBroker{
+//		ResponseID: responseID,
+//	})
+//
+//	if err != nil {
+//		logger.Error("[OrderService] ApproveSelectedOrderByTutor error with push response selected to broker. Error: " + err.Error())
+//	}
+//
+//	return nil
+//}
 
 func (orderServ *OrderService) SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error {
 	order, err := orderServ.orderRepository.GetOrderByID(orderID)

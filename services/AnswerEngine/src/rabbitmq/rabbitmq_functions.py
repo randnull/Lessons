@@ -2,10 +2,13 @@ import json
 
 from aio_pika import connect, IncomingMessage
 
-from AnswerEngine.src.functions.order_functions import create_new_order
+from AnswerEngine.src.functions.order_functions import create_new_order, change_order_status_to_selected
 from AnswerEngine.src.functions.tags_functions import update_tags
-from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto
-from AnswerEngine.src.rabbitmq.bot_functions import proceed_order, proceed_response, proceed_suggest, proceed_order_to_tutors
+from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto, SelectedDto, \
+    ReviewDto
+from AnswerEngine.src.rabbitmq.bot_functions import proceed_order, proceed_response, proceed_suggest, \
+    proceed_order_to_tutors, proceed_selected, proceed_review
+
 
 async def new_order_func(message: IncomingMessage):
     async with message.process():
@@ -41,6 +44,15 @@ async def tutors_change_tags_func(message: IncomingMessage):
 async def selected_order_func(message: IncomingMessage):
     async with message.process():
         body = json.loads(message.body.decode())
-        # new_suggest = SuggestDto(**body)
+        selected_order = SelectedDto(**body)
 
-        # await update_tags(new_suggest)
+        await change_order_status_to_selected(selected_order.order_id)
+
+        await proceed_selected(selected_order)
+
+async def review_func(message: IncomingMessage):
+    async with message.process():
+        body = json.loads(message.body.decode())
+        new_review = ReviewDto(**body)
+
+        await proceed_review(new_review)

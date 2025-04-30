@@ -1,10 +1,12 @@
-from typing import TypeVar, Generic, List, Any, Sequence
+from typing import TypeVar, Generic, List, Any, Sequence, Optional
 from uuid import UUID
 
 from sqlalchemy import select, and_, update, func, Row, RowMapping, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import BaseModel
+
+from AnswerEngine.src.models.dao_table.dao import OrderStatus
 
 Model = TypeVar('Model')
 
@@ -46,3 +48,17 @@ class Repository(Generic[Model]):
             self.__model.tag_id.in_(tag_ids)
          ))
          await self.__session.commit()
+
+    async def change_status(self, order_id: UUID) -> bool:
+         await self.__session.execute(
+            update(self.__model)
+            .where(self.__model.order_id == order_id)
+            .values(status=OrderStatus.SELECTED)
+         )
+         await self.__session.commit()
+
+    async def get(self, order_id: UUID) -> Optional[Model]:
+        result = await self.__session.execute(
+            select(self.__model).where(self.__model.order_id == order_id)
+        )
+        return result.scalars().first()

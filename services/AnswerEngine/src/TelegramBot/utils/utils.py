@@ -25,5 +25,3 @@ async def welcome_tutor(message: Message) -> None:
     )
     await message.answer(welcome_text, parse_mode="HTML", reply_markup=tutor_start_keyboard())
     print(f"Репетитор {message.from_user.id} запустил бота")
-
-

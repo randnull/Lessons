@@ -1,8 +1,14 @@
-from sqlalchemy import DateTime, Enum, UUID, func, ForeignKey, String, BIGINT
+from datetime import datetime
+
+from sqlalchemy import DateTime, Enum, UUID, func, ForeignKey, String, BIGINT, TIMESTAMP
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 import enum
 from AnswerEngine.common.database_connection.base import Base
 
+class OrderStatus(str, Enum):
+    NEW = "New"
+    SELECTED = "Selected"
+    CLOSED = "Closed"
 
 class OrderDao(Base):
     __tablename__ = 'orders'
@@ -11,6 +17,7 @@ class OrderDao(Base):
     order_name: Mapped[String] = mapped_column(String)
     student_id: Mapped[BIGINT] = mapped_column(BIGINT)
     status: Mapped[str] = mapped_column(String(255), nullable=False)
+    created_at: Mapped[TIMESTAMP] = mapped_column(TIMESTAMP, nullable=False)
 
     @classmethod
     def to_dao(cls, OrderDto):
@@ -19,6 +26,7 @@ class OrderDao(Base):
             order_name=OrderDto.order_name,
             student_id=OrderDto.student_id,
             status=OrderDto.status,
+            created_at=OrderDto.created_at
         )
 
 

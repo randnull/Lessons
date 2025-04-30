@@ -26,7 +26,6 @@ async def update_tags(new_tags: TagChangeDto) -> None:
             logger.info(f"adding {tags_to_add} tags to database")
             await tags_repository.create_many(tags_to_add)
 
-    async with async_session() as session:
         tags_repository = Repository[TagDao](TagDao, session)
         tutor_tags_repository = Repository[TutorTagDao](TutorTagDao, session)
 
