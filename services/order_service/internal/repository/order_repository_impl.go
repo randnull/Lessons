@@ -307,7 +307,6 @@ func (o *Repository) GetOrdersPagination(limit int, offset int, tags string) ([]
 		WHERE status = 'New'`
 
 	var args []interface{}
-	args = append(args, tags)
 
 	if tags != "" {
 		query += ` AND $1 = ANY(tags)`
