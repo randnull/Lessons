@@ -14,18 +14,20 @@ import (
 )
 
 type UserServiceInt interface {
-	GetTutor(TutorID string) (*models.Tutor, error)
+	GetTutor(TutorID string, UserData models.UserData) (*models.Tutor, error)
 
-	GetAllTutorsPagination(page int, size int, tag string) (*models.TutorsPagination, error)
+	GetAllTutorsPagination(page int, size int, tag string, UserData models.UserData) (*models.TutorsPagination, error)
 	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
 	UpdateTagsTutor(tags []string, UserData models.UserData) (bool, error)
 	CreateReview(ReviewRequest models.ReviewRequest, UserData models.UserData) (string, error)
-	GetReviewsByTutor(tutorID string) ([]models.Review, error)
-	GetReviewsByID(reviewID string) (*models.Review, error)
-	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
+	GetReviewsByTutor(tutorID string, UserData models.UserData) ([]models.Review, error)
+	GetReviewsByID(reviewID string, UserData models.UserData) (*models.Review, error)
+	GetTutorInfoById(tutorID string, UserData models.UserData) (*models.TutorDetails, error)
 	ChangeTutorActive(isActive bool, UserData models.UserData) (bool, error)
-	UpdateTutorName(tutorID, name string) error
+	UpdateTutorName(tutorID, name string, UserData models.UserData) error
 	ApproveReviewByTutor(reviewID string, UserData models.UserData) error
+	GetAllUsers(UserData models.UserData) ([]*models.TutorForList, error)
+	SetReviewActive(reviewID string, UserData models.UserData) error
 }
 
 type UserService struct {
@@ -34,7 +36,7 @@ type UserService struct {
 	orderRepository repository.OrderRepository
 }
 
-func NewUSerService(grpcClient gRPC_client.GRPCClientInt, producerBroker rabbitmq.RabbitMQInterface, orderRepo repository.OrderRepository) UserServiceInt {
+func NewUserService(grpcClient gRPC_client.GRPCClientInt, producerBroker rabbitmq.RabbitMQInterface, orderRepo repository.OrderRepository) UserServiceInt {
 	return &UserService{
 		GRPCClient:      grpcClient,
 		ProducerBroker:  producerBroker,
@@ -42,11 +44,11 @@ func NewUSerService(grpcClient gRPC_client.GRPCClientInt, producerBroker rabbitm
 	}
 }
 
-func (u *UserService) GetTutor(TutorID string) (*models.Tutor, error) {
+func (u *UserService) GetTutor(TutorID string, UserData models.UserData) (*models.Tutor, error) {
 	return u.GRPCClient.GetTutor(context.Background(), TutorID)
 }
 
-func (u *UserService) GetAllUsers() ([]*models.TutorForList, error) {
+func (u *UserService) GetAllUsers(UserData models.UserData) ([]*models.TutorForList, error) {
 	usersRPC, err := u.GRPCClient.GetAllUsers(context.Background())
 
 	if err != nil {
@@ -78,7 +80,7 @@ func (u *UserService) UpdateBioTutor(BioModel models.UpdateBioTutor, UserData mo
 	return nil
 }
 
-func (u *UserService) GetAllTutorsPagination(page int, size int, tag string) (*models.TutorsPagination, error) {
+func (u *UserService) GetAllTutorsPagination(page int, size int, tag string, UserData models.UserData) (*models.TutorsPagination, error) {
 	usersRPC, err := u.GRPCClient.GetTutorsPagination(context.Background(), page, size, tag)
 
 	if err != nil {
@@ -229,7 +231,7 @@ func (u *UserService) ApproveReviewByTutor(reviewID string, UserData models.User
 	return nil
 }
 
-func (u *UserService) GetReviewsByTutor(tutorID string) ([]models.Review, error) {
+func (u *UserService) GetReviewsByTutor(tutorID string, UserData models.UserData) ([]models.Review, error) {
 	reviews, err := u.GRPCClient.GetReviewsByTutor(context.Background(), tutorID)
 	if err != nil {
 		logger.Error("[UserService] GetReviewsByTutor error GetReviewsByTutor: " + err.Error())
@@ -239,7 +241,7 @@ func (u *UserService) GetReviewsByTutor(tutorID string) ([]models.Review, error)
 	return reviews, nil
 }
 
-func (u *UserService) GetReviewsByID(reviewID string) (*models.Review, error) {
+func (u *UserService) GetReviewsByID(reviewID string, UserData models.UserData) (*models.Review, error) {
 	review, err := u.GRPCClient.GetReviewsByID(context.Background(), reviewID)
 	if err != nil {
 		logger.Error("[UserService] GetReviewsByID error GetReviewsByID: " + err.Error())
@@ -250,7 +252,7 @@ func (u *UserService) GetReviewsByID(reviewID string) (*models.Review, error) {
 	return review, nil
 }
 
-func (u *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, error) {
+func (u *UserService) GetTutorInfoById(tutorID string, UserData models.UserData) (*models.TutorDetails, error) {
 	TutorDetails, err := u.GRPCClient.GetTutorInfoById(context.Background(), tutorID)
 
 	if err != nil {
@@ -271,8 +273,18 @@ func (u *UserService) ChangeTutorActive(isActive bool, UserData models.UserData)
 	return isOk, nil
 }
 
-func (u *UserService) UpdateTutorName(tutorID, name string) error {
+func (u *UserService) UpdateTutorName(tutorID, name string, UserData models.UserData) error {
 	isOk, err := u.GRPCClient.UpdateNameTutor(context.Background(), tutorID, name)
+
+	if err != nil || !isOk {
+		return errors.New("cannot update tutor name")
+	}
+
+	return nil
+}
+
+func (u *UserService) SetReviewActive(reviewID string, UserData models.UserData) error {
+	isOk, err := u.GRPCClient.SetActiveToReview(context.Background(), reviewID)
 
 	if err != nil || !isOk {
 		return errors.New("cannot update tutor name")

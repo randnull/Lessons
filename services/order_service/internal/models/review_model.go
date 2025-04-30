@@ -8,6 +8,7 @@ type Review struct {
 	OrderID   string    `json:"order_id"`
 	Rating    int       `json:"rating"`
 	Comment   string    `json:"comment"`
+	IsActive  bool      `json:"is_active"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -23,4 +24,8 @@ type ReviewToBroker struct {
 	OrderID         string `json:"order_id"`
 	OrderName       string `json:"order_name"`
 	TutorTelegramID int64  `json:"tutor_telegram_id"`
+}
+
+type ReviewActive struct {
+	ReviewID string `json:"review_id"`
 }

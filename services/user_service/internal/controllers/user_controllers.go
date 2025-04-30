@@ -226,6 +226,7 @@ func (s *UserControllers) GetTutorInfoById(ctx context.Context, in *pb.GetById) 
 			OrderId:   r.OrderID,
 			Rating:    int32(r.Rating),
 			Comment:   r.Comment,
+			IsActive:  r.IsActive,
 			CreatedAt: timestamppb.New(r.CreatedAt),
 		})
 	}
@@ -284,6 +285,7 @@ func (s *UserControllers) GetReview(ctx context.Context, in *pb.GetReviewRequest
 		OrderId:   review.OrderID,
 		Rating:    int32(review.Rating),
 		Comment:   review.Comment,
+		IsActive:  review.IsActive,
 		CreatedAt: timestamppb.New(review.CreatedAt),
 	}, nil
 }

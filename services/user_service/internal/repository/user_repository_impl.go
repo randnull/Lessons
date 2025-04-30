@@ -568,6 +568,7 @@ func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
 			order_id,
 			rating,
 			comment,
+			is_active,
 			created_at
 		FROM reviews
 		WHERE id = $1`

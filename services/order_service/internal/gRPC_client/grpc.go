@@ -28,6 +28,7 @@ type GRPCClientInt interface {
 	CreateReview(ctx context.Context, orderID, tutorID, comment string, rating int) (string, error)
 	GetReviewsByTutor(ctx context.Context, tutorID string) ([]models.Review, error)
 	GetReviewsByID(ctx context.Context, reviewID string) (*models.Review, error)
+	SetActiveToReview(ctx context.Context, reviewID string) (bool, error)
 
 	// Connection management
 	Close() error

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/randnull/Lessons/internal/config"
+	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
 	"google.golang.org/grpc"
@@ -223,8 +224,13 @@ func (g *GRPCClient) GetReviewsByID(ctx context.Context, reviewID string) (*mode
 	defer cancel()
 
 	resp, err := g.client.GetReview(ctx, &pb.GetReviewRequest{Id: reviewID})
+
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.IsActive {
+		return nil, custom_errors.ErrorNotActiveReview
 	}
 
 	return &models.Review{
@@ -248,14 +254,16 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string) (*mod
 
 	var reviews []models.Review
 	for _, r := range resp.Review {
-		reviews = append(reviews, models.Review{
-			ID:        r.Id,
-			TutorID:   r.TutorId,
-			OrderID:   r.OrderId,
-			Rating:    int(r.Rating),
-			Comment:   r.Comment,
-			CreatedAt: r.CreatedAt.AsTime(),
-		})
+		if r.IsActive {
+			reviews = append(reviews, models.Review{
+				ID:        r.Id,
+				TutorID:   r.TutorId,
+				OrderID:   r.OrderId,
+				Rating:    int(r.Rating),
+				Comment:   r.Comment,
+				CreatedAt: r.CreatedAt.AsTime(),
+			})
+		}
 	}
 
 	return &models.TutorDetails{
@@ -315,4 +323,19 @@ func (g *GRPCClient) UpdateNameTutor(ctx context.Context, tutorID, name string) 
 	}
 
 	return status.Success, nil
+}
+
+func (g *GRPCClient) SetActiveToReview(ctx context.Context, reviewID string) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := g.client.SetReviewActive(ctx, &pb.SetReviewsActiveRequest{
+		ReviewId: reviewID,
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return resp.Success, nil
 }

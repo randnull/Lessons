@@ -33,7 +33,8 @@ message Review {
   string order_id = 3;
   int32 rating = 4;
   string comment = 5;
-  google.protobuf.Timestamp created_at = 6;
+  bool is_active = 6;
+  google.protobuf.Timestamp created_at = 7;
 }
 
 service UserService {

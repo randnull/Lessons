@@ -41,7 +41,7 @@ func NewApp(cfg *config.Config) *App {
 	responsesService := service.NewResponseService(orderRepo, orderBrokerProducer, ordergRPC)
 	responseControllers := controllers.NewResponseController(responsesService)
 
-	usersService := service.NewUSerService(ordergRPC, orderBrokerProducer, orderRepo)
+	usersService := service.NewUserService(ordergRPC, orderBrokerProducer, orderRepo)
 	usersControllers := controllers.NewUserController(usersService)
 
 	return &App{
@@ -130,6 +130,7 @@ func (a *App) Run() {
 	users.Post("/review", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.userControllers.CreateReview)
 	users.Get("/review/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.userControllers.GetReviewByID)
 	users.Get("/tutor/id/:id/reviews", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.userControllers.GetReviewsByTutor)
+	users.Post("/review/activate", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.SetReviewActive)
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 

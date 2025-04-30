@@ -40,7 +40,9 @@ func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
 
 	tag := ctx.Query("tag")
 
-	users, err := u.UserService.GetAllTutorsPagination(page, size, tag)
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	users, err := u.UserService.GetAllTutorsPagination(page, size, tag, UserData)
 
 	if err != nil {
 		logger.Error("GetTutorsPagination failed: " + err.Error())
@@ -60,7 +62,7 @@ func (u *UserController) GetMyTutorProfile(ctx *fiber.Ctx) error {
 
 	tutorID := UserData.UserID
 
-	info, err := u.UserService.GetTutorInfoById(tutorID)
+	info, err := u.UserService.GetTutorInfoById(tutorID, UserData)
 	if err != nil {
 		logger.Error("GetMyTutorProfile failed: " + err.Error())
 
@@ -77,7 +79,9 @@ func (u *UserController) GetTutorInfoById(ctx *fiber.Ctx) error {
 
 	tutorID := ctx.Params("id")
 
-	info, err := u.UserService.GetTutorInfoById(tutorID)
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	info, err := u.UserService.GetTutorInfoById(tutorID, UserData)
 
 	info.Tutor.TelegramID = 0
 
@@ -169,7 +173,9 @@ func (u *UserController) GetReviewsByTutor(ctx *fiber.Ctx) error {
 
 	tutorID := ctx.Params("tutor_id")
 
-	reviews, err := u.UserService.GetReviewsByTutor(tutorID)
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	reviews, err := u.UserService.GetReviewsByTutor(tutorID, UserData)
 
 	if err != nil {
 		logger.Error("GetReviewsByTutor failed: " + err.Error())
@@ -186,7 +192,9 @@ func (u *UserController) GetReviewByID(ctx *fiber.Ctx) error {
 
 	reviewID := ctx.Params("id")
 
-	review, err := u.UserService.GetReviewsByID(reviewID)
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	review, err := u.UserService.GetReviewsByID(reviewID, UserData)
 
 	if err != nil {
 		logger.Error("GetReviewByID failed: " + err.Error())
@@ -234,7 +242,7 @@ func (u *UserController) UpdateNameTutor(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	err := u.UserService.UpdateTutorName(UserData.UserID, UpdateNameTutor.Name)
+	err := u.UserService.UpdateTutorName(UserData.UserID, UpdateNameTutor.Name, UserData)
 
 	if err != nil {
 		return err
@@ -245,4 +253,26 @@ func (u *UserController) UpdateNameTutor(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusCreated)
 }
 
-// ВОТ ЗДЕСЬ НОВАЯ РУЧКА!!!!!!!!!!!!!! - про отклики
+func (u *UserController) SetReviewActive(ctx *fiber.Ctx) error {
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	logger.Debug("SetReviewActive called")
+
+	var ReviewActive models.ReviewActive
+
+	if err := ctx.BodyParser(&ReviewActive); err != nil {
+		logger.Error("SetReviewActive parse failed: " + err.Error())
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	err := u.UserService.SetReviewActive(ReviewActive.ReviewID, UserData)
+
+	if err != nil {
+		logger.Error("SetReviewActive failed: " + err.Error())
+		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Cannot set review active status"})
+	}
+
+	logger.Debug("SetReviewActive successful")
+
+	return ctx.SendStatus(fiber.StatusCreated)
+}
