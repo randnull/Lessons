@@ -124,11 +124,11 @@ async def proceed_need_review(order: OrderDto) -> None:
 
 async def proceed_add_response(add_response: AddResponseDto) -> None:
     message = (
-        f"<b>Вам были добавлены отклики. Текущее количество: {add_response.response_count}?</b>\n\n"
+        f"<b>Вам были добавлены отклики. Текущее количество: {add_response.response_count}</b>\n\n"
     )
 
     try:
-        await bot_student.send_message(chat_id=str(add_response.tutor_telegram_id), text=message, parse_mode="html")
+        await bot_tutor.send_message(chat_id=str(add_response.tutor_telegram_id), text=message, parse_mode="html")
         logger.info(f"[NOTIFY-TUTOR] add response message to user {add_response.tutor_telegram_id} send!")
     except Exception as ex:
         logger.error(f"[NOTIFY-TUTOR] add response message to user {add_response.tutor_telegram_id} failed!. Error: {ex}!")
