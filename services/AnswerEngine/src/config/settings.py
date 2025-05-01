@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     MQPASSWORD: str = os.getenv('RABBITMQ_PASSWORD', 'guest')
     MQHOST: str = os.getenv('RABBITMQ_HOST', '127.0.0.1')
     MQPORT: int = int(os.getenv('RABBITMQ_PORT', 5672))
+    DELAY_SCHEDULE: int = os.getenv('DELAY_SCHEDULE', 10)
 
     def get_webhook_url(self) -> str:
             return f"https://{self.FQND_HOST}/webhook"

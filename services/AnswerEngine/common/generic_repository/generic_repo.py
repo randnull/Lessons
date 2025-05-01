@@ -49,11 +49,11 @@ class Repository(Generic[Model]):
          ))
          await self.__session.commit()
 
-    async def change_status(self, order_id: UUID) -> bool:
+    async def change_status(self, order_id: UUID, new_status) -> bool:
          await self.__session.execute(
             update(self.__model)
             .where(self.__model.order_id == order_id)
-            .values(status=OrderStatus.SELECTED)
+            .values(status=new_status)
          )
          await self.__session.commit()
 
@@ -62,3 +62,9 @@ class Repository(Generic[Model]):
             select(self.__model).where(self.__model.order_id == order_id)
         )
         return result.scalars().first()
+
+    async def get_all_selected(self):
+        resp = await self.__session.execute(
+            select(self.__model).where(self.__model.status == OrderStatus.SELECTED)
+        )
+        return resp.scalars().all()

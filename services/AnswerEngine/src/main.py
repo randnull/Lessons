@@ -13,6 +13,9 @@ from AnswerEngine.src.controllers.webhook import webhook_router
 from AnswerEngine.src.rabbitmq.rabbitmq_consumer import OrderConsumer, ResponseConsumer, SuggestConsumer, \
     TagsChangeConsumer, SelectedConsumer, ReviewConsumer
 
+from AnswerEngine.src.jobs.job import start_scheduler, stop_scheduler
+
+
 from AnswerEngine.src.logger.logger import logger
 
 tags = [
@@ -51,6 +54,9 @@ async def lifespan(app: FastAPI):
     await TagsChangeConsumer.connect()
     await SelectedConsumer.connect()
     await ReviewConsumer.connect()
+
+    await start_scheduler()
+
     asyncio.create_task(OrderConsumer.consume())
     asyncio.create_task(ResponseConsumer.consume())
     asyncio.create_task(SuggestConsumer.consume())
@@ -69,6 +75,7 @@ async def lifespan(app: FastAPI):
     await bot_student.delete_webhook()
     await bot_tutor.delete_webhook()
 
+    await stop_scheduler()
 app = FastAPI(openapi_tags=tags, lifespan=lifespan)
 
 app.include_router(webhook_router)

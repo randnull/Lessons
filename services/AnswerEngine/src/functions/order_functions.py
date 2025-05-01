@@ -81,13 +81,10 @@ async def change_order_status_to_selected(orderID: UUID):
 
         order = await order_repository.get(orderID)
 
-        print(order)
-
         orderDto = OrderDto.to_dto(order)
 
-        print(orderDto)
         if orderDto.status != OrderStatus.NEW:
             logger.error(f"error: cannot change order to selected from status: {orderDto.status}. OrderID: {orderID}")
             return
 
-        await order_repository.change_status(orderID)
+        await order_repository.change_status(orderID, OrderStatus.SELECTED)

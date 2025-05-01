@@ -5,7 +5,7 @@ from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
 from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard, review_keyboard
 from AnswerEngine.src.logger.logger import logger
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto, SelectedDto, \
-    ReviewDto
+    ReviewDto, OrderDto
 
 from AnswerEngine.src.config.settings import settings
 
@@ -109,3 +109,15 @@ async def proceed_review(new_review: ReviewDto) -> None:
         logger.info(f"[NOTIFY-TUTOR] approved review: {new_review.order_id} to user: {new_review.tutor_telegram_id} send!")
     except Exception as ex:
         logger.error(f"[NOTIFY-TUTOR] approved review: {new_review.order_id} to user: {new_review.tutor_telegram_id} failed!. Error: {ex}!")
+
+async def proceed_need_review(order: OrderDto) -> None:
+    message = (
+        f"<b>Вы занимались с репетитором по заказу: {order.order_name}?</b>\n\n"
+        "📩 <i>Оставьте отзыв о работе - специалист будет рад узнать ваши впечатления!</i>"
+    )
+
+    try:
+        await bot_student.send_message(chat_id=str(order.student_id), text=message, parse_mode="html")
+        logger.info(f"[NOTIFY-STUDENT] order {order.order_id} need_review to user {order.student_id} send!")
+    except Exception as ex:
+        logger.error(f"[NOTIFY-STUDENT] order {order.order_id} need_review to user {order.student_id} failed!. Error: {ex}")
