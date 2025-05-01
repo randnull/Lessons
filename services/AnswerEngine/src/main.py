@@ -11,7 +11,7 @@ from AnswerEngine.src.TelegramBot.botStudent import dp_student, bot_student, sta
 from AnswerEngine.src.TelegramBot.botTutor import dp_tutor, bot_tutor, start_tutor, stop_tutor
 from AnswerEngine.src.controllers.webhook import webhook_router
 from AnswerEngine.src.rabbitmq.rabbitmq_consumer import OrderConsumer, ResponseConsumer, SuggestConsumer, \
-    TagsChangeConsumer, SelectedConsumer, ReviewConsumer
+    TagsChangeConsumer, SelectedConsumer, ReviewConsumer, AddResponsesConsumer
 
 from AnswerEngine.src.jobs.job import start_scheduler, stop_scheduler
 
@@ -54,6 +54,7 @@ async def lifespan(app: FastAPI):
     await TagsChangeConsumer.connect()
     await SelectedConsumer.connect()
     await ReviewConsumer.connect()
+    await AddResponsesConsumer.connect()
 
     await start_scheduler()
 
@@ -63,6 +64,7 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(TagsChangeConsumer.consume())
     asyncio.create_task(SelectedConsumer.consume())
     asyncio.create_task(ReviewConsumer.consume())
+    asyncio.create_task(AddResponsesConsumer.consume())
     yield
     await OrderConsumer.disconnect()
     await ResponseConsumer.disconnect()
@@ -70,6 +72,7 @@ async def lifespan(app: FastAPI):
     await TagsChangeConsumer.disconnect()
     await SelectedConsumer.disconnect()
     await ReviewConsumer.disconnect()
+    await AddResponsesConsumer.disconnect()
     await stop_student()
     await stop_tutor()
     await bot_student.delete_webhook()

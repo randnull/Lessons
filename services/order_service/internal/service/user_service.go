@@ -186,7 +186,6 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 		return "", custom_errors.ErrorServiceError
 	}
 
-	// отправляем на проверку
 	reviewToBroker := &models.ReviewToBroker{
 		ReviewID:        reviewID,
 		ResponseID:      response.ID,
@@ -195,7 +194,6 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 		TutorTelegramID: tutor.TelegramID,
 	}
 
-	// надо создать эту очередь!
 	err = u.ProducerBroker.Publish("new_review", reviewToBroker)
 
 	if err != nil {

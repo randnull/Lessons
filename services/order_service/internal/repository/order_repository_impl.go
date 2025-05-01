@@ -529,8 +529,12 @@ func (o *Repository) GetResponseById(ResponseID string) (*models.ResponseDB, err
 	err := o.db.QueryRowx(query, ResponseID).StructScan(&response)
 
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			logger.Info("[Postgres] GetResponseById not found: " + err.Error())
+			return nil, custom_errors.ErrorNotFound
+		}
 		logger.Error("[Postgres] GetResponseById error" + err.Error())
-		return nil, custom_errors.ErrGetResponse
+		return nil, err
 	}
 
 	return &response, nil

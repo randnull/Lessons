@@ -40,8 +40,11 @@ func (s *ResponseService) GetResponseById(ResponseID string, UserData models.Use
 	response, err := s.orderRepository.GetResponseById(ResponseID)
 
 	if err != nil {
-		logger.Error("[ResponseService] GetResponseById Error GetResponseById: " + err.Error())
-		return nil, custom_errors.ErrorGetResponse
+		if !errors.Is(err, custom_errors.ErrorNotFound) {
+			logger.Error("[ResponseService] GetResponseById Error GetResponseById: " + err.Error())
+			return nil, custom_errors.ErrorServiceError
+		}
+		return nil, custom_errors.ErrorNotFound
 	}
 
 	if UserData.UserID != response.TutorID {
@@ -49,13 +52,15 @@ func (s *ResponseService) GetResponseById(ResponseID string, UserData models.Use
 
 		if err != nil {
 			logger.Error("[ResponseService] GetResponseById Error CheckOrderByStudentID: " + err.Error())
-			return nil, err
+			return nil, custom_errors.ErrorServiceError
 		}
 
 		if !isUserRequest {
+			logger.Info("[ResponseService] GetResponseById Not Allowed CheckOrderByStudentID")
 			return nil, custom_errors.ErrNotAllowed
 		}
 	}
+
 	return response, nil
 }
 

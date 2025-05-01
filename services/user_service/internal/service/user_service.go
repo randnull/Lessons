@@ -38,10 +38,6 @@ func NewUserService(userRepo repository.UserRepository) UserServiceInt {
 	}
 }
 
-//func (s *UserService) GetUserById(UserId string) (*models.UserDB, error) {
-//	return s.userRepository.GetUserById(UserId)
-//}
-
 func (s *UserService) GetStudentById(UserId string) (*models.UserDB, error) {
 	return s.userRepository.GetStudentById(UserId)
 }

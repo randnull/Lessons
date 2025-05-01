@@ -274,7 +274,7 @@ func (orderServ *OrderService) SelectTutor(responseID string, UserData models.Us
 	}
 
 	err = orderServ.ProducerBroker.Publish("selected_orders", models.SelectedResponseToBroker{
-		OrderName:  order.Name,
+		OrderName:  order.Title,
 		OrderID:    order.ID,
 		ResponseID: responseID,
 		StudentID:  student.TelegramID,

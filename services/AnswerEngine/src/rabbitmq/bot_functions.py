@@ -5,7 +5,7 @@ from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
 from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard, review_keyboard
 from AnswerEngine.src.logger.logger import logger
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto, SelectedDto, \
-    ReviewDto, OrderDto
+    ReviewDto, OrderDto, AddResponseDto
 
 from AnswerEngine.src.config.settings import settings
 
@@ -121,3 +121,14 @@ async def proceed_need_review(order: OrderDto) -> None:
         logger.info(f"[NOTIFY-STUDENT] order {order.order_id} need_review to user {order.student_id} send!")
     except Exception as ex:
         logger.error(f"[NOTIFY-STUDENT] order {order.order_id} need_review to user {order.student_id} failed!. Error: {ex}")
+
+async def proceed_add_response(add_response: AddResponseDto) -> None:
+    message = (
+        f"<b>Вам были добавлены отклики. Текущее количество: {add_response.response_count}?</b>\n\n"
+    )
+
+    try:
+        await bot_student.send_message(chat_id=str(add_response.tutor_telegram_id), text=message, parse_mode="html")
+        logger.info(f"[NOTIFY-TUTOR] add response message to user {add_response.tutor_telegram_id} send!")
+    except Exception as ex:
+        logger.error(f"[NOTIFY-TUTOR] add response message to user {add_response.tutor_telegram_id} failed!. Error: {ex}!")

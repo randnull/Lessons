@@ -1,15 +1,19 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/gRPC_client"
+	lg "github.com/randnull/Lessons/internal/logger"
+	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/randnull/Lessons/internal/controllers"
 	"github.com/randnull/Lessons/internal/repository"
@@ -60,7 +64,7 @@ func NewApp(cfg *config.Config) *App {
 	}
 }
 
-func (a *App) Run() {
+func (a *App) Run(ctx context.Context) error {
 	router := fiber.New()
 
 	router.Use(cors.New(cors.Config{
@@ -83,17 +87,14 @@ func (a *App) Run() {
 
 	router.Get("/", a.orderControllers.HealtzHandler)
 
-	// Группа заказов
 	orders := router.Group("api/orders")
 
-	// Работа с заказами для учеников
-
-	studentType := "Student"
-	tutorType := "Tutor"
-	anyType := "Any"
+	studentType := models.StudentType
+	tutorType := models.TutorType
+	anyType := models.AnyType
 
 	orders.Post("/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.CreateOrder)
-	orders.Get("/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetAllUsersOrders) // ручка устарела, теперь pagination
+	orders.Get("/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetAllUsersOrders)
 	orders.Get("/pagination/student", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetStudentOrdersPagination)
 	orders.Put("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.UpdateOrderByID)
 	orders.Get("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetOrderByID)
@@ -134,5 +135,25 @@ func (a *App) Run() {
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 
-	log.Fatal(router.Listen(ListenPort)) // graceful shutdown
+	go func() {
+		err := router.Listen(ListenPort)
+		if err != nil {
+			log.Printf("Server stopped with error: %v", err)
+		}
+	}()
+
+	<-ctx.Done()
+
+	lg.Info("Server graceful shutdown")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := router.ShutdownWithContext(shutdownCtx)
+	if err != nil {
+		log.Printf("Server shutdown error: %v", err)
+		return err
+	}
+
+	return nil
 }

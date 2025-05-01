@@ -261,29 +261,6 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 	return &tutor, nil
 }
 
-//func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
-//	user := &models.UserDB{}
-//
-//	query := `SELECT id, telegram_id, name, role, created_at FROM users WHERE id = $1 AND role = $2`
-//
-//	err := r.db.QueryRow(query, userID, "Tutor").Scan(
-//		&user.Id,
-//		&user.TelegramID,
-//		&user.Name,
-//		&user.Role,
-//		&user.CreatedAt,
-//	)
-//
-//	if err != nil {
-//		if errors.Is(err, sql.ErrNoRows) {
-//			return nil, custom_errors.UserNotFound
-//		}
-//		return nil, err
-//	}
-//
-//	return user, nil
-//}
-
 func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
 	lg.Info("[Postgres] GetAllTutors called")
 
@@ -697,4 +674,57 @@ func (r *Repository) SetReviewActive(reviewID string) error {
 
 	lg.Info("[Postgres] SetReviewActive success")
 	return nil
+}
+
+func (r *Repository) GetAllTutorsResponseCondition(minResponseCount int) ([]*models.TutorWithResponse, error) {
+	lg.Info("[Postgres] GetAllTutorsResponseCondition called")
+
+	const query = `
+		SELECT 
+			u.id, 
+			u.name, 
+			u.telegram_id, 
+			t.response_count
+		FROM users u 
+		JOIN tutors t ON u.id = t.id
+		WHERE u.role = $1 AND t.response_count < $2`
+
+	rows, err := r.db.Query(query, models.RoleTutor, minResponseCount)
+	if err != nil {
+		lg.Error("[Postgres] GetAllTutorsResponseCondition failed. Query error: " + err.Error())
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tutors []*models.TutorWithResponse
+
+	for rows.Next() {
+		var id, name string
+		var telegramID int64
+		var responseCount int32
+
+		err := rows.Scan(&id, &name, &telegramID, &responseCount)
+
+		if err != nil {
+			lg.Error("[Postgres] GetAllTutorsResponseCondition error: " + err.Error())
+			return nil, err
+		}
+
+		tutor := &models.TutorWithResponse{
+			Id:            id,
+			Name:          name,
+			TelegramID:    telegramID,
+			ResponseCount: responseCount,
+		}
+		tutors = append(tutors, tutor)
+	}
+
+	if rows.Err() != nil {
+		lg.Error("[Postgres] GetAllTutorsResponseCondition error after rows scan")
+		return nil, custom_errors.ErrorAfterRowScan
+	}
+
+	lg.Info("[Postgres] GetAllTutorsResponseCondition success")
+
+	return tutors, nil
 }

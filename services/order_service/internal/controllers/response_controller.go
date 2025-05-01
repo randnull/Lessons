@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"errors"
 	"github.com/gofiber/fiber/v2"
+	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
@@ -45,12 +47,19 @@ func (r *ResponseController) GetResponseById(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error("GetResponseById failed: " + err.Error())
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": err.Error()})
+		if errors.Is(err, custom_errors.ErrorNotFound) {
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Response with id: " + ResponseID + " Not found"})
+		} else if errors.Is(err, custom_errors.ErrorServiceError) {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		} else {
+			logger.Error("GetResponseById unknown error failed: " + err.Error())
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Unknown error happends"})
+		}
 	}
 
 	logger.Debug("GetResponseById successful")
 
-	return ctx.JSON(response)
+	return ctx.Status(fiber.StatusOK).JSON(response)
 }
 
 func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {

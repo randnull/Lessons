@@ -66,27 +66,6 @@ func (s *UserControllers) GetUserByTelegramId(ctx context.Context, in *pb.GetByT
 	return userPB, nil
 }
 
-//func (s *UserControllers) GetUserById(ctx context.Context, in *pb.GetById) (*pb.User, error) {
-//	lg.Info("GetUserById called. UserID: " + in.Id)
-//
-//	user, err := s.UserService.GetUserById(in.Id)
-//
-//	if err != nil {
-//		lg.Error("GetUserById failed. UserID: " + in.Id + "Error: " + err.Error())
-//		return nil, err
-//	}
-//
-//	userPB := &pb.User{
-//		Id:         user.Id,
-//		TelegramId: user.TelegramID,
-//		Name:       user.Name,
-//	}
-//
-//	lg.Error("GetUserById success. UserID: " + in.Id)
-//
-//	return userPB, nil
-//}
-
 func (s *UserControllers) GetStudentById(ctx context.Context, in *pb.GetById) (*pb.User, error) {
 	lg.Info("GetStudentById called. UserID: " + in.Id)
 

@@ -27,7 +27,7 @@
             <column name="tags" type="TEXT[]" remarks="tutors tags">
             </column>
 
-            <column name="response_count" type="BIGINT" defaultValueComputed="50" remarks="tutors count responses">
+            <column name="response_count" type="BIGINT" defaultValueComputed="3" remarks="tutors count responses">
                 <constraints nullable="false"/>
             </column>
 

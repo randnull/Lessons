@@ -7,6 +7,13 @@ type User struct {
 	Name string `json:"name" db:"name"`
 }
 
+type TutorWithResponse struct {
+	Id            string `json:"user_id" db:"user_id"`
+	Name          string `json:"name" db:"name"`
+	TelegramID    int64  `json:"telegram_id" db:"telegram_id"`
+	ResponseCount int32  `json:"response_count" db:"response_count"`
+}
+
 type UserDB struct {
 	Id         string    `json:"id" db:"id"`
 	TelegramID int64     `json:"telegram_id" db:"telegram_id"`

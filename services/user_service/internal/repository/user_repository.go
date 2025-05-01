@@ -8,10 +8,10 @@ import (
 type UserRepository interface {
 	CreateUser(user *models.CreateUser) (string, error)
 	GetStudentById(userID string) (*models.UserDB, error)
-	//GetUserById(userID string) (*models.UserDB, error)
 	GetTutorByID(userID string) (*models.TutorDB, error)
 	GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error)
 	GetAllTutors() ([]*pb.Tutor, error)
+	GetAllTutorsResponseCondition(minResponseCount int) ([]*models.TutorWithResponse, error)
 	GetAllTutorsPagination(limit int, offset int, tag string) ([]*pb.Tutor, int, error)
 	UpdateTutorBio(userID string, bio string) error
 	UpdateTutorTags(tutorID string, tags []string) error

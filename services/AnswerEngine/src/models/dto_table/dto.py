@@ -66,9 +66,12 @@ class ReviewDto(BaseModel):
     order_name: str
     tutor_telegram_id: int
 
+class AddResponseDto(BaseModel):
+    tutor_telegram_id: int
+    response_count: int
+
 class NewTagDto(BaseModel):
     tag_name: str
-
 
 class OrderTagDto(BaseModel):
     order_id: UUID4

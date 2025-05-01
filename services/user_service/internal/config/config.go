@@ -8,6 +8,7 @@ type Config struct {
 	DBConfig
 	ServerConfig
 	MQConfig
+	SchedulerConfig
 }
 
 type DBConfig struct {
@@ -27,6 +28,10 @@ type MQConfig struct {
 
 type ServerConfig struct {
 	ServerPort string `env:"SERVER_PORT" env-default:"2000"`
+}
+
+type SchedulerConfig struct {
+	Delay string `env:"SCHEDULER_RESPONSES_DELAY" env-default:"100"`
 }
 
 func NewConfig() (*Config, error) {
