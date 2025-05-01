@@ -47,7 +47,7 @@ class Repository(Generic[Model]):
             self.__model.tutor_id == tutor_id,
             self.__model.tag_id.in_(tag_ids)
          ))
-         await self.__session.commit()
+        await self.__session.commit()
 
     async def change_status(self, order_id: UUID, new_status) -> bool:
          await self.__session.execute(
