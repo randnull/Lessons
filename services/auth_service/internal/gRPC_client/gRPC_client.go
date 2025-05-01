@@ -19,31 +19,13 @@ type GRPCClient struct {
 
 func NewGRPCClient(cfg config.GRPCConfig) *GRPCClient {
 	fmt.Println("Waiting connection")
-	//
-	//var retryPolicy = `{
-	//        "methodConfig": [{
-	//            // config per method or all methods under service
-	//            "name": [{"service": "grpc.examples.echo.Echo"}],
-	//
-	//            "retryPolicy": {
-	//                "MaxAttempts": 4,
-	//                "InitialBackoff": ".01s",
-	//                "MaxBackoff": ".01s",
-	//                "BackoffMultiplier": 1.0,
-	//                // this value is grpc code
-	//                "RetryableStatusCodes": [ "UNAVAILABLE" ]
-	//            }
-	//        }]
-	//    }`
 
-	connection_link := fmt.Sprintf("%v:%v", cfg.Host, cfg.Port)
-	fmt.Println(connection_link)
-	// FATAL!!!! ОЖИДАЕТ Connection до КОНЦА!! СРОЧНО ИСПРАВИТЬ
-	conn, err := grpc.Dial(connection_link, grpc.WithInsecure(), grpc.WithBlock())
-	//conn, err := grpc.NewClient(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	connectionLink := fmt.Sprintf("%v:%v", cfg.Host, cfg.Port)
+
+	conn, err := grpc.Dial(connectionLink, grpc.WithInsecure(), grpc.WithBlock())
 
 	if err != nil {
-		log.Fatal("Can't establish connect with gRPC. Fatal Error")
+		log.Fatal(err)
 	}
 	client := pb.NewUserServiceClient(conn)
 
@@ -81,9 +63,8 @@ func (g *GRPCClient) CreateUser(ctx context.Context, user *models.NewUser) (stri
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	fmt.Println("1", string(user.Role))
 	UserRPC, err := g.client.CreateUser(ctx, &pb.CreateUserRequest{Name: user.Name, TelegramId: user.TelegramID, Role: string(user.Role)})
-	fmt.Println(err)
+
 	if err != nil {
 		return "", custom_errors.ErrorCreateUser
 	}

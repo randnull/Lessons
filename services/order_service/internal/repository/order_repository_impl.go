@@ -36,6 +36,8 @@ func NewRepository(cfg config.DBConfig) *Repository {
 		DbDatabase,
 	)
 
+	log.Printf("Connecting to database: %s", DbDatabase)
+
 	db, err := sqlx.Open("postgres", link)
 
 	if err != nil {

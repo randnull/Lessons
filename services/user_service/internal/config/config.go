@@ -12,22 +12,22 @@ type Config struct {
 }
 
 type DBConfig struct {
-	DBHost     string `env:"DB_HOST"  env-default:"localhost"`
-	DBPort     string `env:"DB_PORT" env-default:"5433"`
-	DBUser     string `env:"DB_USER" env-default:"postgres"`
-	DBPassword string `env:"DB_PASSWORD" env-default:"postgres"`
-	DBName     string `env:"DB_NAME" env-default:"users_database"`
+	DBHost     string `env:"DB_HOST"`
+	DBPort     string `env:"DB_PORT"`
+	DBUser     string `env:"DB_USER"`
+	DBPassword string `env:"DB_PASSWORD"`
+	DBName     string `env:"DB_NAME"`
 }
 
 type MQConfig struct {
-	User string `env:"MQ_USER" env-default:"guest"`
-	Pass string `env:"MQ_PASS" env-default:"guest"`
-	Host string `env:"MQ_HOST" env-default:"127.0.0.1"`
-	Port string `env:"MQ_PORT" env-default:"5672"`
+	User string `env:"MQ_USER"`
+	Pass string `env:"MQ_PASS"`
+	Host string `env:"MQ_HOST"`
+	Port string `env:"MQ_PORT"`
 }
 
 type ServerConfig struct {
-	ServerPort string `env:"SERVER_PORT" env-default:"2000"`
+	ServerPort string `env:"SERVER_PORT"`
 }
 
 type SchedulerConfig struct {

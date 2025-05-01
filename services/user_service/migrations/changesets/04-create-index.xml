@@ -8,18 +8,13 @@
         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
         http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
 
-    <changeSet author="k.goryunov" id="create-index">
-        <createIndex indexName="index_tutor_order" tableName="responses" unique="true">
-            <column name="tutor_id"/>
+    <changeSet author="k.goryunov" id="create-index-table">
+        <createIndex indexName="index_telegram_id" tableName="users">
+            <column name="telegram_id"/>
+        </createIndex>
+
+        <createIndex indexName="index_order_id" tableName="reviews">
             <column name="order_id"/>
-        </createIndex>
-
-        <createIndex indexName="index_student_id" tableName="orders">
-            <column name="student_id"/>
-        </createIndex>
-
-        <createIndex indexName="index_tutor_id" tableName="responses">
-            <column name="tutor_id"/>
         </createIndex>
     </changeSet>
 </databaseChangeLog>

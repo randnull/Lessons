@@ -56,6 +56,8 @@ func (a *App) Run() {
 	//	return proxy.Do(c, targetURL)
 	//})
 
+	log.Printf("InitData time: %v. JWT time: %v", a.cfg.InitDataAliveTime, a.cfg.TokenAliveTime)
+
 	addr := fmt.Sprintf(":%v", a.cfg.ServerPort)
 
 	log.Printf("Listen on: %s\n", addr)

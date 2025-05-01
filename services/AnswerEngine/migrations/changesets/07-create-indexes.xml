@@ -1,28 +1,17 @@
 <databaseChangeLog
-        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
-        xmlns:pro="http://www.liquibase.org/xml/ns/pro"
-        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+    xmlns:pro="http://www.liquibase.org/xml/ns/pro"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd
         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd
         http://www.liquibase.org/xml/ns/pro http://www.liquibase.org/xml/ns/pro/liquibase-pro-latest.xsd">
-</databaseChangeLog>
 
-        <!--<changeSet id="6-add-indexes" author="admin">-->
-<!--    <createIndex indexName="idx_tag_name" tableName="tags">-->
-<!--        <column name="tag_name"/>-->
-<!--    </createIndex>-->
-<!--    <createIndex indexName="idx_tutor_tags_tutor" tableName="tutor_tags">-->
-<!--        <column name="tutor_id"/>-->
-<!--    </createIndex>-->
-<!--    <createIndex indexName="idx_tutor_tags_tag" tableName="tutor_tags">-->
-<!--        <column name="tag_id"/>-->
-<!--    </createIndex>-->
-<!--    <createIndex indexName="idx_order_tags_order" tableName="order_tags">-->
-<!--        <column name="order_id"/>-->
-<!--    </createIndex>-->
-<!--    <createIndex indexName="idx_order_tags_tag" tableName="order_tags">-->
-<!--        <column name="tag_id"/>-->
-<!--    </createIndex>-->
-<!--</changeSet>-->
+    <changeSet author="k.goryunov" id="create-index">
+        <createIndex indexName="index_tag" tableName="tags">
+            <column name="tag_name"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -29,7 +29,7 @@
                 <constraints nullable="false" checkConstraint="rating BETWEEN 1 AND 5"/>
             </column>
 
-            <column name="comment" type="TEXT" remarks="comment"/>
+            <column name="comment" type="VARCHAR(1000)" remarks="comment"/>
 
             <column name="is_active" type="BOOLEAN" remarks="is review active">
                 <constraints nullable="false"/>

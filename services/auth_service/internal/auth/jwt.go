@@ -2,21 +2,12 @@ package auth
 
 import (
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/models"
-	"log"
 	"time"
 )
 
-func CreateJWTToken(userID string, telegramID int64, username string, role models.RoleType, jwtSecret string) (string, error) {
+func CreateJWTToken(userID string, telegramID int64, username string, role models.RoleType, jwtSecret string, TokenAlive int) (string, error) {
 	secretKey := []byte(jwtSecret)
-	//
-	//claims := jwt.MapClaims{
-	//	"user_id":     userID,
-	//	"telegram_id": telegramID,
-	//	"role":        role,
-	//}
-	//claims := jwt.MapClaims{}
 
 	claims := models.Claims{
 		UserID:     userID,
@@ -24,7 +15,7 @@ func CreateJWTToken(userID string, telegramID int64, username string, role model
 		TelegramID: telegramID,
 		Role:       role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(30000 * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(TokenAlive) * time.Hour)),
 		},
 	}
 
@@ -36,28 +27,8 @@ func CreateJWTToken(userID string, telegramID int64, username string, role model
 	tokenStr, err := token.SignedString(secretKey)
 
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	return tokenStr, nil
-}
-
-func ParseJWTToken(tokenStr string, jwtSecret string) (*models.Claims, error) {
-	secretKey := []byte(jwtSecret)
-
-	claims := &models.Claims{}
-
-	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return secretKey, nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	if !token.Valid {
-		return nil, custom_errors.ErrorInvalidToken
-	}
-
-	return claims, nil
 }

@@ -1,15 +1,3 @@
-// Сервис для аутификации
-// Цель - получить initdata, проверить ее на корректность
-// Если все ок - распарсить ее и передать в mock сервиса UserService (grpc)
-// Вернуть jwt токен с информации о пользователе (он содержит user_id)
-
-// При запросе в другой сервис фронт передает jwt токен в него, там он проверяется на корректность
-// Если все ок - запрос происходит. внутри токена - user_id и роль (репет, ученик)
-
-// Конфиг передаватель в auth service
-
-// Ручки endpoint просто принимают один запрос - login. в случае, если акк уже есть - то просто вернется jwt. если акк еще нет - он создаться и вернется jwt
-
 package service
 
 import (
@@ -18,9 +6,10 @@ import (
 	"github.com/randnull/Lessons/internal/auth"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/gRPC_client"
+	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
-	"log"
+	"time"
 )
 
 type AuthServiceInt interface {
@@ -40,34 +29,34 @@ func NewAuthService(cfg *config.JWTConfig, grpcClient gRPC_client.GRPCClientInt)
 }
 
 func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
+	lg.Info("parsing jwt")
+
 	userData, err := initdata.Parse(AuthData.InitData)
 
-	fmt.Println(userData)
-
 	if err != nil {
+		lg.Error(fmt.Sprintf("jwt parsing create error: %v", err))
 		return "", err
 	}
 
-	fmt.Println("username:", userData.User.Username, userData.User)
+	lg.Info(fmt.Sprintf("parsing ok. User-Telegram-Id: %v. User-Role: %v", userData.User.ID, AuthData.Role))
 
-	// ВАЛИДАЦИЮ ОБЯЗАТЕЛЬНО ВКЛЮЧИТЬ КОГДА ОПРЕДЕЛИМСЯ С ТОКЕНАМИ
-	//var errValidate error
+	aliveTime := authserv.cfg.InitDataAliveTime
 
-	//switch AuthData.Role {
-	//case models.RoleTutor:
-	//	errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenTutor, time.Hour*30000) // конфиг
-	//case models.RoleStudent:
-	//	errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenStudent, time.Hour*30000) // конфиг
-	//}
+	var errValidate error
 
-	//if errValidate != nil {
-	//	return "", errValidate
-	//}
-	// create user создает или возвращает пользователя
+	switch AuthData.Role {
+	case models.RoleTutor:
+		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenTutor, time.Duration(aliveTime)*time.Minute)
+	case models.RoleStudent:
+		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenStudent, time.Duration(aliveTime)*time.Minute)
+	}
 
-	log.Println(AuthData.Role)
+	if errValidate != nil {
+		lg.Error(fmt.Sprintf("Error validation. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, errValidate.Error()))
+		return "", errValidate
+	}
 
-	//if userData.User.Username not exist -> error
+	lg.Info("request to create user")
 
 	userID, err := authserv.GRPCClient.CreateUser(context.Background(), &models.NewUser{
 		TelegramID: userData.User.ID,
@@ -75,16 +64,22 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 		Role:       AuthData.Role,
 	})
 
+	lg.Info(fmt.Sprintf("User Created ok. User-Telegram-Id: %v. User-Role: %v. User-Id: %v", userData.User.ID, AuthData.Role, userID))
+
 	if err != nil {
+		lg.Error(fmt.Sprintf("Error Create User. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, err.Error()))
 		return "", err
 	}
 
-	jwtToken, err := auth.CreateJWTToken(userID, userData.User.ID, userData.User.Username, AuthData.Role, authserv.cfg.JWTsecret)
+	lg.Info(fmt.Sprintf("Trying create jwt token. User-Telegram-Id: %v. User-Role: %v. User-Id: %v", userData.User.ID, AuthData.Role, userID))
+	jwtToken, err := auth.CreateJWTToken(userID, userData.User.ID, userData.User.Username, AuthData.Role, authserv.cfg.JWTsecret, authserv.cfg.TokenAliveTime)
+
 	if err != nil {
+		lg.Error(fmt.Sprintf("Error create jwt token. User-Telegram-Id: %v. User-Role: %v. User-Id: %v. Error: %v", userData.User.ID, AuthData.Role, userID, err.Error()))
 		return "", err
 	}
-	x, _ := auth.ParseJWTToken(jwtToken, authserv.cfg.JWTsecret)
-	log.Println("decoded", x)
+
+	lg.Info(fmt.Sprintf("jwt token ok. User-Telegram-Id: %v. User-Role: %v. User-Id: %v", userData.User.ID, AuthData.Role, userID))
 
 	return jwtToken, nil
 }

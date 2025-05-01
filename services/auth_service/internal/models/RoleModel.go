@@ -5,4 +5,5 @@ type RoleType string
 const (
 	RoleStudent RoleType = "Student"
 	RoleTutor   RoleType = "Tutor"
+	RoleAdmin   RoleType = "Admin"
 )

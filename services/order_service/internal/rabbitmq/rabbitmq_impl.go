@@ -24,7 +24,7 @@ func NewRabbitMQ(cfg config.MQConfig) *RabbitMQ {
 
 	connectionLink := fmt.Sprintf("amqp://%v:%v@%v:%v/", MqUser, MqPassword, MqHost, MqPort)
 
-	log.Printf("[RabbitMQ] connecting to %v...", connectionLink)
+	log.Printf("[RabbitMQ] connecting to %v...", MqHost)
 
 	conn, err := amqp.Dial(connectionLink)
 

@@ -11,17 +11,19 @@ type Config struct {
 }
 
 type JWTConfig struct {
-	JWTsecret       string `env:"JWT_SECRET" env-default:"secret"`
-	BotTokenStudent string `env:"BOT_TOKEN_STUDENT" env-default:"7629903300:AAFwHNldwaNDI8cqv7FneC6DtYetbhe0DP0"`
-	BotTokenTutor   string `env:"BOT_TOKEN_TUTOR" env-default:"7629903300:AAFwHNldwaNDI8cqv7FneC6DtYetbhe0DP0"`
+	JWTsecret         string `env:"JWT_SECRET"`
+	BotTokenStudent   string `env:"BOT_STUDENT_TOKEN"`
+	BotTokenTutor     string `env:"BOT_TUTOR_TOKEN"`
+	InitDataAliveTime int    `env:"INITDATA_ALIVE_TIME"`
+	TokenAliveTime    int    `env:"TOKEN_ALIVE_TIME"`
 }
 type GRPCConfig struct {
-	Host string `env:"GRPCUSERHOST" env-default:"127.0.0.1"`
-	Port string `env:"GRPCUSERPORT" env-default:"2000"`
+	Host string `env:"GRPCUSERHOST"`
+	Port string `env:"GRPCUSERPORT"`
 }
 
 type ServerConfig struct {
-	ServerPort string `env:"SERVER_PORT" env-default:"8050"`
+	ServerPort string `env:"AUTH_SERVICE_PORT"`
 }
 
 func NewConfig() (*Config, error) {

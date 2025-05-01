@@ -2,9 +2,9 @@ package models
 
 var StatusNew = "New"
 var StatusSelected = "Selected"
-var StatusApproved = "Approved"
 var StatusInactive = "Inactive"
 var StatusClosed = "Closed"
+var StatusWaiting = "Waiting"
 
 var StudentType = "Student"
 var TutorType = "Tutor"

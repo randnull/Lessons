@@ -43,7 +43,7 @@ class Repository(Generic[Model]):
         return resp.scalars().all()
 
     async def delete_many_by_conditions(self, tutor_id, tag_ids) -> None:
-         await self.__session.execute(delete(self.__model).where(
+        await self.__session.execute(delete(self.__model).where(
             self.__model.tutor_id == tutor_id,
             self.__model.tag_id.in_(tag_ids)
          ))
