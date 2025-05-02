@@ -52,6 +52,14 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 		return "", errors.New("grade is null")
 	}
 
+	if len(order.Title) < 5 || len(order.Title) > 150 {
+		return "", errors.New("error size")
+	}
+
+	if len(order.Description) < 5 || len(order.Description) > 500 {
+		return "", errors.New("error size")
+	}
+
 	_, err := orderServ.GRPCClient.GetStudent(context.Background(), UserData.UserID)
 
 	if err != nil {

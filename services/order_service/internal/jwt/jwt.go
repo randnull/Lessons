@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"fmt"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/models"
@@ -17,7 +16,6 @@ func ParseJWTToken(tokenStr string, jwtSecret string) (*models.Claims, error) {
 	})
 
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 

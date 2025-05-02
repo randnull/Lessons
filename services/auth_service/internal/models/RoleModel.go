@@ -1,9 +1,7 @@
 package models
 
-type RoleType string
-
 const (
-	RoleStudent RoleType = "Student"
-	RoleTutor   RoleType = "Tutor"
-	RoleAdmin   RoleType = "Admin"
+	RoleStudent string = "Student"
+	RoleTutor   string = "Tutor"
+	RoleAdmin   string = "Admin"
 )

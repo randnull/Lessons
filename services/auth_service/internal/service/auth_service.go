@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/randnull/Lessons/internal/auth"
 	"github.com/randnull/Lessons/internal/config"
+	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
@@ -49,6 +50,10 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenTutor, time.Duration(aliveTime)*time.Minute)
 	case models.RoleStudent:
 		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenStudent, time.Duration(aliveTime)*time.Minute)
+	case models.RoleAdmin:
+		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenAdmin, time.Duration(aliveTime)*time.Minute)
+	default:
+		errValidate = custom_errors.ErrorInvalidRole
 	}
 
 	if errValidate != nil {
@@ -57,6 +62,14 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 	}
 
 	lg.Info("request to create user")
+
+	if AuthData.Role == models.RoleAdmin {
+		admin, err := authserv.GRPCClient.GetUserByTelegramID(context.Background(), userData.User.ID, models.RoleAdmin)
+
+		if err != nil || admin.Id == "" {
+			return "", custom_errors.ErrNotRoots
+		}
+	}
 
 	userID, err := authserv.GRPCClient.CreateUser(context.Background(), &models.NewUser{
 		TelegramID: userData.User.ID,

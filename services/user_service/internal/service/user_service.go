@@ -26,6 +26,7 @@ type UserServiceInt interface {
 	CreateNewResponse(tutorID string) error
 	AddResponses(tutorID int64, responseCount int) (int, error)
 	SetReviewActive(reviewID string) error
+	BanUser(userID string) error
 }
 
 type UserService struct {
@@ -47,7 +48,7 @@ func (s *UserService) GetUserByTelegramId(TelegramId int64, userRole string) (*m
 }
 
 func (s *UserService) CreateUser(user models.CreateUser) (string, error) {
-	if (user.Role != models.RoleStudent) && (user.Role != models.RoleTutor) {
+	if (user.Role != models.RoleStudent) && (user.Role != models.RoleTutor) && (user.Role != models.RoleAdmin) {
 		return "", custom_errors.ErrorIncorrectRole
 	}
 
@@ -148,4 +149,14 @@ func (s *UserService) AddResponses(tutorID int64, responseCount int) (int, error
 
 func (s *UserService) SetReviewActive(reviewID string) error {
 	return s.userRepository.SetReviewActive(reviewID)
+}
+
+func (s *UserService) BanUser(userID string) error {
+	err := s.userRepository.BanUser(userID)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

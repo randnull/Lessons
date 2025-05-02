@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func CreateJWTToken(userID string, telegramID int64, username string, role models.RoleType, jwtSecret string, TokenAlive int) (string, error) {
+func CreateJWTToken(userID string, telegramID int64, username string, role string, jwtSecret string, TokenAlive int) (string, error) {
 	secretKey := []byte(jwtSecret)
 
 	claims := models.Claims{

@@ -28,7 +28,7 @@ func NewScheduler(cfg *config.SchedulerConfig, userRepo repository.UserRepositor
 func (s *Scheduler) RunResponseChecker(ctx context.Context) {
 	lg.Info("[Scheduler] start working")
 
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
 
 	func() {

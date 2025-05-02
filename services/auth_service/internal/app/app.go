@@ -50,12 +50,6 @@ func (a *App) Run() {
 
 	router.Post("/auth/init-data", a.controllers.Login)
 
-	//router.Post("/orders", func(c *fiber.Ctx) error {
-	//	targetURL := "http://lessons-order-service:8001/orders"
-	//	log.Println("Proxying request to:", targetURL)
-	//	return proxy.Do(c, targetURL)
-	//})
-
 	log.Printf("InitData time: %v. JWT time: %v", a.cfg.InitDataAliveTime, a.cfg.TokenAliveTime)
 
 	addr := fmt.Sprintf(":%v", a.cfg.ServerPort)

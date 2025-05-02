@@ -43,11 +43,11 @@ func (g *GRPCClient) Close() {
 	}
 }
 
-func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64) (*models.User, error) {
+func (g *GRPCClient) GetUserByTelegramID(ctx context.Context, telegramID int64, role string) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(ctx, time.Second)
 	defer cancel()
 
-	userPB, err := g.client.GetUserByTelegramId(ctx, &pb.GetByTelegramId{Id: telegramID})
+	userPB, err := g.client.GetUserByTelegramId(ctx, &pb.GetByTelegramId{Id: telegramID, Role: role})
 
 	if err != nil {
 		return nil, custom_errors.ErrorGetUser

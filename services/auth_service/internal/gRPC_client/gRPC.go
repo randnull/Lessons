@@ -6,7 +6,7 @@ import (
 )
 
 type GRPCClientInt interface {
-	GetUserByTelegramID(ctx context.Context, telegramID int64) (*models.User, error)
+	GetUserByTelegramID(ctx context.Context, telegramID int64, role string) (*models.User, error)
 	CreateUser(ctx context.Context, user *models.NewUser) (string, error)
 	Close()
 }

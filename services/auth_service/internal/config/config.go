@@ -14,6 +14,7 @@ type JWTConfig struct {
 	JWTsecret         string `env:"JWT_SECRET"`
 	BotTokenStudent   string `env:"BOT_STUDENT_TOKEN"`
 	BotTokenTutor     string `env:"BOT_TUTOR_TOKEN"`
+	BotTokenAdmin     string `env:"BOT_ADMIN_TOKEN"`
 	InitDataAliveTime int    `env:"INITDATA_ALIVE_TIME"`
 	TokenAliveTime    int    `env:"TOKEN_ALIVE_TIME"`
 }

@@ -24,4 +24,5 @@ type UserRepository interface {
 	AddResponses(tutorTelegramID int64, responseCount int) (int, error)
 	RemoveOneResponse(tutorID string) error
 	SetReviewActive(reviewID string) error
+	BanUser(userID string) error
 }

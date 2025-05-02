@@ -25,7 +25,7 @@ async def selected_status_check():
 
             time_diff = time_now - order_dto.created_at
 
-            logger.debug(f"Order diff: {time_diff}")
-            if time_diff.seconds >= 10: # testing
+            logger.debug(f"Time diff: {time_diff}")
+            if time_diff.days >= 3:
                 await proceed_need_review(order_dto)
                 await order_repository.change_status(order_dto.order_id, OrderStatus.CLOSED)

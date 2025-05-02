@@ -728,3 +728,19 @@ func (r *Repository) GetAllTutorsResponseCondition(minResponseCount int) ([]*mod
 
 	return tutors, nil
 }
+
+func (r *Repository) BanUser(userID string) error {
+	const query = `
+		UPDATE users SET
+            is_banned = $1
+        WHERE id = $2`
+
+	_, err := r.db.Exec(query, true, userID)
+
+	if err != nil {
+		lg.Error("[Postgres] BanUser failed. Error: " + err.Error())
+		return err
+	}
+
+	return nil
+}
