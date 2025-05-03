@@ -1,14 +1,16 @@
 package service
 
 import (
+	"fmt"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
+	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/repository"
 )
 
 type UserServiceInt interface {
-	//GetUserById(UserId string) (*models.UserDB, error)
+	GetUserById(UserId string) (*models.UserDB, error)
 	GetStudentById(UserId string) (*models.UserDB, error)
 	GetTutorById(TutorID string) (*models.TutorDB, error)
 	GetUserByTelegramId(TelegramId int64, userRole string) (*models.UserDB, error)
@@ -26,7 +28,7 @@ type UserServiceInt interface {
 	CreateNewResponse(tutorID string) error
 	AddResponses(tutorID int64, responseCount int) (int, error)
 	SetReviewActive(reviewID string) error
-	BanUser(userID string) error
+	BanUser(telegramID int64, isBanned bool) error
 }
 
 type UserService struct {
@@ -118,16 +120,9 @@ func (s *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, er
 		return nil, err
 	}
 
-	tags, err := s.userRepository.GetTagsByTutorID(tutorID)
-	if err != nil {
-		return nil, err
-	}
-
 	return &models.TutorDetails{
-		Tutor:         *tutor,
-		ResponseCount: tutor.ResponseCount,
-		Reviews:       reviews,
-		Tags:          tags,
+		Tutor:   *tutor,
+		Reviews: reviews,
 	}, nil
 }
 
@@ -148,15 +143,26 @@ func (s *UserService) AddResponses(tutorID int64, responseCount int) (int, error
 }
 
 func (s *UserService) SetReviewActive(reviewID string) error {
-	return s.userRepository.SetReviewActive(reviewID)
+	review, err := s.userRepository.GetReviewById(reviewID)
+
+	if err != nil {
+		lg.Error(fmt.Sprintf("error with get review for reviewID: %v. Error: %v", reviewID, err.Error()))
+		return err
+	}
+
+	return s.userRepository.SetReviewActive(reviewID, review.TutorID)
 }
 
-func (s *UserService) BanUser(userID string) error {
-	err := s.userRepository.BanUser(userID)
+func (s *UserService) BanUser(telegramID int64, isBanned bool) error {
+	err := s.userRepository.BanUser(telegramID, isBanned)
 
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (s *UserService) GetUserById(UserId string) (*models.UserDB, error) {
+	return s.userRepository.GetUserById(UserId)
 }

@@ -25,8 +25,12 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="role" type="VARCHAR(50)" remarks="User role (Tutor or Student)">
-                <constraints nullable="false" checkConstraint="role IN ('Tutor', 'Student')"/>
+            <column name="role" type="VARCHAR(50)" remarks="User role (Tutor or Student or Admin)">
+                <constraints nullable="false" checkConstraint="role IN ('Tutor', 'Student', 'Admin')"/>
+            </column>
+
+            <column name="is_banned" type="BOOLEAN" defaultValueBoolean="false" remarks="User ban status">
+                <constraints nullable="false"/>
             </column>
 
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP" remarks="сreation timestamp">

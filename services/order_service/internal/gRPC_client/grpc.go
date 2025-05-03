@@ -30,6 +30,7 @@ type GRPCClientInt interface {
 	GetReviewsByID(ctx context.Context, reviewID string) (*models.Review, error)
 	SetActiveToReview(ctx context.Context, reviewID string) (bool, error)
 
+	BanUser(ctx context.Context, telegramID int64, isBanned bool) (bool, error)
 	// Connection management
 	Close() error
 }

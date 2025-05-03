@@ -269,14 +269,14 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string, isOwn
 
 	return &models.TutorDetails{
 		Tutor: models.User{
-			Id:         resp.Tutor.User.Id,
-			TelegramID: resp.Tutor.User.TelegramId,
-			Name:       resp.Tutor.User.Name,
+			Id:   resp.User.Id,
+			Name: resp.User.Name,
 		},
 		Bio:           resp.Bio,
 		ResponseCount: resp.ResponseCount,
 		Reviews:       reviews,
 		Tags:          resp.Tags,
+		Rating:        resp.Rating,
 		IsActive:      resp.IsActive,
 		CreatedAt:     resp.CreatedAt.AsTime(),
 	}, nil
@@ -332,6 +332,22 @@ func (g *GRPCClient) SetActiveToReview(ctx context.Context, reviewID string) (bo
 
 	resp, err := g.client.SetReviewActive(ctx, &pb.SetReviewsActiveRequest{
 		ReviewId: reviewID,
+	})
+
+	if err != nil {
+		return false, err
+	}
+
+	return resp.Success, nil
+}
+
+func (g *GRPCClient) BanUser(ctx context.Context, telegramID int64, isBanned bool) (bool, error) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	resp, err := g.client.BanUser(ctx, &pb.BanUserRequest{
+		TelegramId: telegramID,
+		IsBanned:   isBanned,
 	})
 
 	if err != nil {

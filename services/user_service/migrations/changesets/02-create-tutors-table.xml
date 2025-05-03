@@ -24,6 +24,10 @@
             <column name="bio" type="VARCHAR(500)" remarks="Tutor's biography">
             </column>
 
+            <column name="rating" type="INTEGER" defaultValueComputed="0" remarks="Tutor's rating">
+                <constraints nullable="false"/>
+            </column>
+
             <column name="tags" type="TEXT[]" remarks="tutors tags">
             </column>
 

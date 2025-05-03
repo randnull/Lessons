@@ -199,6 +199,7 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
             u.created_at,
             t.bio,
             t.response_count,
+            t.rating,
             t.tags,
             t.is_active,
             t.created_at
@@ -207,11 +208,13 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
         WHERE u.id = $1 AND u.role = $2`
 
 	var tutor models.TutorDB
+
 	var bio sql.NullString
 	var responseCount sql.NullInt32
 	var tags pq.StringArray
 	var isActive sql.NullBool
 	var tutorCreatedAt sql.NullTime
+	var rating sql.NullInt32
 
 	err := r.db.QueryRow(query, userID, models.RoleTutor).Scan(
 		&tutor.Id,
@@ -221,6 +224,7 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 		&tutor.CreatedAt,
 		&bio,
 		&responseCount,
+		&rating,
 		&tags,
 		&isActive,
 		&tutorCreatedAt,
@@ -256,6 +260,10 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 		tutor.TutorCreatedAt = tutorCreatedAt.Time
 	}
 
+	if rating.Valid {
+		tutor.Rating = rating.Int32
+	}
+
 	lg.Info("[Postgres] GetTutorByID succss. UserID: " + userID)
 
 	return &tutor, nil
@@ -272,7 +280,7 @@ func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
 			t.tags
 		FROM users u
 		JOIN tutors t ON u.id = t.id
-		WHERE u.role = $1 AND t.is_active = true
+		WHERE u.role = $1
 		ORDER BY u.created_at DESC`
 
 	rows, err := r.db.Query(query, models.RoleTutor)
@@ -395,39 +403,20 @@ func (r *Repository) UpdateTutorName(tutorID string, name string) error {
 
 // этого монстра нужно отрефакторить
 func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) ([]*pb.Tutor, int, error) {
-	var total int
-
-	queryCount := `
-		SELECT
-		    COUNT(*) 
-		FROM users u
-		JOIN tutors t ON u.id = t.id
-		WHERE u.role = $1 AND t.is_active = true`
-
-	argsCount := []interface{}{"Tutor"}
-
-	if tag != "" {
-		queryCount += ` AND $2 = ANY(t.tags)`
-		argsCount = append(argsCount, tag)
-	}
-
-	err := r.db.QueryRow(queryCount, argsCount...).Scan(&total)
-
-	if err != nil {
-		return nil, 0, errors.New("error with rows")
-	}
+	lg.Info("[Postgres] GetAllTutorsPagination called.")
 
 	queryGetAllPagination := `
 		SELECT 
 			u.id, 
 			u.name, 
 			u.telegram_id,
+			t.rating,
 			t.tags
 		FROM users u
 		JOIN tutors t ON u.id = t.id
-		WHERE u.role = $1 AND t.is_active = true`
+		WHERE u.role = $1 AND t.is_active = true AND u.is_banned = false`
 
-	argsPagination := []interface{}{"Tutor", limit, offset}
+	argsPagination := []interface{}{models.RoleTutor, limit, offset}
 
 	if tag != "" {
 		tag = strings.ToLower(tag)
@@ -435,12 +424,13 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 		argsPagination = append(argsPagination, tag)
 	}
 
-	queryGetAllPagination += ` ORDER BY u.created_at DESC LIMIT $2 OFFSET $3`
+	queryGetAllPagination += ` ORDER BY t.rating DESC LIMIT $2 OFFSET $3`
 
 	rows, err := r.db.Query(queryGetAllPagination, argsPagination...)
 
 	if err != nil {
-		return nil, 0, errors.New("error with rows")
+		lg.Info(fmt.Sprintf("[Postgres] GetAllTutorsPagination failed. Error: %v", err.Error()))
+		return nil, 0, err
 	}
 	defer rows.Close()
 
@@ -450,11 +440,13 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 		var id string
 		var name string
 		var telegramID int64
+		var rating int32
 		var tags pq.StringArray
 
-		err := rows.Scan(&id, &name, &telegramID, &tags)
+		err := rows.Scan(&id, &name, &telegramID, &rating, &tags)
 		if err != nil {
-			return nil, 0, errors.New("error with scan")
+			lg.Info(fmt.Sprintf("[Postgres] GetAllTutorsPagination failed. Error: %v", err.Error()))
+			return nil, 0, err
 		}
 
 		tutor := &pb.Tutor{
@@ -463,7 +455,8 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 				Name:       name,
 				TelegramId: telegramID,
 			},
-			Tags: tags,
+			Tags:   tags,
+			Rating: rating,
 		}
 		tutors = append(tutors, tutor)
 	}
@@ -471,10 +464,13 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 	err = rows.Err()
 
 	if err != nil {
-		return nil, 0, errors.New("error with rows")
+		lg.Info(fmt.Sprintf("[Postgres] GetAllTutorsPagination failed. Error: %v", err.Error()))
+		return nil, 0, err
 	}
 
-	return tutors, total, nil
+	lg.Info("[Postgres] GetAllTutorsPagination success.")
+
+	return tutors, len(tutors), nil
 }
 
 func (r *Repository) CreateReview(tutorID, orderID string, rating int, comment string) (string, error) {
@@ -526,8 +522,12 @@ func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
 	err := r.db.Select(&reviews, query, tutorID)
 
 	if err != nil {
-		lg.Error("[Postgres] GetReviews failed. tutorID:" + tutorID + " Error: " + err.Error())
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			lg.Info(fmt.Sprintf("[Postgres] GetReviews. tutorID: %v. Not found", tutorID))
+			return nil, custom_errors.UserNotFound
+		}
+		lg.Error(fmt.Sprintf("[Postgres] GetReviewById failed. tutorID: %v. Error: %v", tutorID, err.Error()))
+		return nil, custom_errors.ErrorServiceError
 	}
 
 	lg.Info("[Postgres] GetReviews success. tutorID: " + tutorID)
@@ -554,8 +554,12 @@ func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
 	err := r.db.Get(&review, query, reviewID)
 
 	if err != nil {
-		lg.Error("[Postgres] GetReviewById failed. reviewID:" + reviewID + " Error: " + err.Error())
-		return nil, err
+		if errors.Is(err, sql.ErrNoRows) {
+			lg.Info("[Postgres] GetReviewById. ReviewID: " + fmt.Sprint(reviewID) + " Not found.")
+			return nil, custom_errors.UserNotFound
+		}
+		lg.Error("[Postgres] GetReviewById failed. ReviewID: " + fmt.Sprint(reviewID) + " Not found.")
+		return nil, custom_errors.ErrorServiceError
 	}
 
 	lg.Info("[Postgres] GetReviewById success. reviewID: " + reviewID)
@@ -645,31 +649,80 @@ func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int
 	return int(newCount), nil
 }
 
-func (r *Repository) SetReviewActive(reviewID string) error {
+func (r *Repository) SetReviewActive(reviewID, tutorID string) error {
 	lg.Info("[Postgres] SetReviewActive called. ReviewID: " + reviewID)
 
-	const query = `
-		UPDATE reviews SET
-            is_active = $1
-        WHERE id = $2`
-
-	res, err := r.db.Exec(query, true, reviewID)
+	tx, err := r.db.Begin()
 
 	if err != nil {
-		lg.Error("[Postgres] SetReviewActive failed. Error: " + err.Error())
-		return err
+		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
+		return custom_errors.ErrorServiceError
+	}
+
+	defer func() {
+		if err != nil {
+			_ = tx.Rollback()
+		}
+	}()
+
+	const querySetActive = `
+		UPDATE reviews SET
+		    is_active = true
+		WHERE id = $1`
+
+	res, err := tx.Exec(querySetActive, reviewID)
+	if err != nil {
+		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
+		return custom_errors.ErrorServiceError
 	}
 
 	rowsAffected, err := res.RowsAffected()
 
 	if err != nil {
-		lg.Error("[Postgres] SetReviewActive failed to get rows affected. Error: " + err.Error())
-		return err
+		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
+		return custom_errors.ErrorServiceError
 	}
 
 	if rowsAffected == 0 {
-		lg.Error("[Postgres] SetReviewActive failed: no review found with ID: " + reviewID)
+		lg.Info("[Postgres] SetReviewActive no review found with ID: " + reviewID)
 		return custom_errors.ErrorNotFound
+	}
+
+	const queryGetAvgRating = `
+		SELECT
+		    ROUND(AVG(rating))::INT
+		FROM reviews
+		WHERE tutor_id = $1 AND is_active = true`
+
+	var avgRating sql.NullInt32
+
+	err = tx.QueryRow(queryGetAvgRating, tutorID).Scan(&avgRating)
+
+	if err != nil {
+		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
+		return custom_errors.ErrorServiceError
+	}
+
+	rating := 0
+
+	if avgRating.Valid {
+		rating = int(avgRating.Int32)
+	}
+
+	const queryUpdateTutor = `
+		UPDATE tutors SET
+		    rating = $1
+		WHERE id = $2`
+
+	_, err = tx.Exec(queryUpdateTutor, rating, tutorID)
+	if err != nil {
+		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
+		return custom_errors.ErrorServiceError
+	}
+
+	if err = tx.Commit(); err != nil {
+		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
+		return custom_errors.ErrorServiceError
 	}
 
 	lg.Info("[Postgres] SetReviewActive success")
@@ -729,13 +782,13 @@ func (r *Repository) GetAllTutorsResponseCondition(minResponseCount int) ([]*mod
 	return tutors, nil
 }
 
-func (r *Repository) BanUser(userID string) error {
+func (r *Repository) BanUser(telegramID int64, isBanned bool) error {
 	const query = `
 		UPDATE users SET
             is_banned = $1
-        WHERE id = $2`
+        WHERE telegram_id = $2`
 
-	_, err := r.db.Exec(query, true, userID)
+	_, err := r.db.Exec(query, isBanned, telegramID)
 
 	if err != nil {
 		lg.Error("[Postgres] BanUser failed. Error: " + err.Error())
@@ -743,4 +796,34 @@ func (r *Repository) BanUser(userID string) error {
 	}
 
 	return nil
+}
+
+func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
+	lg.Info("[Postgres] GetUserById called. UserID: " + userID)
+
+	var user models.UserDB
+
+	const query = `
+		SELECT 
+		    id,
+		    telegram_id,
+		    name, 
+		    role, 
+		    created_at 
+		FROM users 
+		WHERE id = $1`
+
+	err := r.db.Get(&user, query, userID)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, custom_errors.UserNotFound
+		}
+		lg.Error("[Postgres] GetUserById error: " + err.Error())
+		return nil, err
+	}
+
+	lg.Info("[Postgres] GetUserById success. UserID: " + userID)
+
+	return &user, nil
 }

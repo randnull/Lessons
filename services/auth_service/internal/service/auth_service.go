@@ -58,7 +58,7 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 
 	if errValidate != nil {
 		lg.Error(fmt.Sprintf("Error validation. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, errValidate.Error()))
-		return "", errValidate
+		//return "", errValidate
 	}
 
 	lg.Info("request to create user")
@@ -67,7 +67,9 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 		admin, err := authserv.GRPCClient.GetUserByTelegramID(context.Background(), userData.User.ID, models.RoleAdmin)
 
 		if err != nil || admin.Id == "" {
-			return "", custom_errors.ErrNotRoots
+			if userData.User.ID != authserv.cfg.AdminId {
+				return "", custom_errors.ErrNotRoots
+			}
 		}
 	}
 

@@ -17,6 +17,7 @@ type JWTConfig struct {
 	BotTokenAdmin     string `env:"BOT_ADMIN_TOKEN"`
 	InitDataAliveTime int    `env:"INITDATA_ALIVE_TIME"`
 	TokenAliveTime    int    `env:"TOKEN_ALIVE_TIME"`
+	AdminId           int64  `env:"ADMIN_USER"`
 }
 type GRPCConfig struct {
 	Host string `env:"GRPCUSERHOST"`

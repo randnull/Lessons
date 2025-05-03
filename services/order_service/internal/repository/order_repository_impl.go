@@ -61,20 +61,21 @@ func NewRepository(cfg config.DBConfig) *Repository {
 
 func (o *Repository) CreateOrder(NewOrder *models.CreateOrder) (string, error) {
 	const query = `
-		INSERT INTO orders (
-                    name,
-                    student_id, 
-                    title, 
-                    description, 
-                    grade, 
-                    tags, 
-                    min_price, 
-                    max_price, 
-                    status, 
-                    response_count, 
-                    created_at, 
-                    updated_at
-        )
+		INSERT INTO orders
+			(
+			 name, 
+			 student_id,
+			 title,
+			 description,
+			 grade,
+			 tags,
+			 min_price,
+			 max_price,
+			 status,
+			 response_count,
+			 created_at,
+			 updated_at
+			 )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)  RETURNING id`
 
 	var orderID string
@@ -401,12 +402,17 @@ func (o *Repository) CreateResponse(orderID string,
 	username string) (string, error) {
 	var ResponseID string
 
-	queryCheck := `SELECT id FROM responses WHERE order_id = $1 AND tutor_id = $2`
+	queryCheck := `
+		SELECT
+    		id 
+		FROM responses 
+		WHERE order_id = $1 AND tutor_id = $2`
 
 	err := o.db.QueryRow(queryCheck, orderID, Tutor.Id).Scan(&ResponseID)
 
 	if err == nil || !errors.Is(err, sql.ErrNoRows) {
 		if err == nil {
+			logger.Info("[Postgres] CreateResponse: ErrResponseAlreadyExist")
 			return ResponseID, custom_errors.ErrResponseAlredyExist
 		}
 		logger.Error("[Postgres] CreateResponse error" + err.Error())
@@ -424,8 +430,18 @@ func (o *Repository) CreateResponse(orderID string,
 
 	timestamp := time.Now()
 
-	queryInsert := `INSERT INTO responses (order_id, name, tutor_id, tutor_username, greetings, is_final, created_at)
-					VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
+	queryInsert := `
+		INSERT INTO responses 
+		    (
+		     order_id, 
+		     name, 
+		     tutor_id, 
+		     tutor_username, 
+		     greetings, 
+		     is_final, 
+		     created_at
+		     )
+		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`
 
 	greetingsMessage := response.Greetings
 
@@ -436,7 +452,10 @@ func (o *Repository) CreateResponse(orderID string,
 		return "", err
 	}
 
-	queryUpdate := `UPDATE orders SET response_count = response_count + 1 WHERE id = $1`
+	queryUpdate := `
+		UPDATE orders SET
+			response_count = response_count + 1
+		WHERE id = $1`
 
 	_, err = tx.Exec(queryUpdate, orderID)
 
@@ -577,26 +596,28 @@ func (o *Repository) GetUserByOrder(orderID string) (string, error) {
 	return UserID, nil
 }
 
-func (o *Repository) CheckResponseExist(TutorID, OrderID string) bool {
-	var ResponseID string
+func (o *Repository) CheckResponseExist(tutorID, orderID string) bool {
+	var isExist bool
 
-	queryCheck := `SELECT id FROM responses WHERE order_id = $1 AND tutor_id = $2`
+	const query = `
+		SELECT EXISTS (
+			SELECT 1 FROM responses WHERE order_id = $1 AND tutor_id = $2
+		)`
 
-	err := o.db.QueryRow(queryCheck, OrderID, TutorID).Scan(&ResponseID)
+	err := o.db.QueryRow(query, orderID, tutorID).Scan(&isExist)
 
-	if err == nil || !errors.Is(err, sql.ErrNoRows) {
-		if err == nil {
-			return true
-		}
-		logger.Error("[Postgres] CheckResponseExist error" + err.Error())
+	if err != nil {
+		logger.Error("[Postgres] CheckResponseExist error: " + err.Error())
+		return false
 	}
-	return false
+
+	return isExist
 }
 
 func (o *Repository) CheckOrderByStudentID(orderID string, studentID string) (bool, error) {
 	var isExist bool
 
-	query := `
+	const query = `
         SELECT EXISTS (
             SELECT 1 FROM orders WHERE id = $1 AND student_id = $2
         )`

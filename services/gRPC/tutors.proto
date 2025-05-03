@@ -14,17 +14,19 @@ message User {
 
 message Tutor {
   User user = 1;
-  repeated string tags = 2;
+  int32 rating = 2;
+  repeated string tags = 5;
 }
 
 message TutorDetails {
-  Tutor tutor = 1;
+  User user = 1;
   string bio = 2;
   int32 response_count = 3;
   repeated Review review = 4;
   repeated string tags = 5;
-  bool is_active = 6;
-  google.protobuf.Timestamp created_at = 7;
+  int32 rating = 6;
+  bool is_active = 7;
+  google.protobuf.Timestamp created_at = 8;
 }
 
 message Review {
@@ -61,6 +63,8 @@ service UserService {
   rpc GetReview(GetReviewRequest) returns (Review);
   rpc GetReviews(GetReviewsRequest) returns (GetReviewsResponse);
   rpc SetReviewActive(SetReviewsActiveRequest) returns (Success);
+
+  rpc BanUser(BanUserRequest) returns (Success);
 }
 
 message Success {
@@ -162,4 +166,9 @@ message GetReviewsResponse {
 
 message SetReviewsActiveRequest {
   string review_id = 1;
+}
+
+message BanUserRequest {
+  int64 telegram_id = 1;
+  bool is_banned = 2;
 }

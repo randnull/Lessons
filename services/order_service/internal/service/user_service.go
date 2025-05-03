@@ -15,7 +15,6 @@ import (
 
 type UserServiceInt interface {
 	GetTutor(TutorID string, UserData models.UserData) (*models.Tutor, error)
-
 	GetAllTutorsPagination(page int, size int, tag string, UserData models.UserData) (*models.TutorsPagination, error)
 	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
 	UpdateTagsTutor(tags []string, UserData models.UserData) (bool, error)
@@ -28,6 +27,7 @@ type UserServiceInt interface {
 	ApproveReviewByTutor(reviewID string, UserData models.UserData) error
 	GetAllUsers(UserData models.UserData) ([]*models.TutorForList, error)
 	SetReviewActive(reviewID string, UserData models.UserData) error
+	BanUser(banUser models.BanUser, UserData models.UserData) error
 }
 
 type UserService struct {
@@ -92,9 +92,10 @@ func (u *UserService) GetAllTutorsPagination(page int, size int, tag string, Use
 
 	for _, grpcUser := range usersRPC.Tutors {
 		tutors = append(tutors, &models.TutorForList{
-			Id:   grpcUser.User.Id,
-			Name: grpcUser.User.Name,
-			Tags: grpcUser.Tags,
+			Id:     grpcUser.User.Id,
+			Name:   grpcUser.User.Name,
+			Tags:   grpcUser.Tags,
+			Rating: grpcUser.Rating,
 		})
 	}
 
@@ -288,6 +289,22 @@ func (u *UserService) SetReviewActive(reviewID string, UserData models.UserData)
 
 	if err != nil || !isOk {
 		return errors.New("cannot update tutor name")
+	}
+
+	return nil
+}
+
+func (u *UserService) BanUser(banUser models.BanUser, UserData models.UserData) error {
+	user, err := u.GRPCClient.GetUser(context.Background(), banUser.UserID)
+
+	if err != nil {
+		return err
+	}
+
+	isOk, err := u.GRPCClient.BanUser(context.Background(), user.TelegramID, banUser.IsBan)
+
+	if err != nil || !isOk {
+		return err
 	}
 
 	return nil

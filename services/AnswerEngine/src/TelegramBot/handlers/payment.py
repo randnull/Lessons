@@ -2,7 +2,9 @@ from aiogram import Bot
 from aiogram.types import Message, LabeledPrice, PreCheckoutQuery, CallbackQuery
 
 from AnswerEngine.src.TelegramBot.keyboards.keyboards import payment_keyboard
+from AnswerEngine.src.config.settings import settings
 from AnswerEngine.src.functions.payment_functions import add_tutor_responses
+
 
 
 async def send_invoice_handler(message: Message):
@@ -31,7 +33,7 @@ async def process_subscription_callback(callback_query: CallbackQuery, bot: Bot)
         await callback_query.answer("Недостустимое количетсво!")
         return
 
-    prices = [LabeledPrice(label="XTR", amount=1)] # amount
+    prices = [LabeledPrice(label="XTR", amount=amount)] # amount
     await bot.send_invoice(
         chat_id=callback_query.from_user.id,
         title="Покупка откликов",
@@ -86,3 +88,8 @@ async def success_payment_handler(message: Message):
     response_count = payload.split("_")[1]
 
     await message.answer(text=f"🥳 Вы успешно приобрели отклики: {response_count} уже на вашем балансе!")
+
+
+async def pay_support_handler(message: Message):
+    await message.answer(text=f"Если у вас возникли какие-либо проблемы - свяжитесь с поддержкой: {settings.SUPPORT_CHANNEL}")
+

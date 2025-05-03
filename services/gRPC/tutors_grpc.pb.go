@@ -37,6 +37,7 @@ const (
 	UserService_GetReview_FullMethodName              = "/users.UserService/GetReview"
 	UserService_GetReviews_FullMethodName             = "/users.UserService/GetReviews"
 	UserService_SetReviewActive_FullMethodName        = "/users.UserService/SetReviewActive"
+	UserService_BanUser_FullMethodName                = "/users.UserService/BanUser"
 )
 
 // UserServiceClient is the client API for UserService service.
@@ -61,6 +62,7 @@ type UserServiceClient interface {
 	GetReview(ctx context.Context, in *GetReviewRequest, opts ...grpc.CallOption) (*Review, error)
 	GetReviews(ctx context.Context, in *GetReviewsRequest, opts ...grpc.CallOption) (*GetReviewsResponse, error)
 	SetReviewActive(ctx context.Context, in *SetReviewsActiveRequest, opts ...grpc.CallOption) (*Success, error)
+	BanUser(ctx context.Context, in *BanUserRequest, opts ...grpc.CallOption) (*Success, error)
 }
 
 type userServiceClient struct {
@@ -251,6 +253,16 @@ func (c *userServiceClient) SetReviewActive(ctx context.Context, in *SetReviewsA
 	return out, nil
 }
 
+func (c *userServiceClient) BanUser(ctx context.Context, in *BanUserRequest, opts ...grpc.CallOption) (*Success, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Success)
+	err := c.cc.Invoke(ctx, UserService_BanUser_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UserServiceServer is the server API for UserService service.
 // All implementations must embed UnimplementedUserServiceServer
 // for forward compatibility.
@@ -273,6 +285,7 @@ type UserServiceServer interface {
 	GetReview(context.Context, *GetReviewRequest) (*Review, error)
 	GetReviews(context.Context, *GetReviewsRequest) (*GetReviewsResponse, error)
 	SetReviewActive(context.Context, *SetReviewsActiveRequest) (*Success, error)
+	BanUser(context.Context, *BanUserRequest) (*Success, error)
 	mustEmbedUnimplementedUserServiceServer()
 }
 
@@ -336,6 +349,9 @@ func (UnimplementedUserServiceServer) GetReviews(context.Context, *GetReviewsReq
 }
 func (UnimplementedUserServiceServer) SetReviewActive(context.Context, *SetReviewsActiveRequest) (*Success, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetReviewActive not implemented")
+}
+func (UnimplementedUserServiceServer) BanUser(context.Context, *BanUserRequest) (*Success, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method BanUser not implemented")
 }
 func (UnimplementedUserServiceServer) mustEmbedUnimplementedUserServiceServer() {}
 func (UnimplementedUserServiceServer) testEmbeddedByValue()                     {}
@@ -682,6 +698,24 @@ func _UserService_SetReviewActive_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _UserService_BanUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(BanUserRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UserServiceServer).BanUser(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: UserService_BanUser_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UserServiceServer).BanUser(ctx, req.(*BanUserRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // UserService_ServiceDesc is the grpc.ServiceDesc for UserService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -760,6 +794,10 @@ var UserService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "SetReviewActive",
 			Handler:    _UserService_SetReviewActive_Handler,
+		},
+		{
+			MethodName: "BanUser",
+			Handler:    _UserService_BanUser_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -213,17 +213,16 @@ func (s *UserControllers) GetTutorInfoById(ctx context.Context, in *pb.GetById) 
 	lg.Info("GetTutorInfoById success. TutorID: " + in.Id)
 
 	return &pb.TutorDetails{
-		Tutor: &pb.Tutor{
-			User: &pb.User{
-				Id:         tutor.Tutor.Id,
-				Name:       tutor.Tutor.Name,
-				TelegramId: tutor.Tutor.TelegramID,
-			},
+		User: &pb.User{
+			Id:         tutor.Tutor.Id,
+			Name:       tutor.Tutor.Name,
+			TelegramId: tutor.Tutor.TelegramID,
 		},
 		IsActive:      tutor.Tutor.IsActive,
-		ResponseCount: tutor.ResponseCount,
+		ResponseCount: tutor.Tutor.ResponseCount,
 		Bio:           tutor.Tutor.Bio,
-		Tags:          tutor.Tags,
+		Rating:        tutor.Tutor.Rating,
+		Tags:          tutor.Tutor.Tags,
 		Review:        reviews,
 		CreatedAt:     timestamppb.New(tutor.Tutor.CreatedAt),
 	}, nil
@@ -370,4 +369,44 @@ func (s *UserControllers) SetReviewActive(ctx context.Context, in *pb.SetReviews
 	return &pb.Success{
 		Success: true,
 	}, nil
+}
+
+func (s *UserControllers) BanUser(ctx context.Context, in *pb.BanUserRequest) (*pb.Success, error) {
+	lg.Info(fmt.Sprintf("BanUser called. TelegramID: %v", in.TelegramId))
+
+	err := s.UserService.BanUser(in.TelegramId, in.IsBanned)
+
+	if err != nil {
+		lg.Error(fmt.Sprintf("BanUser failed. TelegramID: %v", in.TelegramId))
+		return &pb.Success{
+			Success: false,
+		}, err
+	}
+
+	lg.Info(fmt.Sprintf("BanUser success. TelegramID: %v", in.TelegramId))
+
+	return &pb.Success{
+		Success: true,
+	}, nil
+}
+
+func (s *UserControllers) GetUserById(ctx context.Context, in *pb.GetById) (*pb.User, error) {
+	lg.Info("GetStudentById called. UserID: " + in.Id)
+
+	user, err := s.UserService.GetUserById(in.Id)
+
+	if err != nil {
+		lg.Error("GetStudentById failed. UserID: " + in.Id + "Error: " + err.Error())
+		return nil, err
+	}
+
+	userPB := &pb.User{
+		Id:         user.Id,
+		TelegramId: user.TelegramID,
+		Name:       user.Name,
+	}
+
+	lg.Info("GetStudentById success. UserID: " + in.Id)
+
+	return userPB, nil
 }

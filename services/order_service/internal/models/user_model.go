@@ -29,7 +29,7 @@ type Tutor struct {
 type TutorForList struct {
 	Id     string
 	Name   string
-	Rating float32
+	Rating int32
 	Tags   []string
 }
 
@@ -40,7 +40,7 @@ type TutorDetails struct {
 	Reviews       []Review
 	IsActive      bool
 	Tags          []string
-	Rating        float32
+	Rating        int32
 	CreatedAt     time.Time
 }
 
@@ -62,4 +62,9 @@ type ChangeActive struct {
 
 type UpdateNameTutor struct {
 	Name string `json:"name"`
+}
+
+type BanUser struct {
+	UserID string `json:"user_id"`
+	IsBan  bool   `json:"is_ban"`
 }

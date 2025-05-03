@@ -68,7 +68,7 @@ func (a *App) Run(ctx context.Context) error {
 	router := fiber.New()
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: "*", // НЕБЕЗОПАСНО, ЗАМЕНИТЬ ТОЛЬКО НА ХОСТ ФРОНТА!
+		AllowOrigins: "*",
 		AllowMethods: strings.Join([]string{
 			fiber.MethodGet,
 			fiber.MethodPost,
@@ -91,6 +91,7 @@ func (a *App) Run(ctx context.Context) error {
 
 	studentType := models.StudentType
 	tutorType := models.TutorType
+	adminType := models.AdminType
 	anyType := models.AnyType
 
 	orders.Post("/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.CreateOrder)
@@ -114,7 +115,7 @@ func (a *App) Run(ctx context.Context) error {
 	responses.Post("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.responseControllers.ResponseToOrder)
 	responses.Get("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.responseControllers.GetResponseById)
 	responses.Get("/list", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.responseControllers.GetTutorsResponses)
-	// новая
+
 	// Группа пользователей
 	users := router.Group("/api/users")
 
@@ -132,6 +133,13 @@ func (a *App) Run(ctx context.Context) error {
 	users.Get("/review/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.userControllers.GetReviewByID)
 	users.Get("/tutor/id/:id/reviews", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.userControllers.GetReviewsByTutor)
 	users.Post("/review/activate", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.userControllers.SetReviewActive)
+
+	admins := router.Group("api/admins")
+
+	admins.Post("/ban/user/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.SetReviewActive)
+	admins.Post("/ban/order/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.SetReviewActive)
+	admins.Get("/orders", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.SetReviewActive)
+	admins.Get("/users", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.SetReviewActive)
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 

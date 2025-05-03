@@ -276,3 +276,27 @@ func (u *UserController) SetReviewActive(ctx *fiber.Ctx) error {
 
 	return ctx.SendStatus(fiber.StatusCreated)
 }
+
+func (u *UserController) BanUser(ctx *fiber.Ctx) error {
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	logger.Debug("BanUser called")
+
+	var BanUser models.BanUser
+
+	if err := ctx.BodyParser(&BanUser); err != nil {
+		logger.Error("BanUser parse failed: " + err.Error())
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	err := u.UserService.BanUser(BanUser, UserData)
+
+	if err != nil {
+		logger.Error("BanUser failed: " + err.Error())
+		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Cannot set review active status"})
+	}
+
+	logger.Debug("BanUser successful")
+
+	return ctx.SendStatus(fiber.StatusOK)
+}
