@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"errors"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/logger"
 	"strconv"
 
@@ -19,14 +22,10 @@ func NewOrderController(OrderService service.OrderServiceInt) *OrderController {
 	}
 }
 
-func (c *OrderController) HealtzHandler(ctx *fiber.Ctx) error {
-	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
-}
-
 func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
-	// если custom_error == Service Error - кидаем 500
-	// иначе кидаем 400
 	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	logger.Info("CreateOrder called. UserID: " + UserData.UserID + ", Role: " + UserData.Role)
 
 	var order models.NewOrder
 
@@ -35,13 +34,14 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	logger.Debug("CreateOrder called. UserID: " + UserData.UserID + ", Role: " + UserData.Role)
-
 	orderID, err := c.OrderService.CreateOrder(&order, UserData)
 
 	if err != nil {
-		logger.Error("CreateOrder failed: " + err.Error())
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to create order"})
+		if errors.Is(err, custom_errors.ErrorServiceError) {
+			logger.Error("CreateOrder failed: " + err.Error())
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
+		}
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	logger.Info("CreateOrder successful, OrderID: " + orderID)
@@ -52,21 +52,28 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 }
 
 func (c *OrderController) GetOrderByIdTutor(ctx *fiber.Ctx) error {
-	id := ctx.Params("id")
-
 	UserData, _ := ctx.Locals("user_data").(models.UserData)
 
-	logger.Debug("GetOrderByIdTutor called. UserID: " + UserData.UserID + ", Role: " + UserData.Role + ", OrderID:" + id)
+	id := ctx.Params("id")
+
+	logger.Info(fmt.Sprintf("GetOrderByIdTutor called. UserID: %v Role: %v OrderID: %v", UserData.UserID, UserData.Role, id))
 
 	order, err := c.OrderService.GetOrderByIdTutor(id, UserData)
+
 	if err != nil {
-		logger.Error("GetOrderByIdTutor failed: " + err.Error())
-		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
+		if errors.Is(err, custom_errors.ErrorServiceError) {
+			logger.Error("GetOrderByIdTutor failed: " + err.Error())
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
+		}
+		if errors.Is(err, custom_errors.ErrorNotFound) {
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
+		}
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	logger.Info("GetOrderByIdTutor successful")
 
-	return ctx.JSON(order)
+	return ctx.Status(fiber.StatusOK).JSON(order)
 }
 
 func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {
@@ -74,52 +81,42 @@ func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {
 
 	UserData, _ := ctx.Locals("user_data").(models.UserData)
 
-	logger.Debug("GetOrderByIdTutor called. UserID: " + UserData.UserID + ", Role: " + UserData.Role + ", OrderID:" + id)
+	logger.Info(fmt.Sprintf("GetOrderByID called. UserID: %v Role: %v OrderID: %v", UserData.UserID, UserData.Role, id))
 
 	order, err := c.OrderService.GetOrderById(id, UserData)
+
 	if err != nil {
-		logger.Error("GetOrderById failed: " + err.Error())
-		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
+		if errors.Is(err, custom_errors.ErrorServiceError) {
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
+		}
+		if errors.Is(err, custom_errors.ErrNotAllowed) {
+			return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Not allowed"})
+		}
+		if errors.Is(err, custom_errors.ErrorNotFound) {
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
+		}
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	logger.Info("GetOrderByID successful")
 
-	return ctx.JSON(order)
-}
-
-func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
-	UserData, _ := ctx.Locals("user_data").(models.UserData)
-
-	orders, err := c.OrderService.GetAllOrders(UserData)
-
-	logger.Debug("GetAllOrders called. UserID: " + UserData.UserID + ", Role: " + UserData.Role)
-
-	if err != nil {
-		logger.Error("GetAllOrders failed: " + err.Error())
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
-	}
-
-	logger.Info("GetAllOrders successful")
-
-	return ctx.JSON(orders)
+	return ctx.Status(fiber.StatusOK).JSON(order)
 }
 
 func (c *OrderController) GetOrdersPagination(ctx *fiber.Ctx) error {
 	page, err := strconv.Atoi(ctx.Query("page"))
 
-	logger.Debug("GetOrdersPagination called")
+	logger.Info("GetOrdersPagination called")
 
 	if err != nil {
-		logger.Error("GetOrdersPagination failed: " + err.Error())
-
+		logger.Error(fmt.Sprintf("GetOrdersPagination failed: %v", err.Error()))
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Page param not correct"})
 	}
 
 	size, err := strconv.Atoi(ctx.Query("size"))
 
 	if err != nil {
-		logger.Error("GetOrdersPagination failed: " + err.Error())
-
+		logger.Error(fmt.Sprintf("GetOrdersPagination failed: %v", err.Error()))
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "size param not correct"})
 	}
 
@@ -130,31 +127,28 @@ func (c *OrderController) GetOrdersPagination(ctx *fiber.Ctx) error {
 	orders, err := c.OrderService.GetOrdersWithPagination(page, size, tag, UserData)
 
 	if err != nil {
-		logger.Error("GetOrdersPagination failed: " + err.Error())
-
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
+		logger.Error(fmt.Sprintf("GetOrdersPagination failed: %v", err.Error()))
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
 	}
 	logger.Info("GetOrdersPagination successful")
 
-	return ctx.JSON(orders)
+	return ctx.Status(fiber.StatusOK).JSON(orders)
 }
 
 func (c *OrderController) GetStudentOrdersPagination(ctx *fiber.Ctx) error {
+	logger.Info("GetStudentOrdersPagination called")
+
 	page, err := strconv.Atoi(ctx.Query("page"))
 
-	logger.Debug("GetStudentOrdersPagination called")
-
 	if err != nil {
-		logger.Error("GetStudentOrdersPagination failed: " + err.Error())
-
+		logger.Error(fmt.Sprintf("GetStudentOrdersPagination failed: %v", err.Error()))
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Page param not correct"})
 	}
 
 	size, err := strconv.Atoi(ctx.Query("size"))
 
 	if err != nil {
-		logger.Error("GetStudentOrdersPagination failed: " + err.Error())
-
+		logger.Error(fmt.Sprintf("GetStudentOrdersPagination failed: %v", err.Error()))
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "size param not correct"})
 	}
 
@@ -168,34 +162,16 @@ func (c *OrderController) GetStudentOrdersPagination(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error("GetStudentOrdersPagination failed: " + err.Error())
-
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
 	}
+
 	logger.Info("GetStudentOrdersPagination successful")
 
-	return ctx.JSON(orders)
-}
-
-func (c *OrderController) GetAllUsersOrders(ctx *fiber.Ctx) error {
-	logger.Debug("GetAllUsersOrders called")
-
-	UserData, _ := ctx.Locals("user_data").(models.UserData)
-
-	orders, err := c.OrderService.GetAllUsersOrders(UserData)
-
-	if err != nil {
-		logger.Error("GetAllUsersOrders failed: " + err.Error())
-
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
-	}
-
-	logger.Info("GetAllUsersOrders successful")
-
-	return ctx.JSON(orders)
+	return ctx.Status(fiber.StatusOK).JSON(orders)
 }
 
 func (c *OrderController) DeleteOrderByID(ctx *fiber.Ctx) error {
-	logger.Debug("DeleteOrderByID called")
+	logger.Info("DeleteOrderByID called")
 
 	orderID := ctx.Params("id")
 
@@ -204,9 +180,14 @@ func (c *OrderController) DeleteOrderByID(ctx *fiber.Ctx) error {
 	err := c.OrderService.DeleteOrder(orderID, UserData)
 
 	if err != nil {
-		logger.Error("DeleteOrderByID failed: " + err.Error())
-
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		if errors.Is(err, custom_errors.ErrorServiceError) {
+			logger.Error(fmt.Sprintf("DeleteOrderByID failed: %v", err.Error()))
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
+		}
+		if errors.Is(err, custom_errors.ErrNotAllowed) {
+			return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Not allowed"})
+		}
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	logger.Info("DeleteOrderByID successful")
@@ -214,8 +195,10 @@ func (c *OrderController) DeleteOrderByID(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusNoContent).JSON(fiber.Map{})
 }
 
+// вот тут закончил
+
 func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
-	logger.Debug("UpdateOrderByID called")
+	logger.Info("UpdateOrderByID called")
 
 	orderID := ctx.Params("id")
 
@@ -240,7 +223,7 @@ func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
 }
 
 func (c *OrderController) SelectTutorToOrder(ctx *fiber.Ctx) error {
-	logger.Debug("SelectTutorToOrder called")
+	logger.Info("SelectTutorToOrder called")
 
 	UserData, _ := ctx.Locals("user_data").(models.UserData)
 
@@ -306,4 +289,38 @@ func (c *OrderController) SuggestOrder(ctx *fiber.Ctx) error {
 	logger.Info("SuggestOrder successful")
 
 	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+}
+
+func (c *OrderController) GetAllOrders(ctx *fiber.Ctx) error {
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	orders, err := c.OrderService.GetAllOrders(UserData)
+
+	logger.Debug("GetAllOrders called. UserID: " + UserData.UserID + ", Role: " + UserData.Role)
+
+	if err != nil {
+		logger.Error("GetAllOrders failed: " + err.Error())
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Failed to get orders"})
+	}
+
+	logger.Info("GetAllOrders successful")
+
+	return ctx.JSON(orders)
+}
+
+func (c *OrderController) GetAllUsersOrders(ctx *fiber.Ctx) error {
+	logger.Debug("GetAllUsersOrders called")
+
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	orders, err := c.OrderService.GetAllUsersOrders(UserData)
+
+	if err != nil {
+		logger.Error("GetAllUsersOrders failed: " + err.Error())
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
+	}
+
+	logger.Info("GetAllUsersOrders successful")
+
+	return ctx.JSON(orders)
 }

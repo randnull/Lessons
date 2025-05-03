@@ -85,8 +85,6 @@ func (a *App) Run(ctx context.Context) error {
 		Format: "[LOG] ${time} [${ip}]:${port} ${status} - ${method} - ${latency} ${path}\n",
 	}))
 
-	router.Get("/", a.orderControllers.HealtzHandler)
-
 	orders := router.Group("api/orders")
 
 	studentType := models.StudentType

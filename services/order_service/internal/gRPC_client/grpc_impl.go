@@ -2,6 +2,7 @@ package gRPC_client
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/custom_errors"
@@ -78,6 +79,10 @@ func (g *GRPCClient) GetStudent(ctx context.Context, userID string) (*models.Use
 
 	userPB, err := g.client.GetStudentById(ctx, &pb.GetById{Id: userID})
 	if err != nil {
+		// логгирование
+		if !errors.Is(err, custom_errors.ErrorNotFound) {
+			return nil, custom_errors.ErrorServiceError
+		}
 		return nil, err
 	}
 

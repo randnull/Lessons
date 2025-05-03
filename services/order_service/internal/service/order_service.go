@@ -45,26 +45,26 @@ func NewOrderService(orderRepo repository.OrderRepository, producerBroker rabbit
 
 func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error) {
 	if order.MinPrice > order.MaxPrice {
-		return "", errors.New("max price less than min")
+		return "", custom_errors.ErrorParams
 	}
 
 	if order.Grade == "" {
-		return "", errors.New("grade is null")
+		return "", custom_errors.ErrorParams
 	}
 
 	if len(order.Title) < 5 || len(order.Title) > 150 {
-		return "", errors.New("error size")
+		return "", custom_errors.ErrorParams
 	}
 
 	if len(order.Description) < 5 || len(order.Description) > 500 {
-		return "", errors.New("error size")
+		return "", custom_errors.ErrorParams
 	}
 
 	_, err := orderServ.GRPCClient.GetStudent(context.Background(), UserData.UserID)
 
 	if err != nil {
 		logger.Error("[OrderService] CreateOrder error get student: " + err.Error())
-		return "", custom_errors.ErrorGetUser
+		return "", custom_errors.ErrorServiceError
 	}
 
 	OrderToCreate := &models.CreateOrder{
@@ -84,7 +84,7 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 		StudentID: UserData.TelegramID,
 		Title:     order.Title,
 		Tags:      order.Tags,
-		Status:    "New",
+		Status:    models.StatusNew,
 	}
 
 	err = orderServ.ProducerBroker.Publish("new_orders", OrderToBroker)
@@ -104,7 +104,6 @@ func (orderServ *OrderService) GetOrderById(id string, UserData models.UserData)
 
 	if order.StudentID != UserData.UserID {
 		logger.Info("[OrderService] GetOrderById not allowed. User: " + UserData.UserID + " User-Order: " + order.StudentID)
-
 		return nil, custom_errors.ErrNotAllowed
 	}
 

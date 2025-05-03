@@ -98,8 +98,8 @@ func (o *Repository) CreateOrder(NewOrder *models.CreateOrder) (string, error) {
 	).Scan(&orderID)
 
 	if err != nil {
-		logger.Error("[Postgres] SetTutorToOrder error" + err.Error())
-		return "", err
+		logger.Error("[Postgres] CreateOrder error" + err.Error())
+		return "", custom_errors.ErrorServiceError
 	}
 
 	return orderID, nil
@@ -160,7 +160,7 @@ func (o *Repository) DeleteOrder(id string) error {
 
 	if err != nil {
 		logger.Error("[Postgres] DeleteOrder error" + err.Error())
-		return err
+		return custom_errors.ErrorServiceError
 	}
 
 	return nil
@@ -253,8 +253,11 @@ func (o *Repository) GetOrderByID(id string) (*models.Order, error) {
 	err := o.db.QueryRowx(query, id).StructScan(&order)
 
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, custom_errors.ErrorNotFound
+		}
 		logger.Error("[Postgres] GetOrderByID error" + err.Error())
-		return nil, custom_errors.ErrGetOrder
+		return nil, custom_errors.ErrorServiceError
 	}
 
 	return &order, nil
@@ -325,7 +328,7 @@ func (o *Repository) GetOrdersPagination(limit int, offset int, tags string) ([]
 
 	if err != nil {
 		logger.Error("[Postgres] GetOrdersPagination select error: " + err.Error())
-		return nil, 0, err
+		return nil, 0, custom_errors.ErrorServiceError
 	}
 
 	return orders, len(orders), nil
@@ -358,7 +361,7 @@ func (o *Repository) GetStudentOrdersPagination(limit int, offset int, studentID
 
 	if err != nil {
 		logger.Error("[Postgres] GetStudentOrdersPagination select error: " + err.Error())
-		return nil, 0, err
+		return nil, 0, custom_errors.ErrorServiceError
 	}
 
 	return orders, len(orders), nil
@@ -388,7 +391,7 @@ func (o *Repository) GetStudentOrders(studentID string) ([]*models.Order, error)
 
 	if err != nil {
 		logger.Error("[Postgres] GetStudentOrders error" + err.Error())
-		return nil, err
+		return nil, custom_errors.ErrorServiceError
 	}
 
 	return orders, nil
@@ -575,7 +578,7 @@ func (o *Repository) GetTutorIsRespond(orderID string, tutorID string) (bool, er
 
 	if err != nil {
 		logger.Error("[Postgres] GetTutorIsRespond error" + err.Error())
-		return false, err
+		return false, custom_errors.ErrorServiceError
 	}
 
 	return isExist, nil
