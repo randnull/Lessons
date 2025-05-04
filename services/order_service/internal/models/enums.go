@@ -10,3 +10,5 @@ const StudentType = "Student"
 const TutorType = "Tutor"
 const AdminType = "Admin"
 const AnyType = "Any"
+
+const queueNewOrder = "new_order"

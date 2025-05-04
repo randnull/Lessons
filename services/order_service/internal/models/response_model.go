@@ -25,19 +25,3 @@ type ResponseDB struct {
 	IsFinal       bool      `json:"is_final" db:"is_final"`
 	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 }
-
-type ResponseToBrokerModel struct {
-	ResponseID string `json:"response_id"`
-	TutorID    int64  `json:"tutor_id"`
-	StudentID  int64  `json:"student_id"`
-	OrderID    string `json:"order_id"`
-	Title      string `json:"order_name"`
-}
-
-type SelectedResponseToBroker struct {
-	OrderID    string `json:"order_id"`
-	OrderName  string `json:"order_name"`
-	StudentID  int64  `json:"student_telegram_id"`
-	TutorID    int64  `json:"tutor_telegram_id"`
-	ResponseID string `json:"response_id"`
-}

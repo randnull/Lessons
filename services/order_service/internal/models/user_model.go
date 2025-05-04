@@ -2,17 +2,12 @@ package models
 
 import "time"
 
-type TutorsPagination struct {
-	Tutors []*TutorForList
-	Pages  int
-}
-
 type User struct {
-	Id         string `json:"id"`
-	TelegramID int64  `json:"telegram_id"`
-	Name       string `json:"name"`
-	Role       string `json:"role"`
-	IsBanned   bool   `json:"is_banned"`
+	Id         string
+	TelegramID int64
+	Name       string
+	Role       string
+	IsBanned   bool
 }
 
 type Tutor struct {
@@ -28,6 +23,11 @@ type TutorForList struct {
 	Name   string
 	Rating int32
 	Tags   []string
+}
+
+type TutorsPagination struct {
+	Tutors []*TutorForList
+	Pages  int
 }
 
 type TutorDetails struct {
@@ -51,11 +51,6 @@ type UpdateTagsTutor struct {
 
 type UpdateNameTutor struct {
 	Name string `json:"name" validate:"required,min=2,max=50"`
-}
-
-type ChangeTagsTutorToBroker struct {
-	TutorTelegramID int64    `json:"tutor_telegram_id"`
-	Tags            []string `json:"tags"`
 }
 
 type BanUser struct {

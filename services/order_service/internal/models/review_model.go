@@ -18,14 +18,6 @@ type ReviewRequest struct {
 	Rating     int    `json:"rating" validate:"required,gte=1,lte=5"`
 }
 
-type ReviewToBroker struct {
-	ReviewID        string `json:"review_id"`
-	ResponseID      string `json:"response_id"`
-	OrderID         string `json:"order_id"`
-	OrderName       string `json:"order_name"`
-	TutorTelegramID int64  `json:"tutor_telegram_id"`
-}
-
 type ReviewActive struct {
 	ReviewID string `json:"review_id" validate:"required,uuid"`
 }
