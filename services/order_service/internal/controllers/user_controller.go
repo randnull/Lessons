@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
@@ -280,8 +281,6 @@ func (u *UserController) SetReviewActive(ctx *fiber.Ctx) error {
 func (u *UserController) BanUser(ctx *fiber.Ctx) error {
 	UserData, _ := ctx.Locals("user_data").(models.UserData)
 
-	logger.Debug("BanUser called")
-
 	var BanUser models.BanUser
 
 	if err := ctx.BodyParser(&BanUser); err != nil {
@@ -289,14 +288,52 @@ func (u *UserController) BanUser(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
+	logger.Info(fmt.Sprintf("BanUser called. TelegramID: %v. Banned: %v", BanUser.TelegramID, BanUser.IsBan))
+
 	err := u.UserService.BanUser(BanUser, UserData)
 
 	if err != nil {
 		logger.Error("BanUser failed: " + err.Error())
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Cannot set review active status"})
+		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	logger.Debug("BanUser successful")
 
 	return ctx.SendStatus(fiber.StatusOK)
+}
+
+func (u *UserController) GetAllUsers(ctx *fiber.Ctx) error {
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	logger.Info("GetAllUsers called")
+
+	users, err := u.UserService.GetAllUsers(UserData)
+
+	if err != nil {
+		logger.Error("GetAllUsers failed: " + err.Error())
+		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Cannot get all users"})
+	}
+
+	logger.Debug("GetAllUsers successful")
+
+	return ctx.Status(fiber.StatusOK).JSON(users)
+}
+
+func (u *UserController) GetUserById(ctx *fiber.Ctx) error {
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	logger.Info("GetUserById called")
+
+	userID := ctx.Params("id")
+
+	user, err := u.UserService.GetUserById(userID, UserData)
+
+	if err != nil {
+		logger.Error("GetUserById failed: " + err.Error())
+		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Cannot get user"})
+	}
+
+	logger.Debug("GetUserById successful")
+
+	return ctx.Status(fiber.StatusOK).JSON(user)
 }

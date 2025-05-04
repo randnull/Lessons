@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/randnull/Lessons/internal/auth"
 	"github.com/randnull/Lessons/internal/config"
@@ -48,8 +49,26 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 	switch AuthData.Role {
 	case models.RoleTutor:
 		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenTutor, time.Duration(aliveTime)*time.Minute)
+
+		user, err := authserv.GRPCClient.GetUserByTelegramID(context.Background(), userData.User.ID, models.RoleTutor)
+		if err != nil {
+			lg.Error(fmt.Sprintf("Error check. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, err.Error()))
+		} else if user.IsBanned {
+			lg.Info(fmt.Sprintf("Banned user. User-Telegram-Id: %v. User-Role: %v.", userData.User.ID, AuthData.Role))
+			return "", errors.New("Forbidden")
+		}
+
 	case models.RoleStudent:
 		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenStudent, time.Duration(aliveTime)*time.Minute)
+
+		user, err := authserv.GRPCClient.GetUserByTelegramID(context.Background(), userData.User.ID, models.RoleStudent)
+		if err != nil {
+			lg.Error(fmt.Sprintf("Error check. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, err.Error()))
+		} else if user.IsBanned {
+			lg.Info(fmt.Sprintf("Banned user. User-Telegram-Id: %v. User-Role: %v.", userData.User.ID, AuthData.Role))
+			return "", errors.New("Forbidden")
+		}
+
 	case models.RoleAdmin:
 		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenAdmin, time.Duration(aliveTime)*time.Minute)
 	default:
@@ -63,14 +82,9 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 
 	lg.Info("request to create user")
 
-	if AuthData.Role == models.RoleAdmin {
-		admin, err := authserv.GRPCClient.GetUserByTelegramID(context.Background(), userData.User.ID, models.RoleAdmin)
-
-		if err != nil || admin.Id == "" {
-			if userData.User.ID != authserv.cfg.AdminId {
-				return "", custom_errors.ErrNotRoots
-			}
-		}
+	if (AuthData.Role == models.RoleAdmin) && (userData.User.ID != authserv.cfg.AdminId) {
+		lg.Error(fmt.Sprintf("Error Auth Admin. User-Telegram-Id: %v. User-Role: %v. Error: Not allowed", userData.User.ID, AuthData.Role))
+		return "", errors.New("Not allowed")
 	}
 
 	userID, err := authserv.GRPCClient.CreateUser(context.Background(), &models.NewUser{

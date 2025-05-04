@@ -16,7 +16,7 @@ type UserServiceInt interface {
 	GetUserByTelegramId(TelegramId int64, userRole string) (*models.UserDB, error)
 	UpdateNameTutor(tutorID string, name string) error
 	CreateUser(user models.CreateUser) (string, error)
-	GetTutors() ([]*pb.Tutor, error)
+	GetAllUsers() ([]*pb.User, error)
 	GetTutorsPagination(page int, size int, tag string) (*pb.GetTutorsPaginationResponse, error)
 	UpdateBioTutor(userID string, bio string) error
 	UpdateTutorTags(tutorID string, tags []string) error
@@ -55,10 +55,6 @@ func (s *UserService) CreateUser(user models.CreateUser) (string, error) {
 	}
 
 	return s.userRepository.CreateUser(&user)
-}
-
-func (s *UserService) GetTutors() ([]*pb.Tutor, error) {
-	return s.userRepository.GetAllTutors()
 }
 
 func (s *UserService) UpdateBioTutor(userID string, bio string) error {
@@ -165,4 +161,8 @@ func (s *UserService) BanUser(telegramID int64, isBanned bool) error {
 
 func (s *UserService) GetUserById(UserId string) (*models.UserDB, error) {
 	return s.userRepository.GetUserById(UserId)
+}
+
+func (s *UserService) GetAllUsers() ([]*pb.User, error) {
+	return s.userRepository.GetAllUsers()
 }

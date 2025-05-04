@@ -11,7 +11,7 @@ type UserRepository interface {
 	GetTutorByID(userID string) (*models.TutorDB, error)
 	GetUserById(userID string) (*models.UserDB, error)
 	GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error)
-	GetAllTutors() ([]*pb.Tutor, error)
+	GetAllUsers() ([]*pb.User, error)
 	GetAllTutorsResponseCondition(minResponseCount int) ([]*models.TutorWithResponse, error)
 	GetAllTutorsPagination(limit int, offset int, tag string) ([]*pb.Tutor, int, error)
 	UpdateTutorBio(userID string, bio string) error

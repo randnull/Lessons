@@ -19,6 +19,7 @@ type UserDB struct {
 	TelegramID int64     `json:"telegram_id" db:"telegram_id"`
 	Name       string    `json:"name" db:"name"`
 	Role       string    `json:"role" db:"role"`
+	IsBanned   bool      `json:"is_banned" db:"is_banned"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 }
 

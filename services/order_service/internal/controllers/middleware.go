@@ -32,7 +32,7 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 			})
 		}
 
-		if UserClaims.Role != "Student" && UserClaims.Role != "Tutor" && UserClaims.Role != "Admin" {
+		if UserClaims.Role != models.StudentType && UserClaims.Role != models.TutorType && UserClaims.Role != models.AdminType {
 			logger.Debug("TokenAuthMiddleware failed. Get " + UserClaims.Role + " as Role")
 
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -41,17 +41,17 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 			})
 		}
 
-		if userType == "Student" && UserClaims.Role != "Student" {
+		if userType == models.StudentType && UserClaims.Role != models.StudentType {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,
 				"msg":   "Bad auth data provided. Role mismatch",
 			})
-		} else if userType == "Tutor" && UserClaims.Role != "Tutor" {
+		} else if userType == models.TutorType && UserClaims.Role != models.TutorType {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,
 				"msg":   "Bad auth data provided. Role mismatch",
 			})
-		} else if userType == "Admin" && UserClaims.Role != "Admin" {
+		} else if userType == models.AdminType && UserClaims.Role != models.AdminType {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,
 				"msg":   "Bad auth data provided. Role mismatch",
@@ -59,7 +59,7 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 		}
 
 		if err != nil {
-			logger.Debug("TokenAuthMiddleware failed: " + err.Error())
+			logger.Info("TokenAuthMiddleware failed: " + err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"error": true,

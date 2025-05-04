@@ -10,6 +10,8 @@ message User {
   string id = 1;
   string name = 2;
   int64 telegram_id = 3;
+  bool  is_banned = 4;
+  string role = 5;
 }
 
 message Tutor {
@@ -128,7 +130,7 @@ message GetById {
 message GetAllRequest {}
 
 message GetAllResponse {
-  repeated Tutor tutors = 1;
+  repeated User users = 1;
 }
 
 message GetTutorsPaginationResponse {

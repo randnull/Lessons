@@ -104,7 +104,6 @@ func (a *App) Run(ctx context.Context) error {
 
 	// Работа с заказами для репетиторов
 	orders.Get("/mini/id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetOrderByIdTutor)
-	orders.Get("/all", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetAllOrders) // ручка устарела, теперь pagination
 	orders.Get("/pagination", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetOrdersPagination)
 
 	// Группа откликов
@@ -134,10 +133,12 @@ func (a *App) Run(ctx context.Context) error {
 
 	admins := router.Group("api/admins")
 
-	admins.Post("/ban/user/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.SetReviewActive)
-	admins.Post("/ban/order/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.SetReviewActive)
-	admins.Get("/orders", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.SetReviewActive)
-	admins.Get("/users", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.SetReviewActive)
+	admins.Post("/ban/user/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.BanUser)
+	admins.Post("/ban/order/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.orderControllers.SetBanOrder)
+	admins.Get("/orders", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.orderControllers.GetAllOrders)
+	admins.Get("/order/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.orderControllers.GetOrderByIdTutor)
+	admins.Get("/users", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.GetAllUsers)
+	admins.Get("/user/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.GetUserById)
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 

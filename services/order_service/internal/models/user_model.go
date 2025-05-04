@@ -16,6 +16,8 @@ type User struct {
 	Id         string `json:"id"`
 	TelegramID int64  `json:"telegram_id"`
 	Name       string `json:"name"`
+	Role       string `json:"role"`
+	IsBanned   bool   `json:"is_banned"`
 }
 
 type Tutor struct {
@@ -65,6 +67,6 @@ type UpdateNameTutor struct {
 }
 
 type BanUser struct {
-	UserID string `json:"user_id"`
-	IsBan  bool   `json:"is_ban"`
+	TelegramID int64 `json:"telegram_id"`
+	IsBan      bool  `json:"is_ban"`
 }

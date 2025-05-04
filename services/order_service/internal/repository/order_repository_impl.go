@@ -281,9 +281,9 @@ func (o *Repository) GetOrders() ([]*models.Order, error) {
 			response_count,
 			created_at, 
 			updated_at 
-		FROM orders WHERE status = $1 ORDER BY created_at DESC`
+		FROM orders ORDER BY created_at DESC`
 
-	err := o.db.Select(&orders, query, models.StatusNew)
+	err := o.db.Select(&orders, query)
 
 	if err != nil {
 		logger.Error("[Postgres] GetOrders error" + err.Error())

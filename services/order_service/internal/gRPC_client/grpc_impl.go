@@ -70,6 +70,8 @@ func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, 
 		Id:         userPB.Id,
 		TelegramID: userPB.TelegramId,
 		Name:       userPB.Name,
+		Role:       userPB.Role,
+		IsBanned:   userPB.IsBanned,
 	}, nil
 }
 
@@ -114,6 +116,7 @@ func (g *GRPCClient) GetAllUsers(ctx context.Context) (*pb.GetAllResponse, error
 	defer cancel()
 
 	usersPB, err := g.client.GetAllUsers(ctx, &pb.GetAllRequest{})
+
 	if err != nil {
 		return nil, err
 	}

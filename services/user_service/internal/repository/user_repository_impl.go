@@ -138,6 +138,7 @@ func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*mo
 		    telegram_id,
 		    name, 
 		    role, 
+		    is_banned,
 		    created_at 
 		FROM users 
 		WHERE telegram_id = $1 AND role = $2`
@@ -168,6 +169,7 @@ func (r *Repository) GetStudentById(userID string) (*models.UserDB, error) {
 		    telegram_id,
 		    name, 
 		    role, 
+		    is_banned,
 		    created_at 
 		FROM users 
 		WHERE id = $1 AND role = $2`
@@ -269,50 +271,47 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 	return &tutor, nil
 }
 
-func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
-	lg.Info("[Postgres] GetAllTutors called")
+func (r *Repository) GetAllUsers() ([]*pb.User, error) {
+	lg.Info("[Postgres] GetAllUsers called")
 
 	const query = `
 		SELECT 
-			u.id, 
-			u.name, 
-			u.telegram_id, 
-			t.tags
-		FROM users u
-		JOIN tutors t ON u.id = t.id
-		WHERE u.role = $1
-		ORDER BY u.created_at DESC`
+			id, 
+			name, 
+			telegram_id, 
+			role
+		FROM users
+		ORDER BY created_at DESC`
 
-	rows, err := r.db.Query(query, models.RoleTutor)
+	rows, err := r.db.Query(query)
 	if err != nil {
-		lg.Error("[Postgres] GetAllTutors failed. Query error: " + err.Error())
+		lg.Error("[Postgres] GetAllUsers failed. Query error: " + err.Error())
 		return nil, err
 	}
 	defer rows.Close()
 
-	var tutors []*pb.Tutor
+	var users []*pb.User
 
 	for rows.Next() {
 		var id, name string
 		var telegramID int64
-		var tags pq.StringArray
+		var role string
 
-		err := rows.Scan(&id, &name, &telegramID, &tags)
+		err := rows.Scan(&id, &name, &telegramID, &role)
 
 		if err != nil {
 			lg.Error("[Postgres] GetAllTutors error: " + err.Error())
 			return nil, err
 		}
 
-		tutor := &pb.Tutor{
-			User: &pb.User{
-				Id:         id,
-				Name:       name,
-				TelegramId: telegramID,
-			},
-			Tags: tags,
+		user := &pb.User{
+			Id:         id,
+			Name:       name,
+			TelegramId: telegramID,
+			Role:       role,
 		}
-		tutors = append(tutors, tutor)
+
+		users = append(users, user)
 	}
 
 	if rows.Err() != nil {
@@ -322,7 +321,7 @@ func (r *Repository) GetAllTutors() ([]*pb.Tutor, error) {
 
 	lg.Info("[Postgres] GetAllTutors success")
 
-	return tutors, nil
+	return users, nil
 }
 
 func (r *Repository) UpdateTutorBio(userID string, bio string) error {
@@ -809,6 +808,7 @@ func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
 		    telegram_id,
 		    name, 
 		    role, 
+		    is_banned,
 		    created_at 
 		FROM users 
 		WHERE id = $1`

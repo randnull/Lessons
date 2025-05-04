@@ -324,3 +324,22 @@ func (c *OrderController) GetAllUsersOrders(ctx *fiber.Ctx) error {
 
 	return ctx.JSON(orders)
 }
+
+func (c *OrderController) SetBanOrder(ctx *fiber.Ctx) error {
+	UserData, _ := ctx.Locals("user_data").(models.UserData)
+
+	orderID := ctx.Params("id")
+
+	logger.Debug(fmt.Sprintf("SetBanOrder called. UserID: %v OrderID: %v", UserData.UserID, orderID))
+
+	err := c.OrderService.SetBanOrderStatus(orderID, UserData)
+
+	if err != nil {
+		logger.Error("SetBanOrder failed: " + err.Error())
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
+	}
+
+	logger.Info(fmt.Sprintf("SetBanOrder successful for OrderID: %v", orderID))
+
+	return ctx.Status(fiber.StatusOK).JSON(fiber.Map{})
+}

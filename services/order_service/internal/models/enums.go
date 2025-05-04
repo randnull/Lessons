@@ -1,12 +1,12 @@
 package models
 
-var StatusNew = "New"
-var StatusSelected = "Selected"
-var StatusInactive = "Inactive"
-var StatusClosed = "Closed"
-var StatusWaiting = "Waiting"
+const StatusNew = "New"
+const StatusSelected = "Selected"
+const StatusInactive = "Inactive"
+const StatusClosed = "Closed"
+const StatusBan = "Banned"
 
-var StudentType = "Student"
-var TutorType = "Tutor"
-var AdminType = "Admin"
-var AnyType = "Any"
+const StudentType = "Student"
+const TutorType = "Tutor"
+const AdminType = "Admin"
+const AnyType = "Any"

@@ -117,7 +117,7 @@ func (s *UserControllers) GetTutorById(ctx context.Context, in *pb.GetById) (*pb
 func (s *UserControllers) GetAllUsers(ctx context.Context, in *pb.GetAllRequest) (*pb.GetAllResponse, error) {
 	lg.Info("GetAllUsers called")
 
-	users, err := s.UserService.GetTutors()
+	users, err := s.UserService.GetAllUsers()
 
 	if err != nil {
 		lg.Error("GetAllUsers failed. Error: " + err.Error())
@@ -127,7 +127,7 @@ func (s *UserControllers) GetAllUsers(ctx context.Context, in *pb.GetAllRequest)
 	lg.Info("GetAllUsers success")
 
 	return &pb.GetAllResponse{
-		Tutors: users,
+		Users: users,
 	}, nil
 }
 
@@ -404,6 +404,8 @@ func (s *UserControllers) GetUserById(ctx context.Context, in *pb.GetById) (*pb.
 		Id:         user.Id,
 		TelegramId: user.TelegramID,
 		Name:       user.Name,
+		Role:       user.Role,
+		IsBanned:   user.IsBanned,
 	}
 
 	lg.Info("GetStudentById success. UserID: " + in.Id)

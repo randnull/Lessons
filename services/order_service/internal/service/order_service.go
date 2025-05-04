@@ -19,6 +19,7 @@ type OrderServiceInt interface {
 	SelectTutor(responseID string, UserData models.UserData) error
 	SuggestOrderToTutor(orderID, tutorID string, UserData models.UserData) error
 	SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error
+	SetBanOrderStatus(orderID string, UserData models.UserData) error
 
 	// order getting
 	GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error)
@@ -331,6 +332,24 @@ func (orderServ *OrderService) SetActiveOrderStatus(orderID string, IsActive boo
 			logger.Error("[OrderService] SetActiveOrderStatus Error SetOrderStatus: " + err.Error())
 			return custom_errors.ErrorSetStatus
 		}
+	}
+
+	return nil
+}
+
+func (orderServ *OrderService) SetBanOrderStatus(orderID string, UserData models.UserData) error {
+	_, err := orderServ.orderRepository.GetOrderByID(orderID)
+
+	if err != nil {
+		logger.Error("[OrderService] SetBanOrderStatus Error GetOrderByID: " + err.Error())
+		return err
+	}
+
+	err = orderServ.orderRepository.SetOrderStatus(models.StatusBan, orderID)
+
+	if err != nil {
+		logger.Error("[OrderService] SetBanOrderStatus Error SetOrderStatus: " + err.Error())
+		return custom_errors.ErrorSetStatus
 	}
 
 	return nil
