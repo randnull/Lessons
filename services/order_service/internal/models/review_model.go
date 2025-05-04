@@ -13,9 +13,9 @@ type Review struct {
 }
 
 type ReviewRequest struct {
-	ResponseID string `json:"response_id"`
-	Comment    string `json:"comment"`
-	Rating     int    `json:"rating"`
+	ResponseID string `json:"response_id" validate:"required"`
+	Comment    string `json:"comment" validate:"required"`
+	Rating     int    `json:"rating" validate:"required"`
 }
 
 type ReviewToBroker struct {
@@ -27,5 +27,5 @@ type ReviewToBroker struct {
 }
 
 type ReviewActive struct {
-	ReviewID string `json:"review_id"`
+	ReviewID string `json:"review_id" validate:"required"`
 }

@@ -6,13 +6,13 @@ import (
 )
 
 type NewOrder struct {
-	Title       string   `json:"title"`
-	Name        string   `json:"name"`
-	Description string   `json:"description"`
-	Grade       string   `json:"grade"`
-	MinPrice    int      `json:"min_price"`
-	MaxPrice    int      `json:"max_price"`
-	Tags        []string `json:"tags"`
+	Title       string   `json:"title" validate:"required"`
+	Name        string   `json:"name" validate:"required"`
+	Description string   `json:"description" validate:"required"`
+	Grade       string   `json:"grade" validate:"required"`
+	MinPrice    int      `json:"min_price" validate:"required"`
+	MaxPrice    int      `json:"max_price" validate:"required"`
+	Tags        []string `json:"tags" validate:"required"`
 }
 
 type CreateOrder struct {
@@ -75,4 +75,8 @@ type SuggestOrder struct {
 	Description     string `json:"description"`
 	MinPrice        int    `json:"min_price"`
 	MaxPrice        int    `json:"max_price"`
+}
+
+type ChangeActive struct {
+	IsActive bool `json:"is_active" validate:"required"`
 }

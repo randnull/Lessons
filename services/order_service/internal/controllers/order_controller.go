@@ -34,6 +34,10 @@ func (c *OrderController) CreateOrder(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
+	if err := models.Valid.Struct(order); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	orderID, err := c.OrderService.CreateOrder(&order, UserData)
 
 	if err != nil {
@@ -233,7 +237,6 @@ func (c *OrderController) SelectTutorToOrder(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error("SelectTutorToOrder failed: " + err.Error())
-
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to get orders" + err.Error()})
 	}
 
@@ -253,8 +256,11 @@ func (c *OrderController) SetActiveToOrder(ctx *fiber.Ctx) error {
 
 	if err := ctx.BodyParser(&IsActive); err != nil {
 		logger.Error("SetActiveToOrder failed: " + err.Error())
-
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request."})
+	}
+
+	if err := models.Valid.Struct(IsActive); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	err := c.OrderService.SetActiveOrderStatus(orderID, IsActive.IsActive, UserData)
@@ -282,7 +288,6 @@ func (c *OrderController) SuggestOrder(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error("SuggestOrder failed: " + err.Error())
-
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Failed to suggest order"})
 	}
 

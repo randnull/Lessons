@@ -196,6 +196,14 @@ func (orderServ *OrderService) GetAllOrders(UserData models.UserData) ([]*models
 }
 
 func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error {
+	if len(order.Title) < 5 || len(order.Title) > 150 {
+		return custom_errors.ErrorParams
+	}
+
+	if len(order.Description) < 5 || len(order.Description) > 500 {
+		return custom_errors.ErrorParams
+	}
+
 	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(orderID, UserData.UserID)
 
 	if !isExist || err != nil {

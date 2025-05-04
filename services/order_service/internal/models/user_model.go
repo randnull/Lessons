@@ -47,26 +47,22 @@ type TutorDetails struct {
 }
 
 type UpdateBioTutor struct {
-	Bio string `json:"bio"`
+	Bio string `json:"bio" validate:"required"`
 }
 
 type UpdateTagsTutor struct {
-	Tags []string `json:"tags"`
+	Tags []string `json:"tags" validate:"required"`
 }
 type ChangeTagsTutorToBroker struct {
 	TutorTelegramID int64    `json:"tutor_telegram_id"`
 	Tags            []string `json:"tags"`
 }
 
-type ChangeActive struct {
-	IsActive bool `json:"is_active"`
-}
-
 type UpdateNameTutor struct {
-	Name string `json:"name"`
+	Name string `json:"name" validate:"required"`
 }
 
 type BanUser struct {
-	TelegramID int64 `json:"telegram_id"`
-	IsBan      bool  `json:"is_ban"`
+	TelegramID int64 `json:"telegram_id" validate:"required"`
+	IsBan      bool  `json:"is_ban" validate:"required"`
 }

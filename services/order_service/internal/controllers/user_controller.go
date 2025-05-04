@@ -27,7 +27,6 @@ func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error("GetTutorsPagination failed: " + err.Error())
-
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Page param not correct"})
 	}
 
@@ -35,7 +34,6 @@ func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error("GetTutorsPagination failed: " + err.Error())
-
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "size param not correct"})
 	}
 
@@ -47,7 +45,6 @@ func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error("GetTutorsPagination failed: " + err.Error())
-
 		return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "users not found"})
 	}
 
@@ -66,7 +63,6 @@ func (u *UserController) GetMyTutorProfile(ctx *fiber.Ctx) error {
 	info, err := u.UserService.GetTutorInfoById(tutorID, UserData)
 	if err != nil {
 		logger.Error("GetMyTutorProfile failed: " + err.Error())
-
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot get data tutor" + err.Error()})
 	}
 
@@ -88,7 +84,6 @@ func (u *UserController) GetTutorInfoById(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error("GetTutorInfoById failed: " + err.Error())
-
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot get data tutor" + err.Error()})
 	}
 
@@ -106,11 +101,16 @@ func (u *UserController) UpdateTagsTutor(ctx *fiber.Ctx) error {
 
 	if err := ctx.BodyParser(&UpdateTagsTutor); err != nil {
 		logger.Error("UpdateTagsTutor failed: " + err.Error())
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "bad format"})
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid form"})
 	}
 
-	success, err := u.UserService.UpdateTagsTutor(UpdateTagsTutor.Tags, UserData)
-	if err != nil || !success {
+	if err := models.Valid.Struct(UpdateTagsTutor); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
+	_, err := u.UserService.UpdateTagsTutor(UpdateTagsTutor.Tags, UserData)
+
+	if err != nil {
 		logger.Error("UpdateTagsTutor failed: " + err.Error())
 
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot update tags"})
@@ -134,6 +134,10 @@ func (u *UserController) UpdateBioTutor(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
+	if err := models.Valid.Struct(UpdateBioModel); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	err := u.UserService.UpdateBioTutor(UpdateBioModel, UserData)
 
 	if err != nil {
@@ -153,6 +157,10 @@ func (u *UserController) CreateReview(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&ReviewRequest); err != nil {
 		logger.Error("CreateReview failed: " + err.Error())
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "bad format"})
+	}
+
+	if err := models.Valid.Struct(ReviewRequest); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	UserData, _ := ctx.Locals("user_data").(models.UserData)
@@ -180,7 +188,6 @@ func (u *UserController) GetReviewsByTutor(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		logger.Error("GetReviewsByTutor failed: " + err.Error())
-
 		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "cannot get auth" + err.Error()})
 	}
 	logger.Debug("GetReviewsByTutor successful")
@@ -219,9 +226,13 @@ func (u *UserController) ChangeTutorActive(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	IsOk, err := u.UserService.ChangeTutorActive(IsActive.IsActive, UserData)
+	if err := models.Valid.Struct(IsActive); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+	}
 
-	if err != nil || !IsOk {
+	_, err := u.UserService.ChangeTutorActive(IsActive.IsActive, UserData)
+
+	if err != nil {
 		logger.Error("ChangeTutorActive failed: " + err.Error())
 		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": "Cannot update status"})
 	}
@@ -241,6 +252,10 @@ func (u *UserController) UpdateNameTutor(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&UpdateNameTutor); err != nil {
 		logger.Error("UpdateNameTutor failed: " + err.Error())
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	if err := models.Valid.Struct(UpdateNameTutor); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	err := u.UserService.UpdateTutorName(UserData.UserID, UpdateNameTutor.Name, UserData)
@@ -264,6 +279,10 @@ func (u *UserController) SetReviewActive(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&ReviewActive); err != nil {
 		logger.Error("SetReviewActive parse failed: " + err.Error())
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	if err := models.Valid.Struct(ReviewActive); err != nil {
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	err := u.UserService.SetReviewActive(ReviewActive.ReviewID, UserData)

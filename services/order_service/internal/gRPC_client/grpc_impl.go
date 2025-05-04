@@ -9,7 +9,6 @@ import (
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 	"log"
 	"time"
 )
@@ -21,27 +20,8 @@ type GRPCClient struct {
 
 func NewGRPCClient(cfg config.GRPCConfig) *GRPCClient {
 	connectionLink := fmt.Sprintf("%v:%v", cfg.Host, cfg.Port)
-
-	dialOptions := []grpc.DialOption{
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-		grpc.WithDefaultServiceConfig(`{
-            "methodConfig": [{
-                "name": [{"service": "users.UserService"}],
-                "retryPolicy": {
-                    "MaxAttempts": 4,
-                    "InitialBackoff": "0.1s",
-                    "MaxBackoff": "1s",
-                    "BackoffMultiplier": 2.0,
-                    "RetryableStatusCodes": ["UNAVAILABLE", "DEADLINE_EXCEEDED"]
-                }
-            }]
-        }`),
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	conn, err := grpc.DialContext(ctx, connectionLink, dialOptions...)
+	
+	conn, err := grpc.Dial(connectionLink, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatal("error connection to grpc")
 	}

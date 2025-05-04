@@ -294,6 +294,32 @@ func (o *Repository) GetOrders() ([]*models.Order, error) {
 }
 
 func (o *Repository) GetOrdersPagination(limit int, offset int, tags string) ([]*models.Order, int, error) {
+	var orders []*models.Order
+
+	var args []interface{}
+	var countArgs []interface{}
+
+	countQuery := `
+		SELECT
+		    COUNT(*)
+		FROM orders WHERE status = $1`
+
+	countArgs = append(countArgs, models.StatusNew)
+
+	if tags != "" {
+		countQuery += ` AND $2 = ANY(tags)`
+		countArgs = append(countArgs, tags)
+	}
+
+	var total int
+
+	err := o.db.Get(&total, countQuery, countArgs...)
+
+	if err != nil {
+		logger.Error("[Postgres] GetOrdersPagination count error: " + err.Error())
+		return nil, 0, custom_errors.ErrorServiceError
+	}
+
 	query := `
 		SELECT 
 			id, 
@@ -310,31 +336,45 @@ func (o *Repository) GetOrdersPagination(limit int, offset int, tags string) ([]
 			created_at, 
 			updated_at 
 		FROM orders 
-		WHERE status = 'New'`
+		WHERE status = $1`
 
-	var args []interface{}
+	args = append(args, models.StatusNew)
 
 	if tags != "" {
-		query += ` AND $1 = ANY(tags)`
+		query += ` AND $2 = ANY(tags)`
 		args = append(args, tags)
+		query += ` ORDER BY created_at DESC LIMIT $3 OFFSET $4`
+	} else {
+		query += ` ORDER BY created_at DESC LIMIT $2 OFFSET $3`
 	}
 
-	query += ` ORDER BY created_at DESC LIMIT $` + strconv.Itoa(len(args)+1) + ` OFFSET $` + strconv.Itoa(len(args)+2)
 	args = append(args, limit, offset)
 
-	var orders []*models.Order
-
-	err := o.db.Select(&orders, query, args...)
+	err = o.db.Select(&orders, query, args...)
 
 	if err != nil {
 		logger.Error("[Postgres] GetOrdersPagination select error: " + err.Error())
 		return nil, 0, custom_errors.ErrorServiceError
 	}
 
-	return orders, len(orders), nil
+	return orders, total, nil
 }
 
 func (o *Repository) GetStudentOrdersPagination(limit int, offset int, studentID string) ([]*models.Order, int, error) {
+	const queryCountOrders = `
+		SELECT 
+		    COUNT(*) 
+		FROM orders 
+		WHERE student_id = $1`
+
+	var total int
+
+	err := o.db.Get(&total, queryCountOrders, studentID)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
 	var orders []*models.Order
 
 	const querySelectOrders = `
@@ -357,14 +397,14 @@ func (o *Repository) GetStudentOrdersPagination(limit int, offset int, studentID
 		ORDER BY created_at DESC 
 		LIMIT $2 OFFSET $3`
 
-	err := o.db.Select(&orders, querySelectOrders, studentID, limit, offset)
+	err = o.db.Select(&orders, querySelectOrders, studentID, limit, offset)
 
 	if err != nil {
 		logger.Error("[Postgres] GetStudentOrdersPagination select error: " + err.Error())
 		return nil, 0, custom_errors.ErrorServiceError
 	}
 
-	return orders, len(orders), nil
+	return orders, total, nil
 }
 
 func (o *Repository) GetStudentOrders(studentID string) ([]*models.Order, error) {

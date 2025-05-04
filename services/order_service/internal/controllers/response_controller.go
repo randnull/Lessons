@@ -71,8 +71,7 @@ func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
 
 	if err := ctx.BodyParser(&NewResponse); err != nil {
 		logger.Error("ResponseToOrder failed: " + err.Error())
-
-		return fiber.NewError(fiber.StatusBadRequest, err.Error())
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	UserData, _ := ctx.Locals("user_data").(models.UserData)
