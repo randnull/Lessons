@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	lg "github.com/randnull/Lessons/internal/logger"
@@ -246,12 +247,16 @@ func (u *UserService) GetTutorInfoById(tutorID string, UserData models.UserData)
 }
 
 func (u *UserService) ChangeTutorActive(isActive bool, UserData models.UserData) (bool, error) {
+	lg.Info(fmt.Sprintf("[UserService] ChangeTutorActive. isActive: %v. UserID: %v. Role: %v", isActive, UserData.UserID, UserData.Role))
+
 	isOk, err := u.GRPCClient.ChangeTutorActive(context.Background(), UserData.UserID, isActive)
 
 	if err != nil {
+		lg.Error(fmt.Sprintf("[UserService] ChangeTutorActive failed. isActive: %v. UserID: %v. Role: %v. Error: %v", isActive, UserData.UserID, UserData.Role, err.Error()))
 		return false, err
 	}
 
+	lg.Info(fmt.Sprintf("[UserService] ChangeTutorActive success. isActive: %v. UserID: %v. Role: %v", isActive, UserData.UserID, UserData.Role))
 	return isOk, nil
 }
 

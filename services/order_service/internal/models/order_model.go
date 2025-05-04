@@ -56,14 +56,6 @@ type OrderDetails struct {
 	Responses []Response `json:"responses"`
 }
 
-//type OrderToBroker struct {
-//	ID        string   `json:"order_id"`
-//	StudentID int64    `json:"student_id"`
-//	Title     string   `json:"order_name"`
-//	Tags      []string `json:"tags"`
-//	Status    string   `json:"status"`
-//}
-
 type ChangeActive struct {
-	IsActive bool `json:"is_active" validate:"required"`
+	IsActive bool `json:"is_active"`
 }

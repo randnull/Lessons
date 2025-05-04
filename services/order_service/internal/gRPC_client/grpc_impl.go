@@ -7,6 +7,7 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
+	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"google.golang.org/grpc"
 	"log"
@@ -20,7 +21,7 @@ type GRPCClient struct {
 
 func NewGRPCClient(cfg config.GRPCConfig) *GRPCClient {
 	connectionLink := fmt.Sprintf("%v:%v", cfg.Host, cfg.Port)
-	
+
 	conn, err := grpc.Dial(connectionLink, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatal("error connection to grpc")
@@ -271,6 +272,8 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string, isOwn
 }
 
 func (g *GRPCClient) ChangeTutorActive(ctx context.Context, tutorID string, active bool) (bool, error) {
+	lg.Info(fmt.Sprintf("[gRPC] ChangeTutorActive. isActive: %v. tutorID: %v.", active, tutorID))
+
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
@@ -278,10 +281,13 @@ func (g *GRPCClient) ChangeTutorActive(ctx context.Context, tutorID string, acti
 		Id:     tutorID,
 		Active: active,
 	})
+
 	if err != nil {
+		lg.Error(fmt.Sprintf("[gRPC] ChangeTutorActive. isActive: %v. tutorID: %v.", active, tutorID))
 		return false, err
 	}
 
+	lg.Info(fmt.Sprintf("[gRPC] ChangeTutorActive success. isActive: %v. tutorID: %v.", active, tutorID))
 	return resp.Success, nil
 }
 
