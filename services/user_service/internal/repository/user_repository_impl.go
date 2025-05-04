@@ -707,19 +707,13 @@ func (r *Repository) SetReviewActive(reviewID, tutorID string) error {
 		FROM reviews
 		WHERE tutor_id = $1 AND is_active = true`
 
-	var avgRating sql.NullInt32
+	var rating int32
 
-	err = tx.QueryRow(queryGetAvgRating, tutorID).Scan(&avgRating)
+	err = tx.QueryRow(queryGetAvgRating, tutorID).Scan(&rating)
 
 	if err != nil {
 		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
 		return custom_errors.ErrorServiceError
-	}
-
-	rating := 0
-
-	if avgRating.Valid {
-		rating = int(avgRating.Int32)
 	}
 
 	const queryUpdateTutor = `
@@ -728,8 +722,9 @@ func (r *Repository) SetReviewActive(reviewID, tutorID string) error {
 		WHERE id = $2`
 
 	_, err = tx.Exec(queryUpdateTutor, rating, tutorID)
+
 	if err != nil {
-		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
+		lg.Error("[Postgres] SetReviewActive failed queryUpdateTutor: " + err.Error())
 		return custom_errors.ErrorServiceError
 	}
 

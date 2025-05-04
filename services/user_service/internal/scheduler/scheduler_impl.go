@@ -3,6 +3,7 @@ package scheduler
 import (
 	"context"
 	"fmt"
+	"github.com/go-co-op/gocron"
 	"github.com/randnull/Lessons/internal/config"
 	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
@@ -15,52 +16,55 @@ type Scheduler struct {
 	cfg            *config.SchedulerConfig
 	userRepository repository.UserRepository
 	ProducerBroker rabbitmq.RabbitMQInterface
+	scheduler      *gocron.Scheduler
 }
 
 func NewScheduler(cfg *config.SchedulerConfig, userRepo repository.UserRepository, producerBroker rabbitmq.RabbitMQInterface) *Scheduler {
+	scheduler := gocron.NewScheduler(time.UTC)
 	return &Scheduler{
 		cfg:            cfg,
 		userRepository: userRepo,
 		ProducerBroker: producerBroker,
+		scheduler:      scheduler,
 	}
 }
 
 func (s *Scheduler) RunResponseChecker(ctx context.Context) {
-	lg.Info("[Scheduler] start working")
+	lg.Info(fmt.Sprintf("[Scheduler] start initing at %v", time.Now()))
 
-	ticker := time.NewTicker(24 * time.Hour)
-	defer ticker.Stop()
+	_, err := s.scheduler.Every(1).Week().Sunday().At("20:30").Do(func() {
+		lg.Info("[Scheduler] starting new scheduled job")
+		tutors, err := s.userRepository.GetAllTutorsResponseCondition(5)
+		if err != nil {
+			lg.Error("[Scheduler] cannot get tutors, error: " + err.Error())
+		}
+		lg.Info(fmt.Sprintf("[Scheduler] get %v tutors to update response count", len(tutors)))
 
-	func() {
-		for {
-			select {
-			case <-ctx.Done():
-				lg.Info("[Scheduler] stopped")
-				ticker.Stop()
-				return
-			case <-ticker.C:
-				lg.Info("[Scheduler] starting new scheduled job")
-				tutors, err := s.userRepository.GetAllTutorsResponseCondition(5)
-				if err != nil {
-					lg.Error("[Scheduler] cannot get tutors, error: " + err.Error())
-				}
-				lg.Info(fmt.Sprintf("[Scheduler] get %v tutors to update response count", len(tutors)))
-
-				for _, tutor := range tutors {
-					totalResponses, err := s.userRepository.AddResponses(tutor.TelegramID, int(5-tutor.ResponseCount))
-					if err != nil {
-						lg.Error("[Scheduler] cannot get tutors, error: " + err.Error())
-					}
-					NotifyModel := models.AddResponsesToTutor{
-						TutorTelegramID: tutor.TelegramID,
-						ResponseCount:   totalResponses,
-					}
-					err = s.ProducerBroker.Publish("add_responses", &NotifyModel)
-					if err != nil {
-						lg.Error("[Scheduler] cannot pushed to broker, error: " + err.Error())
-					}
-				}
+		for _, tutor := range tutors {
+			totalResponses, err := s.userRepository.AddResponses(tutor.TelegramID, int(5-tutor.ResponseCount))
+			if err != nil {
+				lg.Error("[Scheduler] cannot get tutors, error: " + err.Error())
+			}
+			NotifyModel := models.AddResponsesToTutor{
+				TutorTelegramID: tutor.TelegramID,
+				ResponseCount:   totalResponses,
+			}
+			err = s.ProducerBroker.Publish("add_responses", &NotifyModel)
+			if err != nil {
+				lg.Error("[Scheduler] cannot pushed to broker, error: " + err.Error())
 			}
 		}
-	}()
+	})
+
+	if err != nil {
+		lg.Error(fmt.Sprintf("[Scheduler] error with scheduler: %v", err.Error()))
+		return
+	}
+
+	s.scheduler.StartAsync()
+	lg.Info("[Scheduler] scheduler started. Waiting Sunday 20:30 UTC...")
+
+	<-ctx.Done()
+	lg.Info("[Scheduler] stopped")
+	s.scheduler.Stop()
 }
