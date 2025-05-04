@@ -2,11 +2,6 @@ package models
 
 import "time"
 
-type CreateUser struct {
-	Name       string `json:"name"`
-	TelegramId int64  `json:"telegram_id"`
-}
-
 type TutorsPagination struct {
 	Tutors []*TutorForList
 	Pages  int
@@ -47,22 +42,23 @@ type TutorDetails struct {
 }
 
 type UpdateBioTutor struct {
-	Bio string `json:"bio" validate:"required"`
+	Bio string `json:"bio" validate:"required,min=10,max=1000"`
 }
 
 type UpdateTagsTutor struct {
-	Tags []string `json:"tags" validate:"required"`
+	Tags []string `json:"tags" validate:"required,min=1,max=10,dive,required"`
 }
+
+type UpdateNameTutor struct {
+	Name string `json:"name" validate:"required,min=2,max=50"`
+}
+
 type ChangeTagsTutorToBroker struct {
 	TutorTelegramID int64    `json:"tutor_telegram_id"`
 	Tags            []string `json:"tags"`
 }
 
-type UpdateNameTutor struct {
-	Name string `json:"name" validate:"required"`
-}
-
 type BanUser struct {
-	TelegramID int64 `json:"telegram_id" validate:"required"`
+	TelegramID int64 `json:"telegram_id" validate:"required,gt=0"`
 	IsBan      bool  `json:"is_ban" validate:"required"`
 }

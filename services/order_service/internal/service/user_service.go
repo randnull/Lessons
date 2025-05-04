@@ -276,11 +276,6 @@ func (u *UserService) SetReviewActive(reviewID string, UserData models.UserData)
 }
 
 func (u *UserService) BanUser(banUser models.BanUser, UserData models.UserData) error {
-	if banUser.TelegramID == 0 {
-		lg.Error("[UserService] BanUser error: telegramID dont provided")
-		return errors.New("telegramID dont provided")
-	}
-
 	isOk, err := u.GRPCClient.BanUser(context.Background(), banUser.TelegramID, banUser.IsBan)
 
 	if err != nil || !isOk {

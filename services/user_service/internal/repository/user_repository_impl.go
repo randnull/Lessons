@@ -402,6 +402,20 @@ func (r *Repository) UpdateTutorName(tutorID string, name string) error {
 
 // этого монстра нужно отрефакторить
 func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) ([]*pb.Tutor, int, error) {
+	const queryCount = `
+		SELECT 
+			COUNT(*)
+		FROM users u
+		JOIN tutors t ON u.id = t.id
+		WHERE u.role = $1 AND t.is_active = true AND u.is_banned = false`
+
+	var total int
+	err := r.db.QueryRow(queryCount, models.RoleTutor).Scan(&total)
+
+	if err != nil {
+		return nil, 0, err
+	}
+
 	lg.Info("[Postgres] GetAllTutorsPagination called.")
 
 	queryGetAllPagination := `
@@ -469,7 +483,7 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 
 	lg.Info("[Postgres] GetAllTutorsPagination success.")
 
-	return tutors, len(tutors), nil
+	return tutors, total, nil
 }
 
 func (r *Repository) CreateReview(tutorID, orderID string, rating int, comment string) (string, error) {

@@ -6,13 +6,13 @@ import (
 )
 
 type NewOrder struct {
-	Title       string   `json:"title" validate:"required"`
-	Name        string   `json:"name" validate:"required"`
-	Description string   `json:"description" validate:"required"`
+	Title       string   `json:"title" validate:"required,min=5,max=100"`
+	Name        string   `json:"name" validate:"required,min=2,max=50"`
+	Description string   `json:"description" validate:"required,min=10,max=1000"`
 	Grade       string   `json:"grade" validate:"required"`
-	MinPrice    int      `json:"min_price" validate:"required"`
-	MaxPrice    int      `json:"max_price" validate:"required"`
-	Tags        []string `json:"tags" validate:"required"`
+	MinPrice    int      `json:"min_price" validate:"gte=0"`
+	MaxPrice    int      `json:"max_price" validate:"gte=0"`
+	Tags        []string `json:"tags" validate:"required,min=1,max=10,dive,required"`
 }
 
 type CreateOrder struct {
@@ -21,12 +21,9 @@ type CreateOrder struct {
 }
 
 type UpdateOrder struct {
-	Title       string   `json:"title,omitempty"`
-	Description string   `json:"description,omitempty"`
-	Grade       string   `json:"grade,omitempty"`
-	MinPrice    int      `json:"min_price,omitempty"`
-	MaxPrice    int      `json:"max_price,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
+	Title       string `json:"title,omitempty" validate:"omitempty,min=5,max=100"`
+	Description string `json:"description,omitempty" validate:"omitempty,min=10,max=1000"`
+	Grade       string `json:"grade,omitempty" validate:"omitempty,min=1,max=20"`
 }
 
 type OrderPagination struct {
