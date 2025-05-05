@@ -215,3 +215,4 @@ cython_debug/
 *yarn-error.log*
 
 *.properties
+*.txt
