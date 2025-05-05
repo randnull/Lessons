@@ -9,6 +9,7 @@ import (
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
+	"github.com/randnull/Lessons/internal/utils"
 )
 
 type OrderServiceInt interface {
@@ -61,6 +62,10 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 		return "", custom_errors.ErrorParams
 	}
 
+	if utils.ContainsBadWords(order.Title) || utils.ContainsBadWords(order.Description) {
+		return "", custom_errors.ErrorBanWords
+	}
+
 	_, err := orderServ.GRPCClient.GetStudent(context.Background(), UserData.UserID)
 
 	if err != nil {
@@ -88,7 +93,7 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 		Status:    models.StatusNew,
 	}
 
-	err = orderServ.ProducerBroker.Publish("new_orders", OrderToBroker)
+	err = orderServ.ProducerBroker.Publish(models.QueueNewOrder, OrderToBroker)
 	if err != nil {
 		logger.Error("[OrderService] CreateOrder Error publishing order: " + err.Error())
 	}
@@ -202,6 +207,10 @@ func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateO
 
 	if len(order.Description) < 5 || len(order.Description) > 500 {
 		return custom_errors.ErrorParams
+	}
+
+	if utils.ContainsBadWords(order.Title) || utils.ContainsBadWords(order.Description) {
+		return custom_errors.ErrorBanWords
 	}
 
 	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(orderID, UserData.UserID)

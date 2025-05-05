@@ -5,14 +5,14 @@ import (
 	"os"
 )
 
-var (
-	infoLogger  *log.Logger
-	errorLogger *log.Logger
-	debugLogger *log.Logger
-)
+var infoLogger *log.Logger
+var errorLogger *log.Logger
+var debugLogger *log.Logger
 
 func InitLogger() error {
-	if _, err := os.Stat("./logs"); os.IsNotExist(err) {
+	_, err := os.Stat("./logs")
+
+	if os.IsNotExist(err) {
 		err := os.Mkdir("./logs", 0755)
 		if err != nil {
 			return err

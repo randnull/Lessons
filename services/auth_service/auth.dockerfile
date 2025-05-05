@@ -2,10 +2,12 @@ FROM golang:1.23-alpine
 
 WORKDIR /app
 
-COPY ./go.mod ./go.sum ./
+COPY ./auth_service/go.mod ./auth_service/go.sum ./
+
 RUN go mod download
 
-COPY . .
+COPY ./auth_service/cmd ./cmd
+COPY ./auth_service/internal ./internal
 
 RUN go build -o /auth-service ./cmd/main_service/main.go
 

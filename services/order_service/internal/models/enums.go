@@ -11,4 +11,5 @@ const TutorType = "Tutor"
 const AdminType = "Admin"
 const AnyType = "Any"
 
-const queueNewOrder = "new_order"
+const QueueNewOrder = "new_orders"
+const QueueNewResponse = "order_response"

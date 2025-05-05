@@ -10,6 +10,7 @@ import (
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
+	"github.com/randnull/Lessons/internal/utils"
 )
 
 type ResponseServiceInt interface {
@@ -67,6 +68,10 @@ func (s *ResponseService) GetResponseById(ResponseID string, UserData models.Use
 func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.NewResponseModel, UserData models.UserData) (string, error) {
 	if UserData.Role != models.TutorType {
 		return "", custom_errors.ErrNotAllowed
+	}
+
+	if utils.ContainsBadWords(newResponse.Greetings) {
+		return "", custom_errors.ErrorBanWords
 	}
 
 	if s.orderRepository.CheckResponseExist(UserData.UserID, orderID) {
@@ -135,7 +140,7 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		Title:      Order.Title,
 	}
 
-	err = s.ProducerBroker.Publish("order_response", ResponseToBroker)
+	err = s.ProducerBroker.Publish(models.QueueNewResponse, ResponseToBroker)
 
 	if err != nil {
 		logger.Error("[OrderService] ResponseToOrder Error publishing order: " + err.Error())

@@ -10,6 +10,7 @@ import (
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
+	"github.com/randnull/Lessons/internal/utils"
 	"strconv"
 	"time"
 )
@@ -72,6 +73,10 @@ func (u *UserService) GetAllUsers(UserData models.UserData) ([]*models.User, err
 }
 
 func (u *UserService) UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error {
+	if utils.ContainsBadWords(BioModel.Bio) {
+		return custom_errors.ErrorBanWords
+	}
+
 	_, err := u.GRPCClient.UpdateBioTutor(context.Background(), BioModel.Bio, UserData.UserID)
 	//success
 	if err != nil {
@@ -115,6 +120,13 @@ func (u *UserService) GetAllTutorsPagination(page int, size int, tag string, Use
 
 func (u *UserService) UpdateTagsTutor(tags []string, UserData models.UserData) (bool, error) {
 	success, err := u.GRPCClient.UpdateTagsTutor(context.Background(), tags, UserData.UserID)
+
+	for _, tag := range tags {
+		if utils.ContainsBadWords(tag) {
+			return false, custom_errors.ErrorBanWords
+		}
+	}
+
 	if err != nil {
 		lg.Error("[UserService] GetAllTutorsPagination error UpdateTagsTutor: " + err.Error())
 		return false, err
@@ -137,6 +149,10 @@ func (u *UserService) UpdateTagsTutor(tags []string, UserData models.UserData) (
 }
 
 func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData models.UserData) (string, error) {
+	if utils.ContainsBadWords(ReviewRequest.Comment) {
+		return "", custom_errors.ErrorBanWords
+	}
+
 	response, err := u.orderRepository.GetResponseById(ReviewRequest.ResponseID)
 
 	if err != nil {
@@ -261,6 +277,10 @@ func (u *UserService) ChangeTutorActive(isActive bool, UserData models.UserData)
 }
 
 func (u *UserService) UpdateTutorName(tutorID, name string, UserData models.UserData) error {
+	if utils.ContainsBadWords(name) {
+		return custom_errors.ErrorBanWords
+	}
+
 	isOk, err := u.GRPCClient.UpdateNameTutor(context.Background(), tutorID, name)
 
 	if err != nil || !isOk {

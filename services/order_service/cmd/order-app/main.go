@@ -5,6 +5,7 @@ import (
 	"github.com/randnull/Lessons/internal/app"
 	"github.com/randnull/Lessons/internal/config"
 	lg "github.com/randnull/Lessons/internal/logger"
+	"github.com/randnull/Lessons/internal/utils"
 	"log"
 	"os"
 	"os/signal"
@@ -32,15 +33,22 @@ func main() {
 
 	go func() {
 		<-sigs
-		log.Println("Graceful shutdown signal received")
+		lg.Info("Graceful shutdown signal received")
 		stop()
 	}()
+
+	err = utils.LoadBadWords()
+
+	if err != nil {
+		log.Fatalf("Ban list error: %v", err.Error())
+		return
+	}
 
 	application := app.NewApp(NewConfig)
 
 	err = application.Run(ctx)
 
 	if err != nil {
-		log.Fatal("app run error: " + err.Error())
+		log.Fatalf("app run error: %v", err.Error())
 	}
 }
