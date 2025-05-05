@@ -65,7 +65,7 @@ func (s *ResponseService) GetResponseById(ResponseID string, UserData models.Use
 }
 
 func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.NewResponseModel, UserData models.UserData) (string, error) {
-	if UserData.Role != "Tutor" {
+	if UserData.Role != models.TutorType {
 		return "", custom_errors.ErrNotAllowed
 	}
 

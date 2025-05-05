@@ -258,8 +258,11 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string, isOwn
 
 	return &models.TutorDetails{
 		Tutor: models.User{
-			Id:   resp.User.Id,
-			Name: resp.User.Name,
+			Id:         resp.User.Id,
+			Name:       resp.User.Name,
+			TelegramID: resp.User.TelegramId,
+			Role:       resp.User.Role,
+			IsBanned:   resp.User.IsBanned,
 		},
 		Bio:           resp.Bio,
 		ResponseCount: resp.ResponseCount,

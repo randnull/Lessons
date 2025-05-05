@@ -35,7 +35,7 @@ func main() {
 		log.Println("Graceful shutdown signal received")
 		stop()
 	}()
-	
+
 	application := app.NewApp(NewConfig)
 
 	err = application.Run(ctx)

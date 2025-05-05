@@ -10,24 +10,29 @@ import (
 )
 
 type UserServiceInt interface {
+	CreateUser(user models.CreateUser) (string, error)
+
 	GetUserById(UserId string) (*models.UserDB, error)
 	GetStudentById(UserId string) (*models.UserDB, error)
 	GetTutorById(TutorID string) (*models.TutorDB, error)
 	GetUserByTelegramId(TelegramId int64, userRole string) (*models.UserDB, error)
-	UpdateNameTutor(tutorID string, name string) error
-	CreateUser(user models.CreateUser) (string, error)
 	GetAllUsers() ([]*pb.User, error)
 	GetTutorsPagination(page int, size int, tag string) (*pb.GetTutorsPaginationResponse, error)
-	UpdateBioTutor(userID string, bio string) error
-	UpdateTutorTags(tutorID string, tags []string) error
-	CreateReview(tutorID, orderID string, rating int, comment string) (string, error)
+	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
+
 	GetReviews(tutorID string) ([]models.Review, error)
 	GetReviewById(reviewID string) (*models.Review, error)
-	GetTutorInfoById(tutorID string) (*models.TutorDetails, error)
-	ChangeTutorActive(tutorID string, IsActive bool) error
+	CreateReview(tutorID, orderID string, rating int, comment string) (string, error)
+	SetReviewActive(reviewID string) error
+
 	CreateNewResponse(tutorID string) error
 	AddResponses(tutorID int64, responseCount int) (int, error)
-	SetReviewActive(reviewID string) error
+
+	ChangeTutorActive(tutorID string, IsActive bool) error
+	UpdateNameTutor(tutorID string, name string) error
+	UpdateBioTutor(userID string, bio string) error
+	UpdateTutorTags(tutorID string, tags []string) error
+
 	BanUser(telegramID int64, isBanned bool) error
 }
 
