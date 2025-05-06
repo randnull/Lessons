@@ -44,7 +44,10 @@ func NewRepository(cfg config.DBConfig) *Repository {
 		log.Fatal("[Postgres] failed to connect" + err.Error())
 	}
 
-	err = db.PingContext(context.Background())
+	PingCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err = db.PingContext(PingCtx)
 
 	if err != nil {
 		log.Fatal("[Postgres] failed to ping" + err.Error())
@@ -673,4 +676,8 @@ func (o *Repository) CheckOrderByStudentID(orderID string, studentID string) (bo
 	}
 
 	return isExist, nil
+}
+
+func (o *Repository) GetDB() *sqlx.DB {
+	return o.db
 }

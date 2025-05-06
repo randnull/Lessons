@@ -114,6 +114,11 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		return "", err
 	}
 
+	if Order.Status != models.StatusNew {
+		logger.Info("[ResponseService] ResponseToOrder GetOrderByID InActive Order: ")
+		return "", custom_errors.ErrorBadStatus
+	}
+
 	StudentInfo, err := s.GRPCClient.GetStudent(context.Background(), Order.StudentID)
 
 	if err != nil {

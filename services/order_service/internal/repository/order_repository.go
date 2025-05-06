@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/jmoiron/sqlx"
 	"github.com/randnull/Lessons/internal/models"
 )
 
@@ -32,4 +33,6 @@ type OrderRepository interface {
 	CheckOrderByStudentID(orderID string, studentID string) (bool, error)
 	CheckResponseExist(TutorID, OrderID string) bool
 	GetResponseById(ResponseID string) (*models.ResponseDB, error)
+
+	GetDB() *sqlx.DB
 }

@@ -93,7 +93,7 @@ func (a *App) Run(ctx context.Context) error {
 	anyType := models.AnyType
 
 	orders.Post("/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.CreateOrder)
-	orders.Get("/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetAllUsersOrders)
+	//orders.Get("/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetAllUsersOrders)
 	orders.Get("/pagination/student", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetStudentOrdersPagination)
 	orders.Put("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.UpdateOrderByID)
 	orders.Get("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.GetOrderByID)
@@ -102,18 +102,15 @@ func (a *App) Run(ctx context.Context) error {
 	orders.Post("/select/id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.SelectTutorToOrder)
 	orders.Post("/suggest/tutor_id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.SuggestOrder)
 
-	// Работа с заказами для репетиторов
 	orders.Get("/mini/id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetOrderByIdTutor)
 	orders.Get("/pagination", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetOrdersPagination)
 
-	// Группа откликов
 	responses := router.Group("api/responses")
 
 	responses.Post("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.responseControllers.ResponseToOrder)
 	responses.Get("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, anyType), a.responseControllers.GetResponseById)
 	responses.Get("/list", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.responseControllers.GetTutorsResponses)
 
-	// Группа пользователей
 	users := router.Group("/api/users")
 
 	users.Get("/pagination", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.userControllers.GetTutorsPagination)
@@ -145,20 +142,20 @@ func (a *App) Run(ctx context.Context) error {
 	go func() {
 		err := router.Listen(ListenPort)
 		if err != nil {
-			log.Printf("Server stopped with error: %v", err)
+			log.Printf("server stopped with error: %v", err)
 		}
 	}()
 
 	<-ctx.Done()
 
-	lg.Info("Server graceful shutdown")
+	lg.Info("server graceful shutdown")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	err := router.ShutdownWithContext(shutdownCtx)
 	if err != nil {
-		log.Printf("Server shutdown error: %v", err)
+		log.Printf("server shutdown error: %v", err)
 		return err
 	}
 

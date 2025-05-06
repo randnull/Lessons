@@ -35,6 +35,7 @@ type Order struct {
 	CreatedAt     time.Time      `json:"created_at" db:"created_at"`
 	UpdatedAt     time.Time      `json:"updated_at" db:"updated_at"`
 }
+
 type UpdateOrder struct {
 	Title       string `json:"title,omitempty" validate:"omitempty,min=5,max=100"`
 	Description string `json:"description,omitempty" validate:"omitempty,min=10,max=1000"`
