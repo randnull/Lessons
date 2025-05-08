@@ -1,10 +1,14 @@
+from pydantic import Field
 from pydantic_settings import BaseSettings
 import os
+
+from AnswerEngine.src.logger.logger import logger
+
 
 class Settings(BaseSettings):
     BOT_TOKEN: str = os.getenv('BOT_STUDENT_TOKEN')
     BOT_TOKEN_TUTOR: str = os.getenv('BOT_TUTOR_TOKEN')
-    FQND_HOST: str = os.getenv('FQND_HOST', "lessonsmy.tech")
+    FQND_HOST: str = os.getenv('FQND_HOST')
     ANSWER_DB_USER: str = os.getenv('ANSWER_DB_USER', "postgres")
     ANSWER_DB_PASSWORD: str = os.getenv('ANSWER_DB_PASSWORD', "postgres")
     ANSWER_DB_NAME: str = os.getenv('ANSWER_DB_NAME', "response_database")
@@ -21,6 +25,7 @@ class Settings(BaseSettings):
     SUPPORT_CHANNEL: str = os.getenv('SUPPORT_CHANNEL', "@support")
 
     def get_webhook_url(self) -> str:
-            return f"https://{self.FQND_HOST}/webhook"
+        logger.info(f"https://{self.FQND_HOST}/webhook")
+        return f"https://{self.FQND_HOST}/webhook"
 
 settings = Settings()

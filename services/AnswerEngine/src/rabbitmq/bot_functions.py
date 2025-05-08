@@ -4,10 +4,9 @@ from AnswerEngine.src.TelegramBot.botStudent import bot_student
 from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
 from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard, review_keyboard
 from AnswerEngine.src.logger.logger import logger
-from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto, SelectedDto, \
+from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, SelectedDto, \
     ReviewDto, OrderDto, AddResponseDto
 
-from AnswerEngine.src.config.settings import settings
 
 async def proceed_order(order_create: NewOrderDto) -> None:
     message = (

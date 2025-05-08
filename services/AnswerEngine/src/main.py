@@ -38,16 +38,15 @@ async def lifespan(app: FastAPI):
     try:
         await bot_student.set_webhook(url=webhook_url_student, allowed_updates=dp_student.resolve_used_update_types(),
                                       drop_pending_updates=True)
-    except Exception as ex:
-        logger.error("student bot webhook failed: %s", str(ex))
         logger.info("student bot webhook ok: %s", webhook_url_student)
-
+    except Exception as ex:
+        logger.error("student bot webhook: %s failed: %s", webhook_url_student, str(ex))
     try:
         await bot_tutor.set_webhook(url=webhook_url_tutor, allowed_updates=dp_tutor.resolve_used_update_types(),
                                 drop_pending_updates=True)
         logger.info("tutors bot webhook ok: %s", webhook_url_tutor)
     except Exception as ex:
-        logger.error("tutor bot webhook ok: %s", str(ex))
+        logger.error("tutor bot webhook %s failed: %s", webhook_url_tutor, str(ex))
     await OrderConsumer.connect()
     await ResponseConsumer.connect()
     await SuggestConsumer.connect()
@@ -85,4 +84,4 @@ app.include_router(webhook_router)
 
 if __name__ == "__main__":
     logger.info(f"Starting AnswerEngine server. Port: {settings.SERVER_PORT}")
-    uvicorn.run("main:app", host="0.0.0.0", port=settings.SERVER_PORT) # , workers=5
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.SERVER_PORT)

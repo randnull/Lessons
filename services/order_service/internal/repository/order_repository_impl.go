@@ -139,7 +139,7 @@ func (o *Repository) UpdateOrder(orderID string, order *models.UpdateOrder) erro
 	values = append(values, currentTime)
 	index += 1
 
-	if index == 1 {
+	if index == 2 {
 		return nil
 	}
 

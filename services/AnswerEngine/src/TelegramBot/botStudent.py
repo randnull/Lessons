@@ -1,10 +1,6 @@
 import datetime
-import socket
 
-import psutil
-from aiogram import Bot, Dispatcher, F
-from aiogram.filters import Command
-
+from aiogram import Bot, Dispatcher
 
 from AnswerEngine.src.TelegramBot.routers.stundents_routers import student_router
 from AnswerEngine.src.config.settings import settings
@@ -14,6 +10,7 @@ bot_student = Bot(token=settings.BOT_TOKEN)
 dp_student = Dispatcher()
 
 dp_student.include_router(student_router)
+
 
 async def start_student() -> None:
     try:
