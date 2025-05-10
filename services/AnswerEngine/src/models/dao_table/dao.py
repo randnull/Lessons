@@ -6,6 +6,7 @@ import enum
 from AnswerEngine.common.database_connection.base import Base
 
 class OrderStatus(str, Enum):
+    WAITING = "Waiting"
     NEW = "New"
     SELECTED = "Selected"
     CLOSED = "Closed"

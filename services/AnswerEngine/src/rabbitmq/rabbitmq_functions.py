@@ -4,6 +4,7 @@ from aio_pika import connect, IncomingMessage
 
 from AnswerEngine.src.functions.order_functions import create_new_order, change_order_status_to_selected, suggest_order
 from AnswerEngine.src.functions.tags_functions import update_tags
+from AnswerEngine.src.models.dao_table.dao import OrderStatus
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto, SelectedDto, \
     ReviewDto, AddResponseDto
 from AnswerEngine.src.rabbitmq.bot_functions import proceed_order, proceed_response, proceed_suggest, \
@@ -15,10 +16,13 @@ async def new_order_func(message: IncomingMessage):
         body = json.loads(message.body.decode())
         new_order: NewOrderDto = NewOrderDto(**body)
 
-        tutors_to_notify = await create_new_order(new_order)
+        if new_order.status == OrderStatus.NEW:
+            tutors_to_notify = await create_new_order(new_order)
 
-        await proceed_order(new_order)
-        await proceed_order_to_tutors(new_order, tutors_to_notify)
+            await proceed_order(new_order)
+            await proceed_order_to_tutors(new_order, tutors_to_notify)
+        else:
+            await proceed_order(new_order)
 
 async def response_func(message: IncomingMessage):
     async with message.process():

@@ -132,6 +132,7 @@ func (a *App) Run(ctx context.Context) error {
 
 	admins.Post("/ban/user/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.BanUser)
 	admins.Post("/ban/order/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.orderControllers.SetBanOrder)
+	admins.Post("/approve/order/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.orderControllers.SetApprovedOrder)
 	admins.Get("/orders", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.orderControllers.GetAllOrders)
 	admins.Get("/order/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.orderControllers.GetOrderByIdTutor)
 	admins.Get("/users", controllers.TokenAuthMiddleware(a.cfg.BotConfig, adminType), a.userControllers.GetAllUsers)

@@ -4,15 +4,23 @@ from AnswerEngine.src.TelegramBot.botStudent import bot_student
 from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
 from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard, review_keyboard
 from AnswerEngine.src.logger.logger import logger
+from AnswerEngine.src.models.dao_table.dao import OrderStatus
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, SelectedDto, \
     ReviewDto, OrderDto, AddResponseDto
 
 
 async def proceed_order(order_create: NewOrderDto) -> None:
-    message = (
+    messageWaiting = (
         f"<b>Вы успешно создали новый заказ: {order_create.order_name}!</b>\n\n"
-        "📩 <i>Мы сообщим вам, как только подберем подходящего исполнителя.</i>"
+        "📩 <i>Заказ находится на рассмотрении у администрации</i>"
     )
+
+    messageNew = (
+        f"📩 <i>Заказ:{order_create.order_name} был одобрен администрацией для размещения!\n</i>"
+        "📩 <i>Мы сообщим вам, как только исполнитель отправит предложение.</i>"
+    )
+
+    message = messageWaiting if order_create.status == OrderStatus.WAITING else messageNew
 
     try:
         await bot_student.send_message(chat_id=str(order_create.student_id), text=message, parse_mode="html")

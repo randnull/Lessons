@@ -21,6 +21,7 @@ type OrderServiceInt interface {
 	SuggestOrderToTutor(orderID, tutorID string, UserData models.UserData) error
 	SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error
 	SetBanOrderStatus(orderID string, UserData models.UserData) error
+	SetApprovedOrderStatus(orderID string, UserData models.UserData) error
 
 	// order getting
 	GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error)
@@ -90,7 +91,7 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 		StudentID: UserData.TelegramID,
 		Title:     order.Title,
 		Tags:      order.Tags,
-		Status:    models.StatusNew,
+		Status:    models.StatusWaiting,
 	}
 
 	err = orderServ.ProducerBroker.Publish(models.QueueNewOrder, OrderToBroker)
@@ -411,6 +412,41 @@ func (orderServ *OrderService) SuggestOrderToTutor(orderID, tutorID string, User
 	if err != nil {
 		logger.Error("[OrderService] CreateOrder Error publishing order: " + err.Error())
 		return err
+	}
+
+	return nil
+}
+
+func (orderServ *OrderService) SetApprovedOrderStatus(orderID string, UserData models.UserData) error {
+	order, err := orderServ.orderRepository.GetOrderByID(orderID)
+
+	if err != nil {
+		logger.Error("[OrderService] SetApprovedOrderStatus Error GetOrderByID: " + err.Error())
+		return err
+	}
+
+	if order.Status != models.StatusWaiting {
+		return custom_errors.ErrorBadStatus
+	}
+
+	err = orderServ.orderRepository.SetOrderStatus(models.StatusNew, orderID)
+
+	if err != nil {
+		logger.Error("[OrderService] SetApprovedOrderStatus Error SetOrderStatus: " + err.Error())
+		return custom_errors.ErrorSetStatus
+	}
+
+	OrderToBroker := models.OrderToBroker{
+		ID:        orderID,
+		StudentID: UserData.TelegramID,
+		Title:     order.Title,
+		Tags:      order.Tags,
+		Status:    models.StatusNew,
+	}
+
+	err = orderServ.ProducerBroker.Publish(models.QueueNewOrder, OrderToBroker)
+	if err != nil {
+		logger.Error("[OrderService] SetApprovedOrderStatus Error publishing order: " + err.Error())
 	}
 
 	return nil

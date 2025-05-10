@@ -1,5 +1,6 @@
 package models
 
+const StatusWaiting = "Waiting"
 const StatusNew = "New"
 const StatusSelected = "Selected"
 const StatusInactive = "Inactive"

@@ -94,7 +94,7 @@ func (o *Repository) CreateOrder(NewOrder *models.CreateOrder) (string, error) {
 		tags,
 		NewOrder.Order.MinPrice,
 		NewOrder.Order.MaxPrice,
-		models.StatusNew,
+		models.StatusWaiting,
 		0,
 		timestamp,
 		timestamp,
