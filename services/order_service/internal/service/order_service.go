@@ -13,23 +13,23 @@ import (
 )
 
 type OrderServiceInt interface {
-	// order edit
 	CreateOrder(order *models.NewOrder, UserData models.UserData) (string, error)
 	UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error
 	DeleteOrder(orderID string, UserData models.UserData) error
-	SelectTutor(responseID string, UserData models.UserData) error
-	SuggestOrderToTutor(orderID, tutorID string, UserData models.UserData) error
-	SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error
-	SetBanOrderStatus(orderID string, UserData models.UserData) error
-	SetApprovedOrderStatus(orderID string, UserData models.UserData) error
 
-	// order getting
 	GetOrderById(id string, UserData models.UserData) (*models.OrderDetails, error)
 	GetStudentOrdersWithPagination(page int, size int, UserData models.UserData) (*models.OrderPagination, error)
 	GetOrdersWithPagination(page int, size int, tag string, UserData models.UserData) (*models.OrderPagination, error)
 	GetOrderByIdTutor(id string, UserData models.UserData) (*models.OrderDetailsTutor, error)
 	GetAllOrders(UserData models.UserData) ([]*models.Order, error)
 	GetAllUsersOrders(UserData models.UserData) ([]*models.Order, error)
+
+	SelectTutor(responseID string, UserData models.UserData) error
+	SuggestOrderToTutor(orderID, tutorID string, UserData models.UserData) error
+
+	SetActiveOrderStatus(orderID string, IsActive bool, UserData models.UserData) error
+	SetBanOrderStatus(orderID string, UserData models.UserData) error
+	SetApprovedOrderStatus(orderID string, UserData models.UserData) error
 }
 
 type OrderService struct {
@@ -51,18 +51,6 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 		return "", custom_errors.ErrorParams
 	}
 
-	if order.Grade == "" {
-		return "", custom_errors.ErrorParams
-	}
-
-	if len(order.Title) < 5 || len(order.Title) > 150 {
-		return "", custom_errors.ErrorParams
-	}
-
-	if len(order.Description) < 5 || len(order.Description) > 500 {
-		return "", custom_errors.ErrorParams
-	}
-
 	if utils.ContainsBadWords(order.Title) || utils.ContainsBadWords(order.Description) {
 		return "", custom_errors.ErrorBanWords
 	}
@@ -70,7 +58,7 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 	_, err := orderServ.GRPCClient.GetStudent(context.Background(), UserData.UserID)
 
 	if err != nil {
-		logger.Error("[OrderService] CreateOrder error get student: " + err.Error())
+		logger.Error("[OrderService] CreateOrder error GetStudent: " + err.Error())
 		return "", custom_errors.ErrorServiceError
 	}
 
@@ -82,7 +70,7 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 	OrderID, err := orderServ.orderRepository.CreateOrder(OrderToCreate)
 
 	if err != nil {
-		logger.Error("[OrderService] CreateOrder error create order: " + err.Error())
+		logger.Error("[OrderService] CreateOrder error CreateOrder: " + err.Error())
 		return "", err
 	}
 
@@ -202,14 +190,6 @@ func (orderServ *OrderService) GetAllOrders(UserData models.UserData) ([]*models
 }
 
 func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateOrder, UserData models.UserData) error {
-	if len(order.Title) < 5 || len(order.Title) > 150 {
-		return custom_errors.ErrorParams
-	}
-
-	if len(order.Description) < 5 || len(order.Description) > 500 {
-		return custom_errors.ErrorParams
-	}
-
 	if utils.ContainsBadWords(order.Title) || utils.ContainsBadWords(order.Description) {
 		return custom_errors.ErrorBanWords
 	}
@@ -221,7 +201,7 @@ func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateO
 			logger.Error("[OrderService] UpdateOrder Error CheckOrderByStudentID: " + err.Error())
 			return custom_errors.ErrorServiceError
 		}
-		logger.Info("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + orderID)
+		logger.Error("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + orderID)
 		return custom_errors.ErrNotAllowed
 	}
 
@@ -236,7 +216,7 @@ func (orderServ *OrderService) DeleteOrder(orderID string, UserData models.UserD
 			logger.Error("[OrderService] UpdateOrder Error CheckOrderByStudentID: " + err.Error())
 			return custom_errors.ErrorServiceError
 		}
-		logger.Info("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + orderID)
+		logger.Error("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + orderID)
 		return custom_errors.ErrNotAllowed
 	}
 
@@ -305,12 +285,6 @@ func (orderServ *OrderService) SelectTutor(responseID string, UserData models.Us
 		return nil
 	}
 
-	//err = orderServ.orderRepository.SetOrderStatus(models.StatusWaiting, order.ID)
-	//
-	//if err != nil {
-	//	logger.Error("[UserService] SelectTutor error SetOrderStatus: " + err.Error())
-	//}
-
 	return nil
 }
 
@@ -329,7 +303,7 @@ func (orderServ *OrderService) SetActiveOrderStatus(orderID string, IsActive boo
 
 	if IsActive {
 		if order.Status != models.StatusInactive {
-			logger.Info("[OrderService] SetActiveOrderStatus Not Invative state. OrderID:" + orderID)
+			logger.Info("[OrderService] SetActiveOrderStatus Not Inactive state. OrderID:" + orderID)
 			return errors.New("error not Inactive state")
 		}
 
@@ -390,7 +364,7 @@ func (orderServ *OrderService) SuggestOrderToTutor(orderID, tutorID string, User
 
 	if orderInfo.Status != models.StatusNew {
 		logger.Info("[OrderService] SuggestOrderToTutor Not New state. OrderID:" + orderID)
-		return errors.New("order not NEW state")
+		return errors.New("order not new state")
 	}
 
 	if orderInfo.StudentID != UserData.UserID {
@@ -408,7 +382,7 @@ func (orderServ *OrderService) SuggestOrderToTutor(orderID, tutorID string, User
 		MaxPrice:        orderInfo.MaxPrice,
 	}
 
-	err = orderServ.ProducerBroker.Publish("suggest_order", suggestOrderModel)
+	err = orderServ.ProducerBroker.Publish(models.QueueSuggestOrder, suggestOrderModel)
 	if err != nil {
 		logger.Error("[OrderService] CreateOrder Error publishing order: " + err.Error())
 		return err

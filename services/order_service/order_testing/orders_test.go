@@ -2,7 +2,6 @@ package order_testing
 
 import (
 	"context"
-	"fmt"
 	config2 "github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/repository"
@@ -24,14 +23,6 @@ var configTest = config2.Config{
 	},
 }
 
-//func TestInitLogger(t *testing.T) {
-//	err := logger.InitLogger()
-//
-//	if err != nil {
-//		t.Errorf("Expected OK, got error: %v", err.Error())
-//	}
-//}
-
 var repo *repository.Repository
 
 func TestMain(m *testing.M) {
@@ -43,12 +34,13 @@ func TestMain(m *testing.M) {
 	)
 
 	if err != nil {
-		return
+		log.Fatalf("failed start testcontainers: %v", err)
 	}
 
 	mappedPort, err := postgresContainer.MappedPort(context.Background(), "5432/tcp")
+
 	if err != nil {
-		panic("Failed to get mapped port")
+		log.Fatalf("failed mapped port: %v", err)
 	}
 
 	configTest.DBConfig.DBPort = mappedPort.Port()
@@ -77,15 +69,14 @@ func TestMain(m *testing.M) {
 	);`)
 
 	if err != nil {
-		log.Fatal(fmt.Sprintf("failed to init DB: %v", err))
+		log.Fatalf("failed init db: %v", err)
 	}
 
 	os.Exit(m.Run())
 }
 
-func TestRepositoryCreateAndGet(t *testing.T) {
-	t.Run("Testing create and get", func(t *testing.T) {
-		t.Log("creating order")
+func TestRepositoryCreate(t *testing.T) {
+	t.Run("Testing create functions", func(t *testing.T) {
 		mockOrder := &models.CreateOrder{
 			StudentID: "67acb220-7812-4d54-a660-a809b125d088",
 			Order: &models.NewOrder{
@@ -95,7 +86,7 @@ func TestRepositoryCreateAndGet(t *testing.T) {
 				Grade:       "11",
 				MinPrice:    500,
 				MaxPrice:    1000,
-				Tags:        []string{"math", "calculus"},
+				Tags:        []string{"math"},
 			},
 		}
 
@@ -109,7 +100,6 @@ func TestRepositoryCreateAndGet(t *testing.T) {
 			t.Errorf("Order null ID!")
 		}
 
-		t.Log("getting order")
 		order, err := repo.GetOrderByID(orderId)
 
 		if err != nil {
@@ -118,6 +108,100 @@ func TestRepositoryCreateAndGet(t *testing.T) {
 
 		if orderId != order.ID {
 			t.Errorf("OrderID: %v != %v.", orderId, order.ID)
+		}
+	})
+}
+
+func TestRepositoryDelete(t *testing.T) {
+	t.Run("Testing delete functions", func(t *testing.T) {
+		mockOrder := &models.CreateOrder{
+			StudentID: "67acb220-7812-4d54-a660-a809b125d088",
+			Order: &models.NewOrder{
+				Title:       "Help...",
+				Name:        "testing exam!",
+				Description: "i need test myself:)",
+				Grade:       "11",
+				MinPrice:    500,
+				MaxPrice:    1000,
+				Tags:        []string{"math"},
+			},
+		}
+
+		orderId, err := repo.CreateOrder(mockOrder)
+
+		if err != nil {
+			assert.Error(t, err)
+		}
+
+		if orderId == "" {
+			t.Errorf("Order null ID!")
+		}
+
+		order, err := repo.GetOrderByID(orderId)
+
+		if err != nil {
+			assert.Error(t, err)
+		}
+
+		if orderId != order.ID {
+			t.Errorf("OrderID: %v != %v.", orderId, order.ID)
+		}
+
+		err = repo.DeleteOrder(orderId)
+
+		if err != nil {
+			assert.Error(t, err)
+		}
+
+		order, err = repo.GetOrderByID(orderId)
+
+		if err == nil {
+			assert.Error(t, err)
+		}
+	})
+}
+
+func TestRepositoryUpdate(t *testing.T) {
+	t.Run("Testing update functions", func(t *testing.T) {
+		mockOrder := &models.CreateOrder{
+			StudentID: "67acb220-7812-4d54-a660-a809b125d088",
+			Order: &models.NewOrder{
+				Title:       "Help...",
+				Name:        "testing exam!",
+				Description: "i need test myself:)",
+				Grade:       "11",
+				MinPrice:    500,
+				MaxPrice:    1000,
+				Tags:        []string{"math"},
+			},
+		}
+
+		orderId, err := repo.CreateOrder(mockOrder)
+
+		if err != nil {
+			assert.Error(t, err)
+		}
+
+		if orderId == "" {
+			t.Errorf("Order null ID!")
+		}
+
+		err = repo.UpdateOrder(orderId, &models.UpdateOrder{
+			Title: "new_title",
+		})
+
+		if err != nil {
+			assert.Error(t, err)
+		}
+
+		order, err := repo.GetOrderByID(orderId)
+
+		if err != nil {
+			assert.Error(t, err)
+		}
+
+		if order.Title != mockOrder.Order.Title {
+			t.Errorf("Order Title error: %v != %v.", order.Title, mockOrder.Order.Title)
 		}
 	})
 }

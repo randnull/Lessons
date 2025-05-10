@@ -2,7 +2,6 @@ package gRPC_client
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/custom_errors"
@@ -24,7 +23,7 @@ func NewGRPCClient(cfg config.GRPCConfig) *GRPCClient {
 
 	conn, err := grpc.Dial(connectionLink, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Fatal("error connection to grpc")
+		log.Fatalf("error connection to grpc: %v", err)
 	}
 
 	client := pb.NewUserServiceClient(conn)
@@ -32,10 +31,6 @@ func NewGRPCClient(cfg config.GRPCConfig) *GRPCClient {
 		conn:   conn,
 		client: client,
 	}
-}
-
-func (g *GRPCClient) Close() error {
-	return g.conn.Close()
 }
 
 func (g *GRPCClient) GetUser(ctx context.Context, userID string) (*models.User, error) {
@@ -62,10 +57,6 @@ func (g *GRPCClient) GetStudent(ctx context.Context, userID string) (*models.Use
 
 	userPB, err := g.client.GetStudentById(ctx, &pb.GetById{Id: userID})
 	if err != nil {
-		// логгирование
-		if !errors.Is(err, custom_errors.ErrorNotFound) {
-			return nil, custom_errors.ErrorServiceError
-		}
 		return nil, err
 	}
 
@@ -286,11 +277,9 @@ func (g *GRPCClient) ChangeTutorActive(ctx context.Context, tutorID string, acti
 	})
 
 	if err != nil {
-		lg.Error(fmt.Sprintf("[gRPC] ChangeTutorActive. isActive: %v. tutorID: %v.", active, tutorID))
 		return false, err
 	}
 
-	lg.Info(fmt.Sprintf("[gRPC] ChangeTutorActive success. isActive: %v. tutorID: %v.", active, tutorID))
 	return resp.Success, nil
 }
 
@@ -352,4 +341,8 @@ func (g *GRPCClient) BanUser(ctx context.Context, telegramID int64, isBanned boo
 	}
 
 	return resp.Success, nil
+}
+
+func (g *GRPCClient) Close() error {
+	return g.conn.Close()
 }

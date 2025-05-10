@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/logger"
@@ -85,7 +84,7 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 	}
 
 	if TutorInfoRaw.ResponseCount <= 0 {
-		return "", errors.New(fmt.Sprintf("tutors with id have %v responses. Denied", TutorInfoRaw.ResponseCount))
+		return "", custom_errors.ErrNotAllowed
 	}
 
 	TutorInfo := &models.Tutor{
@@ -96,15 +95,15 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 		Tags:       TutorInfoRaw.Tags,
 	}
 
-	isAvaliable, err := s.GRPCClient.CreateNewResponse(context.Background(), UserData.UserID)
+	isAvailable, err := s.GRPCClient.CreateNewResponse(context.Background(), UserData.UserID)
 
 	if err != nil {
 		logger.Error("[ResponseService] ResponseToOrder error CreateNewResponse: " + err.Error())
 		return "", err
 	}
 
-	if !isAvaliable {
-		return "", errors.New("No responses")
+	if !isAvailable {
+		return "", custom_errors.ErrorServiceError
 	}
 
 	Order, err := s.orderRepository.GetOrderByID(orderID)

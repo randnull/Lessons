@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -8,8 +9,10 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/controllers"
 	"github.com/randnull/Lessons/internal/gRPC_client"
+	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/service"
 	"log"
+	"time"
 )
 
 type App struct {
@@ -33,7 +36,7 @@ func NewApp(cfg *config.Config) *App {
 	return authApp
 }
 
-func (a *App) Run() {
+func (a *App) Run(ctx context.Context) error {
 	router := fiber.New()
 
 	router.Use(logger.New())
@@ -50,11 +53,27 @@ func (a *App) Run() {
 
 	router.Post("/auth/init-data", a.controllers.Login)
 
-	log.Printf("InitData time: %v. JWT time: %v", a.cfg.InitDataAliveTime, a.cfg.TokenAliveTime)
+	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 
-	addr := fmt.Sprintf(":%v", a.cfg.ServerPort)
+	go func() {
+		err := router.Listen(ListenPort)
+		if err != nil {
+			log.Printf("server stopped with error: %v", err)
+		}
+	}()
 
-	log.Printf("Listen on: %s\n", addr)
+	<-ctx.Done()
 
-	log.Fatal(router.Listen(addr))
+	lg.Info("server graceful shutdown")
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := router.ShutdownWithContext(shutdownCtx)
+	if err != nil {
+		log.Printf("server shutdown error: %v", err)
+		return err
+	}
+
+	return nil
 }

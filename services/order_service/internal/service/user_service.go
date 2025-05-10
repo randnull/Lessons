@@ -12,23 +12,26 @@ import (
 	"github.com/randnull/Lessons/internal/repository"
 	"github.com/randnull/Lessons/internal/utils"
 	"strconv"
-	"time"
 )
 
 type UserServiceInt interface {
 	GetTutor(TutorID string, UserData models.UserData) (*models.Tutor, error)
 	GetAllTutorsPagination(page int, size int, tag string, UserData models.UserData) (*models.TutorsPagination, error)
+	GetTutorInfoById(tutorID string, UserData models.UserData) (*models.TutorDetails, error)
+	GetAllUsers(UserData models.UserData) ([]*models.User, error)
+	GetUserById(userID string, UserData models.UserData) (*models.User, error)
+
 	UpdateBioTutor(BioModel models.UpdateBioTutor, UserData models.UserData) error
 	UpdateTagsTutor(tags []string, UserData models.UserData) (bool, error)
+	UpdateTutorName(tutorID, name string, UserData models.UserData) error
+
 	CreateReview(ReviewRequest models.ReviewRequest, UserData models.UserData) (string, error)
 	GetReviewsByTutor(tutorID string, UserData models.UserData) ([]models.Review, error)
 	GetReviewsByID(reviewID string, UserData models.UserData) (*models.Review, error)
-	GetTutorInfoById(tutorID string, UserData models.UserData) (*models.TutorDetails, error)
-	ChangeTutorActive(isActive bool, UserData models.UserData) (bool, error)
-	UpdateTutorName(tutorID, name string, UserData models.UserData) error
-	GetAllUsers(UserData models.UserData) ([]*models.User, error)
-	GetUserById(userID string, UserData models.UserData) (*models.User, error)
 	SetReviewActive(reviewID string, UserData models.UserData) error
+
+	ChangeTutorActive(isActive bool, UserData models.UserData) (bool, error)
+
 	BanUser(banUser models.BanUser, UserData models.UserData) error
 }
 
@@ -78,7 +81,7 @@ func (u *UserService) UpdateBioTutor(BioModel models.UpdateBioTutor, UserData mo
 	}
 
 	_, err := u.GRPCClient.UpdateBioTutor(context.Background(), BioModel.Bio, UserData.UserID)
-	//success
+
 	if err != nil {
 
 		return err
@@ -138,7 +141,7 @@ func (u *UserService) UpdateTagsTutor(tags []string, UserData models.UserData) (
 			Tags:            tags,
 		}
 
-		err := u.ProducerBroker.Publish("tutors_tags_change", ChangeTagsToBroker)
+		err := u.ProducerBroker.Publish(models.QueueTutorTags, ChangeTagsToBroker)
 
 		if err != nil {
 			lg.Error("[UserService] ResponseToOrder Error publishing order: " + err.Error())
@@ -177,11 +180,6 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 		return "", custom_errors.ErrorBadStatus
 	}
 
-	if ReviewRequest.Rating < 0 || ReviewRequest.Rating > 5 {
-		lg.Info("[UserService] Rating bad diapozon: " + strconv.Itoa(ReviewRequest.Rating))
-		return "", custom_errors.ErrNotAllowed
-	}
-
 	tutor, err := u.GRPCClient.GetTutor(context.Background(), response.TutorID)
 
 	if err != nil {
@@ -189,14 +187,13 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 		return "", custom_errors.ErrorGetUser
 	}
 
-	currentTimestamp := time.Now()
-
-	TimeDiff := currentTimestamp.Sub(response.CreatedAt)
-
-	if TimeDiff < 1*time.Second {
-		lg.Info("[UserService] Review time bad. Diff: " + TimeDiff.String())
-		return "", custom_errors.ErrorLowTimeFromResponse
-	}
+	//currentTimestamp := time.Now()
+	//TimeDiff := currentTimestamp.Sub(response.CreatedAt)
+	//
+	//if TimeDiff < 72*time.Hour {
+	//	lg.Info("[UserService] Review time bad. Diff: " + TimeDiff.String())
+	//	return "", custom_errors.ErrorLowTimeFromResponse
+	//}
 
 	reviewID, err := u.GRPCClient.CreateReview(context.Background(), order.ID, response.TutorID, ReviewRequest.Comment, ReviewRequest.Rating)
 
@@ -213,7 +210,7 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 		TutorTelegramID: tutor.TelegramID,
 	}
 
-	err = u.ProducerBroker.Publish("new_review", reviewToBroker)
+	err = u.ProducerBroker.Publish(models.QueueNewReview, reviewToBroker)
 
 	if err != nil {
 		lg.Error("[UserService] CreateReview Error publishing order: " + err.Error())

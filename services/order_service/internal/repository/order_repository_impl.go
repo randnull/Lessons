@@ -60,8 +60,6 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	}
 }
 
-// Order Edit
-
 func (o *Repository) CreateOrder(NewOrder *models.CreateOrder) (string, error) {
 	const query = `
 		INSERT INTO orders
@@ -440,8 +438,6 @@ func (o *Repository) GetStudentOrders(studentID string) ([]*models.Order, error)
 	return orders, nil
 }
 
-// Response Edit
-
 func (o *Repository) CreateResponse(orderID string,
 	response *models.NewResponseModel,
 	Tutor *models.Tutor,
@@ -470,7 +466,6 @@ func (o *Repository) CreateResponse(orderID string,
 
 	if err != nil {
 		logger.Error("[Postgres] CreateResponse error" + err.Error())
-		tx.Rollback()
 		return "", err
 	}
 
@@ -494,7 +489,6 @@ func (o *Repository) CreateResponse(orderID string,
 	err = tx.QueryRow(queryInsert, orderID, Tutor.Name, Tutor.Id, username, greetingsMessage, false, timestamp).Scan(&ResponseID)
 	if err != nil {
 		logger.Error("[Postgres] CreateResponse error" + err.Error())
-		tx.Rollback()
 		return "", err
 	}
 
@@ -507,11 +501,11 @@ func (o *Repository) CreateResponse(orderID string,
 
 	if err != nil {
 		logger.Error("[Postgres] CreateResponse error" + err.Error())
-		tx.Rollback()
 		return "", err
 	}
 
 	err = tx.Commit()
+
 	if err != nil {
 		logger.Error("[Postgres] CreateResponse error" + err.Error())
 		return "", err
@@ -519,8 +513,6 @@ func (o *Repository) CreateResponse(orderID string,
 
 	return ResponseID, nil
 }
-
-// Response Getting
 
 func (o *Repository) GetResponsesByOrderID(id string) ([]models.Response, error) {
 	const query = `

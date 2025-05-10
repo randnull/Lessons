@@ -1,7 +1,5 @@
 package models
 
-const (
-	RoleStudent string = "Student"
-	RoleTutor   string = "Tutor"
-	RoleAdmin   string = "Admin"
-)
+const RoleStudent string = "Student"
+const RoleTutor string = "Tutor"
+const RoleAdmin string = "Admin"

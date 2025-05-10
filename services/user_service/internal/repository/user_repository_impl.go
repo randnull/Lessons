@@ -58,12 +58,12 @@ func NewRepository(cfg config.DBConfig) *Repository {
 }
 
 func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
-	lg.Info("[Postgres] CreateUser called. UserID: " + fmt.Sprint(user.TelegramId) + " Role: " + user.Role)
+	lg.Info(fmt.Sprintf("[Postgres] CreateUser called. UserID: %v. Role: %v", user.TelegramId, user.Role))
 
 	ExistedUser, err := r.GetUserByTelegramId(user.TelegramId, user.Role)
 
 	if err == nil {
-		lg.Info("[Postgres] CreateUser User exist. Authorization UserID: " + fmt.Sprint(user.TelegramId) + " UserID " + ExistedUser.Id)
+		lg.Info(fmt.Sprintf("[Postgres] CreateUser User exist. Authorization Telegram-UserID: %v. UserID: %v", user.TelegramId, ExistedUser.Id))
 		return ExistedUser.Id, nil
 	}
 
@@ -72,7 +72,6 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 
 	if err != nil {
 		lg.Info("[Postgres] CreateUser TX failed " + fmt.Sprint(user.TelegramId) + " Error: " + err.Error())
-		tx.Rollback()
 		return "", err
 	}
 
@@ -96,8 +95,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 	).Scan(&UserId)
 
 	if err != nil {
-		lg.Info("[Postgres] CreateUser Insert failed for userTelegramID: " + fmt.Sprint(user.TelegramId) + " Error: " + err.Error())
-		tx.Rollback()
+		lg.Info("[Postgres] CreateUser failed: " + err.Error())
 		return "", custom_errors.ErrorWithCreate
 	}
 
@@ -111,8 +109,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 		_, err = tx.Exec(queryInsertTutor, UserId, currentTime)
 
 		if err != nil {
-			lg.Info("[Postgres] CreateUser Insert Tutor failed for userTelegramID: " + fmt.Sprint(user.TelegramId) + " Error: " + err.Error())
-
+			lg.Info("[Postgres] CreateUser failed: " + err.Error())
 			tx.Rollback()
 			return "", custom_errors.ErrorWithCreate
 		}
@@ -120,7 +117,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 
 	err = tx.Commit()
 	if err != nil {
-		lg.Info("[Postgres] CreateUser TX failed " + fmt.Sprint(user.TelegramId) + " Error: " + err.Error())
+		lg.Info("[Postgres] CreateUser failed: " + err.Error())
 		return "", err
 	}
 
@@ -128,8 +125,6 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 }
 
 func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error) {
-	lg.Info("[Postgres] GetUserByTelegramId called. UserID: " + fmt.Sprint(telegramID) + " Role: " + userRole)
-
 	var user models.UserDB
 
 	const query = `
@@ -153,14 +148,10 @@ func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*mo
 		return nil, err
 	}
 
-	lg.Info("[Postgres] GetUserByTelegramId success. UserTelegramID: " + fmt.Sprint(telegramID) + " Role: " + userRole + " UserID: " + user.Id)
-
 	return &user, nil
 }
 
 func (r *Repository) GetStudentById(userID string) (*models.UserDB, error) {
-	lg.Info("[Postgres] GetStudentById called. UserID: " + userID)
-
 	var user models.UserDB
 
 	const query = `
@@ -184,14 +175,10 @@ func (r *Repository) GetStudentById(userID string) (*models.UserDB, error) {
 		return nil, err
 	}
 
-	lg.Info("[Postgres] GetStudentById success. UserID: " + userID)
-
 	return &user, nil
 }
 
 func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
-	lg.Info("[Postgres] GetTutorByID called. UserID: " + userID)
-
 	const query = `
         SELECT 
             u.id, 
@@ -266,14 +253,10 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 		tutor.Rating = rating.Int32
 	}
 
-	lg.Info("[Postgres] GetTutorByID succss. UserID: " + userID)
-
 	return &tutor, nil
 }
 
 func (r *Repository) GetAllUsers() ([]*pb.User, error) {
-	lg.Info("[Postgres] GetAllUsers called")
-
 	const query = `
 		SELECT 
 			id, 
@@ -285,7 +268,7 @@ func (r *Repository) GetAllUsers() ([]*pb.User, error) {
 
 	rows, err := r.db.Query(query)
 	if err != nil {
-		lg.Error("[Postgres] GetAllUsers failed. Query error: " + err.Error())
+		lg.Error("[Postgres] GetAllUsers failed: " + err.Error())
 		return nil, err
 	}
 	defer rows.Close()
@@ -300,7 +283,7 @@ func (r *Repository) GetAllUsers() ([]*pb.User, error) {
 		err := rows.Scan(&id, &name, &telegramID, &role)
 
 		if err != nil {
-			lg.Error("[Postgres] GetAllTutors error: " + err.Error())
+			lg.Error("[Postgres] GetAllTutors failed: " + err.Error())
 			return nil, err
 		}
 
@@ -319,14 +302,10 @@ func (r *Repository) GetAllUsers() ([]*pb.User, error) {
 		return nil, custom_errors.ErrorAfterRowScan
 	}
 
-	lg.Info("[Postgres] GetAllTutors success")
-
 	return users, nil
 }
 
 func (r *Repository) UpdateTutorBio(userID string, bio string) error {
-	lg.Info("[Postgres] UpdateTutorBio called")
-
 	const query = `
 		UPDATE tutors SET
             bio = $1 
@@ -339,7 +318,6 @@ func (r *Repository) UpdateTutorBio(userID string, bio string) error {
 		return err
 	}
 
-	lg.Info("[Postgres] UpdateTutorBio success")
 	return nil
 }
 
@@ -400,7 +378,6 @@ func (r *Repository) UpdateTutorName(tutorID string, name string) error {
 	return nil
 }
 
-// этого монстра нужно отрефакторить
 func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) ([]*pb.Tutor, int, error) {
 	const queryCount = `
 		SELECT 

@@ -14,3 +14,6 @@ const AnyType = "Any"
 
 const QueueNewOrder = "new_orders"
 const QueueNewResponse = "order_response"
+const QueueSuggestOrder = "suggest_order"
+const QueueNewReview = "new_review"
+const QueueTutorTags = "tutors_tags_change"
