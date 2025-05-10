@@ -39,7 +39,7 @@ func (a *App) Run() {
 	router.Use(logger.New())
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: "*", // НЕБЕЗОПАСНО, ЗАМЕНИТЬ ТОЛЬКО НА ХОСТ ФРОНТА!
+		AllowOrigins: "*",
 		AllowMethods: "GET,POST,PUT,DELETE",
 		AllowHeaders: "*",
 	}))

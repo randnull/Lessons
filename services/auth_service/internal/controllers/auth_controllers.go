@@ -31,7 +31,7 @@ func (c *AuthHandlers) Login(ctx *fiber.Ctx) error {
 	}
 
 	if AuthData.InitData == "" || AuthData.Role == "" {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Field 'initData' and 'role' is required"})
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Field initData and role is empty"})
 	}
 
 	jwtToken, err := c.Service.Login(&AuthData)
