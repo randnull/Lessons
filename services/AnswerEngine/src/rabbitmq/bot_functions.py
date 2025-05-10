@@ -23,7 +23,7 @@ async def proceed_order(order_create: NewOrderDto) -> None:
 
 async def proceed_order_to_tutors(order_create: NewOrderDto, tutors_id: List[int]) -> None:
     message = (
-        f"<b>Заказ подходит вашим тегам!: {order_create.order_name}!</b>\n\n"
+        f"<b>Появился новый заказ, подходящий вашим тегам: {order_create.order_name}!</b>\n\n"
     )
 
     for tutor_id in tutors_id:
@@ -83,7 +83,7 @@ async def proceed_selected(selected_order: SelectedDto) -> None:
 
 async def proceed_suggest(suggest_order: SuggestDto) -> None:
     message = (
-        f"<b>Новый заказ для вас: {suggest_order.order_name}</b>\n\n"
+        f"<b>Ученик предлагает вам заказ: {suggest_order.order_name}</b>\n\n"
         f"👀 <b>Описание:</b> {suggest_order.description}\n\n"
         f"<b>Бюджет:</b> {suggest_order.min_price} - {suggest_order.max_price}\n\n"
         "⚡ <i>Вы можете просмотреть заказ, нажав на кнопку ниже.</i>"
@@ -100,7 +100,7 @@ async def proceed_suggest(suggest_order: SuggestDto) -> None:
 async def proceed_review(new_review: ReviewDto) -> None:
     message = (
         f"<b>Ученик оставил отзыв по заказу: {new_review.order_name}</b>\n\n"
-        f"<b>Если вы занимались с учеником - подтвердите на странице отклика!</b>\n\n"
+        f"<b>Если вы занимались с учеником - подтвердите на странице профиля!</b>\n\n"
     )
 
     try:
@@ -123,7 +123,8 @@ async def proceed_need_review(order: OrderDto) -> None:
 
 async def proceed_add_response(add_response: AddResponseDto) -> None:
     message = (
-        f"<b>Вам были добавлены отклики. Текущее количество: {add_response.response_count}</b>\n\n"
+        f"<b>🎉Вам были добавлены отклики.</b>\n\n"
+        f"<i>Текущее количество: {add_response.response_count}</i>"
     )
 
     try:

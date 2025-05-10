@@ -5,8 +5,8 @@ from uuid import UUID
 from AnswerEngine.common.generic_repository.generic_repo import Repository
 from AnswerEngine.common.database_connection.base import async_session
 from AnswerEngine.src.logger.logger import logger
-from AnswerEngine.src.models.dao_table.dao import OrderDao, TagDao, OrderTagDao, TutorTagDao, OrderStatus
-from AnswerEngine.src.models.dto_table.dto import NewOrderDto, OrderDto, TagDto, OrderTagDto, NewTagDto
+from AnswerEngine.src.models.dao_table.dao import OrderDao, TagDao, OrderTagDao, TutorTagDao, OrderStatus, SuggestDao
+from AnswerEngine.src.models.dto_table.dto import NewOrderDto, OrderDto, TagDto, OrderTagDto, NewTagDto, SuggestDto
 
 
 async def create_new_order(order_data: NewOrderDto) -> List[int]:
@@ -88,3 +88,17 @@ async def change_order_status_to_selected(orderID: UUID):
             return
 
         await order_repository.change_status(orderID, OrderStatus.SELECTED)
+
+
+async def suggest_order(suggestDto: SuggestDto) -> bool:
+    async with async_session() as session:
+        suggest_repository = Repository[SuggestDao](SuggestDao, session)
+
+        is_exist = await suggest_repository.suggest_exists(suggestDto.order_id, suggestDto.tutor_telegram_id)
+
+        if is_exist:
+            return False
+
+        _ = await suggest_repository.create(suggestDto)
+
+        return True

@@ -84,3 +84,17 @@ class TutorTagDao(Base):
             tutor_id=TutorTagDto.tutor_id,
             tag_id=TutorTagDto.tag_id,
         )
+
+
+class SuggestDao(Base):
+    __tablename__ = "suggest_table"
+
+    tutor_id: Mapped[BIGINT] = mapped_column(BIGINT, primary_key=True)
+    order_id: Mapped[UUID] = mapped_column(UUID, primary_key=True)
+
+    @classmethod
+    def to_dao(cls, SuggestDto):
+        return SuggestDao(
+            tutor_id=SuggestDto.tutor_telegram_id,
+            order_id=SuggestDto.order_id,
+        )

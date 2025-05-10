@@ -2,7 +2,7 @@ import json
 
 from aio_pika import connect, IncomingMessage
 
-from AnswerEngine.src.functions.order_functions import create_new_order, change_order_status_to_selected
+from AnswerEngine.src.functions.order_functions import create_new_order, change_order_status_to_selected, suggest_order
 from AnswerEngine.src.functions.tags_functions import update_tags
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, TagChangeDto, SelectedDto, \
     ReviewDto, AddResponseDto
@@ -32,7 +32,10 @@ async def suggest_func(message: IncomingMessage):
         body = json.loads(message.body.decode())
         new_suggest = SuggestDto(**body)
 
-        await proceed_suggest(new_suggest)
+        is_created = await suggest_order(new_suggest)
+
+        if is_created:
+            await proceed_suggest(new_suggest)
 
 async def tutors_change_tags_func(message: IncomingMessage):
     async with message.process():

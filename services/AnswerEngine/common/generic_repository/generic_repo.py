@@ -1,7 +1,7 @@
-from typing import TypeVar, Generic, List, Any, Sequence, Optional
+from typing import TypeVar, Generic, List, Optional
 from uuid import UUID
 
-from sqlalchemy import select, and_, update, func, Row, RowMapping, delete
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from pydantic import BaseModel
@@ -15,7 +15,7 @@ class Repository(Generic[Model]):
         self.__model = model
         self.__session = session
 
-    async def create(self, model: BaseModel) -> UUID:
+    async def create(self, model: BaseModel):
         result_dao = self.__model.to_dao(model)
         self.__session.add(result_dao)
         await self.__session.flush()
@@ -42,14 +42,14 @@ class Repository(Generic[Model]):
         resp = await self.__session.execute(select(self.__model).where(self.__model.tag_id.in_(tags)))
         return resp.scalars().all()
 
-    async def delete_many_by_conditions(self, tutor_id, tag_ids) -> None:
+    async def delete_many_by_conditions(self, tutor_id, tag_ids):
         await self.__session.execute(delete(self.__model).where(
             self.__model.tutor_id == tutor_id,
             self.__model.tag_id.in_(tag_ids)
          ))
         await self.__session.commit()
 
-    async def change_status(self, order_id: UUID, new_status) -> bool:
+    async def change_status(self, order_id: UUID, new_status):
          await self.__session.execute(
             update(self.__model)
             .where(self.__model.order_id == order_id)
@@ -57,11 +57,21 @@ class Repository(Generic[Model]):
          )
          await self.__session.commit()
 
-    async def get(self, order_id: UUID) -> Optional[Model]:
+    async def get(self, order_id: UUID):
         result = await self.__session.execute(
             select(self.__model).where(self.__model.order_id == order_id)
         )
         return result.scalars().first()
+
+    async def suggest_exists(self, order_id: UUID, tutor_id: int):
+        result = await self.__session.execute(
+            select(self.__model)
+            .where(
+                (self.__model.order_id == order_id) &
+                (self.__model.tutor_id == tutor_id)
+            )
+        )
+        return result.scalars().first() is not None
 
     async def get_all_selected(self):
         resp = await self.__session.execute(
