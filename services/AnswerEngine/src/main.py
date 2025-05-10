@@ -64,7 +64,9 @@ async def lifespan(app: FastAPI):
     asyncio.create_task(SelectedConsumer.consume())
     asyncio.create_task(ReviewConsumer.consume())
     asyncio.create_task(AddResponsesConsumer.consume())
+
     yield
+
     await OrderConsumer.disconnect()
     await ResponseConsumer.disconnect()
     await SuggestConsumer.disconnect()

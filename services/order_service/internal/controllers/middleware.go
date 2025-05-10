@@ -3,8 +3,10 @@ package controllers
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/config"
+	"github.com/randnull/Lessons/internal/custom_errors"
 	auth "github.com/randnull/Lessons/internal/jwt"
 	"github.com/randnull/Lessons/internal/logger"
+	custom_logger "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 )
 
@@ -78,4 +80,13 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 
 		return c.Next()
 	}
+}
+
+func getUserData(ctx *fiber.Ctx) (models.UserData, error) {
+	userData, ok := ctx.Locals("user_data").(models.UserData)
+	if !ok {
+		custom_logger.Error("Failed to get user data")
+		return models.UserData{}, custom_errors.ErrorInvalidToken
+	}
+	return userData, nil
 }
