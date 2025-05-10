@@ -1,0 +1,262 @@
+services:
+  postgresql:
+    image: postgres:latest
+    container_name: postgresql
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${ORDER_DB_USER}
+      - POSTGRES_PASSWORD=${ORDER_DB_PASSWORD}
+      - POSTGRES_DB=${ORDER_DB_NAME}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${ORDER_DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lessons-network
+    volumes:
+      - habrdb-data:/var/lib/postgresql/data
+    expose:
+      - ${ORDER_DB_PORT}
+  answer-engine-postgresql:
+    image: postgres:latest
+    container_name: postgresql-answer
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${ANSWER_DB_USER}
+      - POSTGRES_PASSWORD=${ANSWER_DB_PASSWORD}
+      - POSTGRES_DB=${ANSWER_DB_NAME}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${ANSWER_DB_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lessons-network
+    volumes:
+      - habrdb-data-answer-engine:/var/lib/postgresql/data
+    expose:
+      - ${ANSWER_DB_PORT}
+  users-postgresql:
+    image: postgres:latest
+    container_name: postgresql-users
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=${USERS_DB_USER}
+      - POSTGRES_PASSWORD=${USERS_DB_PASSWORD}
+      - POSTGRES_DB=${USERS_DB_NAME}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "${USERS_DB_USER}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lessons-network
+    volumes:
+      - habrdb-data-users:/var/lib/postgresql/data
+    expose:
+      - ${USERS_DB_PORT}
+  migrations:
+    image: liquibase/liquibase:latest
+    volumes:
+      - ./Lessons/services/order_service/migrations:/app
+    command: sh /app/entrypoint.sh
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - lessons-network
+    environment:
+      - DB_USER=${ORDER_DB_USER}
+      - DB_PASSWORD=${ORDER_DB_PASSWORD}
+      - DB_NAME=${ORDER_DB_NAME}
+      - DB_PORT=${ORDER_DB_PORT}
+      - DB_HOST=${ORDER_DB_HOST}
+  migrations-answer-engine:
+    image: liquibase/liquibase:latest
+    volumes:
+      - ./services/AnswerEngine/migrations:/app
+    command: sh /app/entrypoint.sh
+    depends_on:
+      answer-engine-postgresql:
+        condition: service_healthy
+    networks:
+      - lessons-network
+    environment:
+      - DB_USER=${ANSWER_DB_USER}
+      - DB_PASSWORD=${ANSWER_DB_PASSWORD}
+      - DB_NAME=${ANSWER_DB_NAME}
+      - DB_PORT=${ANSWER_DB_PORT}
+      - DB_HOST=${ANSWER_DB_HOST}
+  migrations-users:
+    image: liquibase/liquibase:latest
+    volumes:
+      - ./services/user_service/migrations:/app
+    command: sh /app/entrypoint.sh
+    depends_on:
+      users-postgresql:
+        condition: service_healthy
+    networks:
+      - lessons-network
+    environment:
+      - DB_USER=${USERS_DB_USER}
+      - DB_PASSWORD=${USERS_DB_PASSWORD}
+      - DB_NAME=${USERS_DB_NAME}
+      - DB_PORT=${USERS_DB_PORT}
+      - DB_HOST=${USERS_DB_HOST}
+  order-service:
+    container_name: "lessons-order-service"
+    build:
+      context: ./services
+      dockerfile: order_service/orders.dockerfile
+    ports:
+      - "${ORDER_SERVER_PORT}:${ORDER_SERVER_PORT}"
+    volumes:
+      - order-service-logs:/app/logs
+    environment:
+      - DB_USER=${ORDER_DB_USER}
+      - DB_PASSWORD=${ORDER_DB_PASSWORD}
+      - DB_NAME=${ORDER_DB_NAME}
+      - DB_PORT=${ORDER_DB_PORT}
+      - DB_HOST=${ORDER_DB_HOST}
+      - SERVER_PORT=${ORDER_SERVER_PORT}
+      - BOT_STUDENT_TOKEN=${BOT_STUDENT_TOKEN}
+      - BOT_TUTOR_TOKEN=${BOT_TUTOR_TOKEN}
+      - MQ_USER=${MQ_USER}
+      - MQ_PASS=${MQ_PASS}
+      - MQ_HOST=${MQ_HOST}
+      - MQ_PORT=${MQ_PORT}
+      - GRPCUSERHOST=${GRPCUSERHOST}
+      - GRPCUSERPORT=${GRPCUSERPORT}
+      - TOKEN_ALIVE_TIME=${TOKEN_ALIVE_TIME}
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - lessons-network
+  auth-service:
+    container_name: "lessons-auth-service"
+    build:
+      context: ./services
+      dockerfile: auth_service/auth.dockerfile
+    ports:
+      - ${AUTH_SERVICE_PORT}:${AUTH_SERVICE_PORT}
+    volumes:
+      - auth-service-logs:/app/logs
+    environment:
+      - GRPCUSERHOST=${GRPCUSERHOST}
+      - GRPCUSERPORT=${GRPCUSERPORT}
+      - BOT_STUDENT_TOKEN=${BOT_STUDENT_TOKEN}
+      - BOT_TUTOR_TOKEN=${BOT_TUTOR_TOKEN}
+      - BOT_ADMIN_TOKEN=${BOT_ADMIN_TOKEN}
+      - JWT_SECRET=${JWT_SECRET}
+      - INITDATA_ALIVE_TIME=${INITDATA_ALIVE_TIME}
+      - TOKEN_ALIVE_TIME=${TOKEN_ALIVE_TIME}
+      - AUTH_SERVICE_PORT=${AUTH_SERVICE_PORT}
+      - ADMIN_USER=${ADMIN_USER}
+    networks:
+      - lessons-network
+    depends_on:
+      user-service:
+        condition: service_started
+  user-service:
+    container_name: "lessons-user-service"
+    build:
+      context: ./services
+      dockerfile: user_service/users.dockerfile
+    volumes:
+      - user-service-logs:/app/logs
+    environment:
+      - DB_USER=${USERS_DB_USER}
+      - DB_PASSWORD=${USERS_DB_PASSWORD}
+      - DB_NAME=${USERS_DB_NAME}
+      - DB_PORT=${USERS_DB_PORT}
+      - DB_HOST=${USERS_DB_HOST}
+      - SERVER_PORT=${USERS_SERVER_PORT}
+      - MQ_USER=${MQ_USER}
+      - MQ_PASS=${MQ_PASS}
+      - MQ_HOST=${MQ_HOST}
+      - MQ_PORT=${MQ_PORT}
+    networks:
+      - lessons-network
+    depends_on:
+      users-postgresql:
+        condition: service_healthy
+      migrations-users:
+        condition: service_completed_successfully
+  answer_engine_fastapi:
+    container_name: "lessons-answer-engine"
+    build:
+      context: ./services/AnswerEngine
+      dockerfile: src/bot.dockerfile
+    ports:
+      - "${ANSWER_SERVER_PORT}:${ANSWER_SERVER_PORT}"
+    volumes:
+      - answer-engine-logs:/app/logs
+    environment:
+      - BOT_STUDENT_TOKEN=${BOT_STUDENT_TOKEN}
+      - BOT_TUTOR_TOKEN=${BOT_TUTOR_TOKEN}
+      - FQND_HOST=${FQND_HOST}
+      - ANSWER_DB_USER=${ANSWER_DB_USER}
+      - ANSWER_DB_PASSWORD=${ANSWER_DB_PASSWORD}
+      - ANSWER_DB_NAME=${ANSWER_DB_NAME}
+      - ANSWER_DB_HOST=${ANSWER_DB_HOST}
+      - RABBITMQ_USER=${MQ_USER}
+      - RABBITMQ_PASSWORD=${MQ_PASS}
+      - RABBITMQ_HOST=${MQ_HOST}
+      - RABBITMQ_PORT=${MQ_PORT}
+      - GRPCUSERHOST=${GRPCUSERHOST}
+      - GRPCUSERPORT=${GRPCUSERPORT}
+      - ADMIN_USER=${ADMIN_USER}
+    networks:
+      - lessons-network
+    depends_on:
+      answer-engine-postgresql:
+        condition: service_healthy
+      migrations-answer-engine:
+        condition: service_completed_successfully
+      rabbitmq:
+        condition: service_healthy
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    expose:
+      - ${MQ_PORT}
+      - ${MQ_UI_PORT}
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment:
+      - RABBITMQ_DEFAULT_USER=${MQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${MQ_PASS}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 2147483648
+    networks:
+      - lessons-network
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  habrdb-data:
+    external: true
+  habrdb-data-answer-engine:
+    external: true
+  habrdb-data-users:
+    external: true
+  rabbitmq_data:
+    external: true
+  user-service-logs:   
+  answer-engine-logs:
+  order-service-logs:
+  auth-service-logs:
+
+
+networks:
+  lessons-network:
+    name: "lessons-network"
