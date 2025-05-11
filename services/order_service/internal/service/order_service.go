@@ -410,9 +410,16 @@ func (orderServ *OrderService) SetApprovedOrderStatus(orderID string, UserData m
 		return custom_errors.ErrorSetStatus
 	}
 
+	student, err := orderServ.GRPCClient.GetStudent(context.Background(), order.StudentID)
+
+	if err != nil {
+		logger.Error("[OrderService] SetApprovedOrderStatus Error GetStudent: " + err.Error())
+		return custom_errors.ErrorGetUser
+	}
+	
 	OrderToBroker := models.OrderToBroker{
 		ID:        orderID,
-		StudentID: UserData.TelegramID,
+		StudentID: student.TelegramID,
 		Title:     order.Title,
 		Tags:      order.Tags,
 		Status:    models.StatusNew,

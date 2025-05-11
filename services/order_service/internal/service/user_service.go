@@ -187,6 +187,7 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 		return "", custom_errors.ErrorGetUser
 	}
 
+	// отзыв можно оставить сразу, логика теперь в его подтверждении
 	//currentTimestamp := time.Now()
 	//TimeDiff := currentTimestamp.Sub(response.CreatedAt)
 	//
