@@ -1,52 +1,98 @@
 @startuml er-diagram
 
 skinparam linetype ortho
+skinparam roundcorner 10
 
-entity "orders" as orders_table {
-  *id : UUID <<PK>>
-  --
-  *telegram_student_id: INTEGER
-  *title: VARCHAR
-  description: VARCHAR
-  *tags: TEXT[]
-  *min_price: INTEGER
-  *max_price: INTEGER
-  *status: VARCHAR
-  *created_at: TIMESTAMPZ
-  *updated_at: TIMESTAMPZ
+package "UserGroup" {
+  entity "users" {
+    *id : UUID <<PK>>
+    --
+    telegram_id : BIGINT
+    name : VARCHAR
+    role : VARCHAR
+    is_banned: BOOLEAN
+    created_at : TIMESTAMP
+  }
+
+  entity "tutors" {
+    *id : UUID <<PK>> <<FK users.id>>
+    --
+    is_active : BOOLEAN
+    bio : VARCHAR
+    tags : TEXT[]
+    rating : INTEGER
+    response_count : BIGINT
+    created_at : TIMESTAMP
+  }
+
+  entity "reviews" {
+    *id : UUID <<PK>>
+    --
+    tutor_id : UUID <<FK tutors.id>>
+    order_id : UUID <<FK orders.id>>
+    rating : INT
+    comment : VARCHAR
+    created_at : TIMESTAMP
+  }
 }
 
-entity "tutors" as tutors_table {
-  *id : UUID <<PK>>
-  --
-  *tutor_telegram_id: INTEGER
-  university: VARCHAR
-  bio: VARCHAR
-  *count_orders: INTEGER
-  rating: INTEGER
+package "OrderGroup" {
+  entity "orders" {
+    *id : UUID <<PK>>
+    --
+    name : VARCHAR
+    student_id : UUID
+    title : VARCHAR
+    description : VARCHAR
+    grade : VARCHAR
+    tags : TEXT[]
+    min_price : INTEGER
+    max_price : INTEGER
+    status : VARCHAR
+    response_count : INTEGER
+    created_at : TIMESTAMPT
+    updated_at : TIMESTAMPT
+  }
+
+  entity "responses" {
+    *id : UUID <<PK>>
+    --
+    order_id : UUID <<FK orders.id>>
+    tutor_id : UUID <<FK tutors.id>>
+    name : VARCHAR
+    tutor_username : VARCHAR
+    greetings : VARCHAR
+    is_final : BOOLEAN
+    created_at : TIMESTAMPT
+  }
 }
 
-entity "response" as answer_engine_table {
-  *id : UUID <<PK>>
-  --
-  *order_id: UUID <<FK>>
-  *tutor_id: UUID <<FK>>
-  *created_at: TIMESTAMPZ
-  *status: VARCHAR
+package "TagGroup" {
+  entity "tags" {
+    *id : UUID <<PK>>
+    --
+    tag_name : VARCHAR
+  }
+
+  entity "order_tags" {
+    *order_id : UUID <<PK>> <<FK orders.id>>
+    *tag_id : UUID <<PK>> <<FK tags.id>>
+  }
+
+  entity "tutor_tags" {
+    *tutor_id : BIGINT <<PK>>
+    *tag_id : UUID <<PK>> <<FK tags.id>>
+  }
 }
 
-entity "review" as review_table {
-  *id : UUID <<PK>>
-  --
-  *order_id: UUID <<FK>>
-  *tutor_id: INTEGER
-  review: VARCHAR
-  *rating: INTEGER
-}
+users ||--o{ tutors : id
+tutors ||--o{ responses : tutor_id
+orders ||--o{ responses : order_id
+orders ||--o{ reviews : order_id
+tutors ||--o{ reviews : tutor_id
+orders ||--o{ order_tags : order_id
+tags ||--o{ order_tags : tag_id
+tutors ||--o{ tutor_tags : tutor_id
+tags ||--o{ tutor_tags : tag_id
 
-' Relationships
-'orders_table::id --> answer_engine_table::order_id
-'tutors_table::id --> answer_engine_table::tutor_id
-'tutors_table::id --> answer_engine_table::tutors_id_pool
-'tutors_table::id --> review_table::tutor_id
 @enduml
