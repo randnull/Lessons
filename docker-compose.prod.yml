@@ -122,6 +122,7 @@ services:
       - SERVER_PORT=${ORDER_SERVER_PORT}
       - BOT_STUDENT_TOKEN=${BOT_STUDENT_TOKEN}
       - BOT_TUTOR_TOKEN=${BOT_TUTOR_TOKEN}
+      - SERVER_PORT=${ANSWER_SERVER_PORT}
       - MQ_USER=${MQ_USER}
       - MQ_PASS=${MQ_PASS}
       - MQ_HOST=${MQ_HOST}
@@ -130,6 +131,7 @@ services:
       - GRPCUSERPORT=${GRPCUSERPORT}
       - TOKEN_ALIVE_TIME=${TOKEN_ALIVE_TIME}
       - JWT_SECRET=${JWT_SECRET}
+      - SUPPORT_CHANNEL=${SUPPORT_CHANNEL}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -244,13 +246,13 @@ services:
 
 volumes:
   habrdb-data:
-    external: true
+    # external: true
   habrdb-data-answer-engine:
-    external: true
+    # external: true
   habrdb-data-users:
-    external: true
+    # external: true
   rabbitmq_data:
-    external: true
+    # external: true
   user-service-logs:   
   answer-engine-logs:
   order-service-logs:

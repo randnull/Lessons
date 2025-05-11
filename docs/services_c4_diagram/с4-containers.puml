@@ -1,68 +1,54 @@
-@startuml c4_containers
+@startuml c4_lessons_updated
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 !define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
 !include DEVICONS/go.puml
 !include DEVICONS/python.puml
 !include DEVICONS/postgresql.puml
-!include <cloudinsight/kafka>
+!include <cloudinsight/rabbitmq>
 
-title Архитектура Lessons (Сервисный уровень)
+title Архитектура Lessons (сервисный уровень)
 
 ' Пользователь
-Person(tutor, "Репетитор", "")
-Person(student, "Ученик", "")
+Person(user, "Пользователь", "")
 
 ' Интерфейс
-Container(LessonsBot, "Телеграмм бот", "Telegram Bot", "Чат с ботом для учеников")
-Container(TutorsBot, "Телеграмм бот для репетиторов", "Telegram Bot", "Чат с ботом для репетиторов")
+Container(telegram_bot, "Telegram Bot", "Telegram Bot", "telegram bot")
+Container(nginx, "Nginx", "Nginx", "Reverse-proxy")
 
-Container(TutorApp, "Приложение для репетиторов", "Telegram Mini App", "Интерфейс для управления профилем и заказами")
-Container(LessonsApp, "Приложение для учеников", "Telegram Mini App", "Интерфейс для создания заказов")
-
-' Основные микросервисы
-Container(order_service, "Сервис заказов", "Go", "Управление заказами (принятие, отклонение)", "go")
-Container(answer_engine_service, "Сервис обработки заказов и уведомлений, бот", "Python", ".", "python")
-Container(tutors_service, "Сервис хранения информации о репетиторе (биография, отзывы)", "Go", ".", "go")
-'Container(review_service, "Сервис хранения отзывов", "Go", ".", "go")
-'Container(telegram_bot, "Сервис хранения отзывов", "Go", ".", "go")
+' Сервисы
+Container(auth_service, "Auth Service", "Go", "Создание и валидация access токенов", "go")
+Container(order_service, "Order Service", "Go", "Работа с заказами и откликами", "go")
+Container(user_service, "User Service", "Go", "Работа с пользователями и профилями", "go")
+Container(notification_service, "Notification Service", "Python", "Обработка событий и ответы пользователю", "python")
 
 ' Брокер сообщений
-ContainerQueue(NotificationQueue, "notifications_topic", "kafka", "Очередь для уведомлений", "kafka")
+ContainerQueue(message_broker, "Message Broker", "RabbitMQ", "Очередь сообщений", "rabbitmq")
 
 ' Базы данных
-ContainerDb(OrderDB, "orders_postgres", "Postgres", "Хранение данных заказов", "postgresql")
-ContainerDb(AnswersDB, "answer_postgres", "Postgres", "Хранение данных состояния заказа", "postgresql")
-ContainerDb(TutorsDB, "tutors_postgres", "Postgres", "Хранение данных о репетиторе", "postgresql")
+ContainerDb(order_db, "Order DB", "PostgreSQL", "Хранение заказов и откликов", "postgresql")
+ContainerDb(user_db, "User DB", "PostgreSQL", "Хранение данных пользователей и профилей", "postgresql")
+ContainerDb(notification_db, "Notification DB", "PostgreSQL", "Хранение тегов заказов и тегов репетиторов", "postgresql")
 
 ' Связи
-Rel(tutor, TutorsBot, "Открыть приложение")
-Rel(TutorsBot, tutor, "получить уведомление")
-Rel(tutor, TutorApp, "Управление профилем, управление заказами")
+Rel(user, nginx, "Запрос через UI-интерфейс")
+Rel(user, telegram_bot, "Взаимодействие внутри Telegram")
+Rel(telegram_bot, user, "Ответы, уведомления")
 
-Rel(student, LessonsBot, "Открыть приложение")
-Rel(LessonsBot, student, "получить уведомление")
+Rel(nginx, auth_service, "Отправка initData")
+Rel(telegram_bot, nginx, "Передача команд")
+Rel(auth_service, nginx, "Access Token")
+Rel(nginx, order_service, "REST API [Token]")
 
-Rel(student, LessonsApp, "Создание заказов, просмотр откликов")
+Rel(order_service, user_service, "Получение данных пользователя [gRPC]")
+Rel(auth_service, user_service, "Работа с пользователями [gRPC]")
+Rel(user_service, message_broker, "Изменения параметров (теги)")
+Rel(order_service, message_broker, "Публикация новых событий (создание заказа, отклик)")
+Rel(message_broker, notification_service, "Обработка событий")
+Rel(notification_service, telegram_bot, "Ответы пользователю (уведомления, сообщения)")
+Rel(nginx, notification_service, "Передача команд")
 
-Rel(TutorApp, order_service, "Просмотр/отклик на заказ", "REST")
-Rel(LessonsApp, order_service, "Создание/Просмотр заказа", "REST")
+Rel(order_service, order_db, "Чтение / Запись заказов и откликов")
+Rel(user_service, user_db, "Чтение / Запись данных пользователей")
+Rel(notification_service, notification_db, "Чтение / Запись тегов заказов и тегов репетитора")
 
-Rel(order_service, NotificationQueue, "Пишет в топик информацию о создании заказа и отклике")
-
-Rel(answer_engine_service, NotificationQueue, "Читает событие из топика")
-' answer_engine_service
-Rel(order_service, OrderDB, "Хранение данных заказов")
-Rel(answer_engine_service, AnswersDB, "Хранение данных заказов")
-
-Rel(answer_engine_service, TutorsBot, "уведомляет о новом заказе")
-Rel(answer_engine_service, LessonsBot, "уведомляет об отклике")
-
-Rel(TutorApp, tutors_service, "Изменить информацию о себе")
-Rel(LessonsApp, tutors_service, "Оставить отзыв")
-
-Rel(tutors_service, TutorsDB, "Хранение данных о репетиторе")
-'
-'Rel(order_service, notification_service, "Уведомление об изменениях статуса", "gRPC")
-'Rel(notification_service, NotificationQueue, "Отправка уведомлений в очередь", "Kafka")
-'Rel(notification_service, TutorApp, "Отправка уведомлений репетиторам")
 @enduml
