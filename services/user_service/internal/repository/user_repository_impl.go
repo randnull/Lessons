@@ -379,15 +379,22 @@ func (r *Repository) UpdateTutorName(tutorID string, name string) error {
 }
 
 func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) ([]*pb.Tutor, int, error) {
-	const queryCount = `
+	queryCount := `
 		SELECT 
 			COUNT(*)
 		FROM users u
 		JOIN tutors t ON u.id = t.id
 		WHERE u.role = $1 AND t.is_active = true AND u.is_banned = false`
 
+	argsCount := []interface{}{models.RoleTutor}
+
+	if tag != "" {
+		tag = strings.ToLower(tag)
+		queryCount += ` AND $2 = ANY(t.tags)`
+		argsCount = append(argsCount, tag)
+	}
 	var total int
-	err := r.db.QueryRow(queryCount, models.RoleTutor).Scan(&total)
+	err := r.db.QueryRow(queryCount, argsCount...).Scan(&total)
 
 	if err != nil {
 		return nil, 0, err
