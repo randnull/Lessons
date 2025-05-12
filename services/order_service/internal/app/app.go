@@ -100,9 +100,9 @@ func (a *App) Run(ctx context.Context) error {
 	orders.Delete("/id/:id", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.DeleteOrderByID)
 	orders.Post("/id/:id/active", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.SetActiveToOrder)
 	orders.Post("/select/id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.SelectTutorToOrder)
-	orders.Post("/suggest/tutor_id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.SuggestOrder)
+	orders.Post("/suggest/tutor/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, studentType), a.orderControllers.SuggestOrder)
 
-	orders.Get("/mini/id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetOrderByIdTutor)
+	orders.Get("/tutor/id/:id/", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetOrderByIdTutor)
 	orders.Get("/pagination", controllers.TokenAuthMiddleware(a.cfg.BotConfig, tutorType), a.orderControllers.GetOrdersPagination)
 
 	responses := router.Group("api/responses")
