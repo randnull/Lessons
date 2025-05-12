@@ -1,4 +1,4 @@
-@startuml c4_lessons_updated
+@startuml c4_containers
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 !define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
 !include DEVICONS/go.puml

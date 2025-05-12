@@ -19,26 +19,28 @@ async def process_subscription_callback(callback_query: CallbackQuery, bot: Bot)
     logger.info(f"process_subscription_callback called with callback_query {callback_query}")
 
     if subscription_type == "sub_5":
-        amount = 5
-        description = "Оплатить 10⭐"
-    elif subscription_type == "sub_10":
-        amount = 10
-        description = "Оплатить 20⭐"
-    elif subscription_type == "sub_15":
-        amount = 15
-        description = "Оплатить 30⭐"
-    elif subscription_type == "sub_30":
         amount = 30
-        description = "Оплатить 50⭐"
+        description = "Оплатить 30⭐"
+    elif subscription_type == "sub_10":
+        amount = 60
+        description = "Оплатить 60⭐"
+    elif subscription_type == "sub_15":
+        amount = 90
+        description = "Оплатить 90⭐"
+    elif subscription_type == "sub_30":
+        amount = 120
+        description = "Оплатить 120⭐"
     else:
         await callback_query.answer("Недостустимое количетсво!")
         return
 
-    prices = [LabeledPrice(label="XTR", amount=amount)] # amount
+    response_count =  int(payload.split("_")[1])
+
+    prices = [LabeledPrice(label="XTR", amount=amount)]
 
     await bot.send_invoice(
         chat_id=callback_query.from_user.id,
-        title="Покупка откликов",
+        title=f"Покупка откликов [{response_count}]",
         description=description,
         prices=prices,
         provider_token="",
@@ -60,7 +62,7 @@ async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
     if not payload.startswith("subscription:"):
         await pre_checkout_query.answer(
             ok=False,
-            error_message="Неверные данные платежа."
+            error_message="Неверные данные."
         )
         return
 
@@ -81,7 +83,7 @@ async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
         return
 
     responses, status = await add_tutor_responses(tutor_id, total_amount)
-    logger.info(f"add_tutor_responses called. Answer: {responses} {status}")
+    logger.info(f"add_tutor_responses called for tutor_id: {tutor_id}. Answer: {responses} {status}")
 
     if not status:
         await pre_checkout_query.answer(ok=False, error_message="Пожалуйста, попробуйте позже")
@@ -93,9 +95,8 @@ async def success_payment_handler(message: Message):
     payload = message.successful_payment.invoice_payload
     response_count = payload.split("_")[1]
 
-    await message.answer(text=f"🥳 Вы успешно приобрели отклики: {response_count} уже на вашем балансе!")
+    await message.answer(text=f"🥳 Вы успешно приобрели отклики: {response_count} откликов добавлены на вашем балансе!")
 
 
 async def pay_support_handler(message: Message):
     await message.answer(text=f"Если у вас возникли какие-либо проблемы - свяжитесь с поддержкой: {settings.SUPPORT_CHANNEL}")
-

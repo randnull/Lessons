@@ -49,4 +49,3 @@ def payment_keyboard():
 
     return builder.as_markup()
 
-
