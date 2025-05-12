@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/randnull/Lessons/internal/auth"
 	"github.com/randnull/Lessons/internal/config"
@@ -55,7 +54,7 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 			lg.Error(fmt.Sprintf("Error check. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, err.Error()))
 		} else if user.IsBanned {
 			lg.Info(fmt.Sprintf("Banned user. User-Telegram-Id: %v. User-Role: %v.", userData.User.ID, AuthData.Role))
-			return "", errors.New("Forbidden")
+			return "", custom_errors.ErrorInvalidToken
 		}
 
 	case models.RoleStudent:
@@ -66,7 +65,7 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 			lg.Error(fmt.Sprintf("Error check. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, err.Error()))
 		} else if user.IsBanned {
 			lg.Info(fmt.Sprintf("Banned user. User-Telegram-Id: %v. User-Role: %v.", userData.User.ID, AuthData.Role))
-			return "", errors.New("Forbidden")
+			return "", custom_errors.ErrorInvalidToken
 		}
 
 	case models.RoleAdmin:
@@ -77,14 +76,14 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 
 	if errValidate != nil {
 		lg.Error(fmt.Sprintf("Error validation. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, errValidate.Error()))
-		//return "", errValidate
+		return "", errValidate
 	}
 
 	lg.Info("request to create user")
 
 	if (AuthData.Role == models.RoleAdmin) && (userData.User.ID != authserv.cfg.AdminId) {
 		lg.Error(fmt.Sprintf("Error Auth Admin. User-Telegram-Id: %v. User-Role: %v. Error: Not allowed", userData.User.ID, AuthData.Role))
-		return "", errors.New("Not allowed")
+		return "", custom_errors.ErrorInvalidToken
 	}
 
 	userID, err := authserv.GRPCClient.CreateUser(context.Background(), &models.NewUser{
