@@ -20,16 +20,16 @@ async def process_subscription_callback(callback_query: CallbackQuery, bot: Bot)
 
     if subscription_type == "sub_5":
         amount = 30
-        description = "Оплатить 30⭐"
+        description = "Покупка 5 откликов"
     elif subscription_type == "sub_10":
         amount = 60
-        description = "Оплатить 60⭐"
+        description = "Покупка 10 откликов"
     elif subscription_type == "sub_15":
         amount = 90
-        description = "Оплатить 90⭐"
+        description = "Покупка 15 откликов"
     elif subscription_type == "sub_30":
         amount = 120
-        description = "Оплатить 120⭐"
+        description = "Покупка 30 откликов"
     else:
         await callback_query.answer("Недостустимое количетсво!")
         return
