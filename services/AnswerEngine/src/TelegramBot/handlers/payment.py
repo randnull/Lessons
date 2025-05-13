@@ -34,7 +34,7 @@ async def process_subscription_callback(callback_query: CallbackQuery, bot: Bot)
         await callback_query.answer("Недостустимое количетсво!")
         return
 
-    response_count =  int(payload.split("_")[1])
+    response_count =  int(subscription_type.split("_")[1])
 
     prices = [LabeledPrice(label="XTR", amount=amount)]
 
