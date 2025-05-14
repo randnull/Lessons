@@ -31,14 +31,6 @@ class OrderDao(Base):
         )
 
 
-class ResponseDao(Base):
-    __tablename__ = 'responses'
-
-    response_id: Mapped[UUID] = mapped_column(UUID, primary_key=True)
-    tutor_id: Mapped[BIGINT] = mapped_column(BIGINT)
-    order_id: Mapped[UUID] = mapped_column(UUID)
-
-
 class TagDao(Base):
     __tablename__ = "tags"
 

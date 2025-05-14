@@ -53,7 +53,6 @@ async def process_subscription_callback(callback_query: CallbackQuery, bot: Bot)
 
 async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
     payload = pre_checkout_query.invoice_payload
-    total_amount = pre_checkout_query.total_amount
     currency = pre_checkout_query.currency
     tutor_id = pre_checkout_query.from_user.id
 
@@ -81,6 +80,8 @@ async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
             error_message="Поддерживается только XTR."
         )
         return
+
+    total_amount = sub_type
 
     responses, status = await add_tutor_responses(tutor_id, total_amount)
     logger.info(f"add_tutor_responses called for tutor_id: {tutor_id}. Answer: {responses} {status}")

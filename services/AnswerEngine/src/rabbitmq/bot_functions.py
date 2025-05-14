@@ -2,7 +2,7 @@ from typing import List
 
 from AnswerEngine.src.TelegramBot.botStudent import bot_student
 from AnswerEngine.src.TelegramBot.botTutor import bot_tutor
-from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard, review_keyboard
+from AnswerEngine.src.TelegramBot.keyboards.keyboards import suggest_keyboard
 from AnswerEngine.src.logger.logger import logger
 from AnswerEngine.src.models.dao_table.dao import OrderStatus
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, SelectedDto, \
@@ -112,7 +112,7 @@ async def proceed_review(new_review: ReviewDto) -> None:
     )
 
     try:
-        await bot_tutor.send_message(chat_id=new_review.tutor_telegram_id, text=message, parse_mode="html", reply_markup=review_keyboard(new_review.order_id))
+        await bot_tutor.send_message(chat_id=new_review.tutor_telegram_id, text=message, parse_mode="html")
         logger.info(f"[NOTIFY-TUTOR] approved review: {new_review.order_id} to user: {new_review.tutor_telegram_id} send!")
     except Exception as ex:
         logger.error(f"[NOTIFY-TUTOR] approved review: {new_review.order_id} to user: {new_review.tutor_telegram_id} failed!. Error: {ex}!")

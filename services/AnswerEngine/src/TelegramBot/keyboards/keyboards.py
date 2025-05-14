@@ -28,15 +28,6 @@ def suggest_keyboard(order_id) -> InlineKeyboardMarkup:
     ])
     return keyboard
 
-def review_keyboard(review_id) -> InlineKeyboardMarkup:
-    keyboard = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(
-            text="Перейти к отклику",
-            web_app=WebAppInfo(url=f"https://lessonsmy.tech/reps/#/response/id/{review_id}")
-        )]
-    ])
-    return keyboard
-
 def payment_keyboard():
     builder = InlineKeyboardBuilder()
 
