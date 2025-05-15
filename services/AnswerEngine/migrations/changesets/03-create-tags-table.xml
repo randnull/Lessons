@@ -13,10 +13,10 @@ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
 
 <changeSet author="k.goryunov" id="create-tags-table">
     <createTable tableName="tags">
-        <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primary key uuid">
+        <column name="id" type="${uuid_type}" defaultValueComputed="${uuid_function}" remarks="primary key">
             <constraints nullable="false" unique="true" primaryKey="true"/>
         </column>
-        <column name="tag_name" type="VARCHAR(255)">
+        <column name="tag_name" type="VARCHAR(100)">
             <constraints unique="true" nullable="false"/>
         </column>
     </createTable>

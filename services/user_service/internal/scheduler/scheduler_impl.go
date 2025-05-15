@@ -51,7 +51,7 @@ func (s *Scheduler) RunResponseChecker(ctx context.Context) {
 			}
 			err = s.ProducerBroker.Publish("add_responses", &NotifyModel)
 			if err != nil {
-				lg.Error("[Scheduler] cannot pushed to broker, error: " + err.Error())
+				lg.Error("[Scheduler] cannot push to broker, error: " + err.Error())
 			}
 		}
 	})

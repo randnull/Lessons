@@ -33,7 +33,7 @@ func main() {
 
 	go func() {
 		<-sigs
-		lg.Info("Graceful shutdown signal received")
+		lg.Info("Graceful shutdown started")
 		stop()
 	}()
 

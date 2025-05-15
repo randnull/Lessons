@@ -2,15 +2,11 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
 	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -49,9 +45,6 @@ func (s *UserControllers) GetUserByTelegramId(ctx context.Context, in *pb.GetByT
 	user, err := s.UserService.GetUserByTelegramId(in.Id, in.Role)
 
 	if err != nil {
-		if errors.Is(err, custom_errors.UserNotFound) {
-			return nil, status.Errorf(codes.NotFound, "tutor not found: "+err.Error())
-		}
 		lg.Error("GetUserByTelegramId failed. UserTelegramID: " + fmt.Sprint(in.Id) + "Error: " + err.Error())
 		return nil, err
 	}
@@ -93,9 +86,6 @@ func (s *UserControllers) GetTutorById(ctx context.Context, in *pb.GetById) (*pb
 	tutor, err := s.UserService.GetTutorById(in.Id)
 
 	if err != nil {
-		if errors.Is(err, custom_errors.UserNotFound) {
-			return nil, status.Errorf(codes.NotFound, "tutor not found: "+err.Error())
-		}
 		lg.Error("GetTutorById failed. UserID: " + in.Id + "Error: " + err.Error())
 		return nil, err
 	}

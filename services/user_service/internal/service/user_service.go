@@ -91,13 +91,7 @@ func (s *UserService) GetTutorsPagination(page int, size int, tag string) (*pb.G
 }
 
 func (s *UserService) UpdateTutorTags(tutorID string, tags []string) error {
-	err := s.userRepository.UpdateTutorTags(tutorID, tags)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.userRepository.UpdateTutorTags(tutorID, tags)
 }
 
 func (s *UserService) CreateReview(tutorID string, orderID string, rating int, comment string) (string, error) {
@@ -155,13 +149,7 @@ func (s *UserService) SetReviewActive(reviewID string) error {
 }
 
 func (s *UserService) BanUser(telegramID int64, isBanned bool) error {
-	err := s.userRepository.BanUser(telegramID, isBanned)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return s.userRepository.BanUser(telegramID, isBanned)
 }
 
 func (s *UserService) GetUserById(UserId string) (*models.UserDB, error) {

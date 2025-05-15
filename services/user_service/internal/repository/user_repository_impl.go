@@ -101,9 +101,11 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 
 	if user.Role == models.RoleTutor {
 		const queryInsertTutor = `
-				INSERT INTO tutors (
+				INSERT INTO tutors 
+				(
                     id,
-                    created_at)
+                    created_at
+                )
 				VALUES ($1, $2)`
 
 		_, err = tx.Exec(queryInsertTutor, UserId, currentTime)
@@ -122,6 +124,37 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 	}
 
 	return UserId, nil
+}
+
+func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
+	lg.Info("[Postgres] GetUserById called. UserID: " + userID)
+
+	var user models.UserDB
+
+	const query = `
+		SELECT 
+		    id,
+		    telegram_id,
+		    name, 
+		    role, 
+		    is_banned,
+		    created_at 
+		FROM users 
+		WHERE id = $1`
+
+	err := r.db.Get(&user, query, userID)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, custom_errors.UserNotFound
+		}
+		lg.Error("[Postgres] GetUserById error: " + err.Error())
+		return nil, err
+	}
+
+	lg.Info("[Postgres] GetUserById success. UserID: " + userID)
+
+	return &user, nil
 }
 
 func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*models.UserDB, error) {
@@ -656,11 +689,7 @@ func (r *Repository) SetReviewActive(reviewID, tutorID string) error {
 		return custom_errors.ErrorServiceError
 	}
 
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback()
-		}
-	}()
+	defer tx.Rollback()
 
 	const querySetActive = `
 		UPDATE reviews SET
@@ -668,6 +697,7 @@ func (r *Repository) SetReviewActive(reviewID, tutorID string) error {
 		WHERE id = $1`
 
 	res, err := tx.Exec(querySetActive, reviewID)
+
 	if err != nil {
 		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
 		return custom_errors.ErrorServiceError
@@ -788,35 +818,4 @@ func (r *Repository) BanUser(telegramID int64, isBanned bool) error {
 	}
 
 	return nil
-}
-
-func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
-	lg.Info("[Postgres] GetUserById called. UserID: " + userID)
-
-	var user models.UserDB
-
-	const query = `
-		SELECT 
-		    id,
-		    telegram_id,
-		    name, 
-		    role, 
-		    is_banned,
-		    created_at 
-		FROM users 
-		WHERE id = $1`
-
-	err := r.db.Get(&user, query, userID)
-
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, custom_errors.UserNotFound
-		}
-		lg.Error("[Postgres] GetUserById error: " + err.Error())
-		return nil, err
-	}
-
-	lg.Info("[Postgres] GetUserById success. UserID: " + userID)
-
-	return &user, nil
 }

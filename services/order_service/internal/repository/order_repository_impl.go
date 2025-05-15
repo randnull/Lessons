@@ -487,6 +487,7 @@ func (o *Repository) CreateResponse(orderID string,
 	greetingsMessage := response.Greetings
 
 	err = tx.QueryRow(queryInsert, orderID, Tutor.Name, Tutor.Id, username, greetingsMessage, false, timestamp).Scan(&ResponseID)
+
 	if err != nil {
 		logger.Error("[Postgres] CreateResponse error" + err.Error())
 		return "", err

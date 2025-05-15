@@ -6,7 +6,6 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/custom_errors"
 	pb "github.com/randnull/Lessons/internal/gRPC"
-	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"google.golang.org/grpc"
 	"log"
@@ -23,7 +22,7 @@ func NewGRPCClient(cfg config.GRPCConfig) *GRPCClient {
 
 	conn, err := grpc.Dial(connectionLink, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
-		log.Fatalf("error connection to grpc: %v", err)
+		log.Fatal("error connection to grpc: " + err.Error())
 	}
 
 	client := pb.NewUserServiceClient(conn)
@@ -266,8 +265,6 @@ func (g *GRPCClient) GetTutorInfoById(ctx context.Context, tutorID string, isOwn
 }
 
 func (g *GRPCClient) ChangeTutorActive(ctx context.Context, tutorID string, active bool) (bool, error) {
-	lg.Info(fmt.Sprintf("[gRPC] ChangeTutorActive. isActive: %v. tutorID: %v.", active, tutorID))
-
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 

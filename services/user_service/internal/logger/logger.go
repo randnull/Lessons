@@ -26,8 +26,8 @@ func InitLogger() error {
 	}
 
 	infoLogger = log.New(file, "INFO: ", log.Ldate|log.Ltime)
-	errorLogger = log.New(file, "ERROR: ", log.Ldate|log.Ltime|log.Lshortfile)
-	debugLogger = log.New(file, "DEBUG: ", log.Ldate|log.Ltime|log.Lshortfile)
+	errorLogger = log.New(file, "ERROR: ", log.Ldate|log.Ltime)
+	debugLogger = log.New(file, "DEBUG: ", log.Ldate|log.Ltime)
 
 	return nil
 }

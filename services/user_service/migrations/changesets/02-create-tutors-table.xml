@@ -13,18 +13,18 @@
 
     <changeSet author="k.goryunov" id="create-tutors-table">
         <createTable tableName="tutors" remarks="Table with tutors">
-            <column name="id" type="${uuid_type}" remarks="Primary key UUID">
+            <column name="id" type="${uuid_type}" remarks="Primary key">
                 <constraints primaryKey="true" nullable="false" foreignKeyName="fk_tutors_users" references="users(id)"/>
             </column>
 
-            <column name="is_active" type="BOOLEAN" defaultValueBoolean="false" remarks="if the tutor is active">
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="false" remarks="is active">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="bio" type="VARCHAR(500)" remarks="Tutor's biography">
+            <column name="bio" type="VARCHAR(500)" remarks="Tutor bio">
             </column>
 
-            <column name="rating" type="INTEGER" defaultValueComputed="0" remarks="Tutor's rating">
+            <column name="rating" type="INTEGER" defaultValueComputed="0" remarks="Tutor rating">
                 <constraints nullable="false"/>
             </column>
 
@@ -35,7 +35,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP" remarks="creation timestamp">
+            <column name="created_at" type="TIMESTAMPZ" defaultValueComputed="CURRENT_TIMESTAMP" remarks="creation timestamp">
                 <constraints nullable="false"/>
             </column>
         </createTable>

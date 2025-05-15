@@ -18,8 +18,7 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 
 		if token == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": true,
-				"msg":   "No token provided",
+				"error": "No token provided",
 			})
 		}
 
@@ -29,8 +28,7 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 			logger.Debug("TokenAuthMiddleware failed: " + err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": true,
-				"msg":   "Bad auth data provided. Error in Parse",
+				"error": "Bad auth data provided. Error in Parse",
 			})
 		}
 
@@ -38,25 +36,21 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 			logger.Debug("TokenAuthMiddleware failed. Get " + UserClaims.Role + " as Role")
 
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": true,
-				"msg":   "Bad auth data provided. Role forbidden",
+				"error": "Bad auth data provided. Role forbidden",
 			})
 		}
 
 		if userType == models.StudentType && UserClaims.Role != models.StudentType {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": true,
-				"msg":   "Bad auth data provided. Role mismatch",
+				"error": "Bad auth data provided. Role mismatch",
 			})
 		} else if userType == models.TutorType && UserClaims.Role != models.TutorType {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": true,
-				"msg":   "Bad auth data provided. Role mismatch",
+				"error": "Bad auth data provided. Role mismatch",
 			})
 		} else if userType == models.AdminType && UserClaims.Role != models.AdminType {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": true,
-				"msg":   "Bad auth data provided. Role mismatch",
+				"error": "Bad auth data provided. Role mismatch",
 			})
 		}
 
@@ -64,8 +58,7 @@ func TokenAuthMiddleware(cfg config.BotConfig, userType string) fiber.Handler {
 			logger.Info("TokenAuthMiddleware failed: " + err.Error())
 
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"error": true,
-				"msg":   "Bad auth data provided. Error in Parse",
+				"error": "Bad auth data provided. Error in Parse",
 			})
 		}
 

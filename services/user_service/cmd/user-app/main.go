@@ -32,7 +32,7 @@ func main() {
 
 	go func() {
 		<-sigs
-		log.Println("Graceful shutdown signal received")
+		log.Println("Graceful shutdown started")
 		stop()
 	}()
 

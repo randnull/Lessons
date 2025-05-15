@@ -29,7 +29,7 @@ package "UserGroup" {
     *id : UUID <<PK>>
     --
     tutor_id : UUID <<FK tutors.id>>
-    order_id : UUID <<FK orders.id>>
+    order_id : UUID
     rating : INT
     comment : VARCHAR
     created_at : TIMESTAMP
@@ -58,7 +58,7 @@ package "OrderGroup" {
     *id : UUID <<PK>>
     --
     order_id : UUID <<FK orders.id>>
-    tutor_id : UUID <<FK tutors.id>>
+    tutor_id : UUID
     name : VARCHAR
     tutor_username : VARCHAR
     greetings : VARCHAR
@@ -75,13 +75,27 @@ package "TagGroup" {
   }
 
   entity "order_tags" {
-    *order_id : UUID <<PK>> <<FK orders.id>>
+    *order_id : UUID
     *tag_id : UUID <<PK>> <<FK tags.id>>
   }
 
   entity "tutor_tags" {
     *tutor_id : BIGINT <<PK>>
-    *tag_id : UUID <<PK>> <<FK tags.id>>
+    *tag_id : UUID <<FK tags.id>>
+  }
+
+  entity "suggest_table" {
+    *tutor_id : BIGINT
+    *order_id : UUID
+  }
+
+  entity "short_orders" {
+    *order_id : UUID
+    --
+    order_name : VARCHAR
+    student_id : BIGINT
+    status : VARCHAR
+    created_at : TIMESTAMP
   }
 }
 
@@ -94,5 +108,8 @@ orders ||--o{ order_tags : order_id
 tags ||--o{ order_tags : tag_id
 tutors ||--o{ tutor_tags : tutor_id
 tags ||--o{ tutor_tags : tag_id
+
+tutors ||--o{ suggest_table : tutor_id
+orders ||--o{ suggest_table : order_id
 
 @enduml

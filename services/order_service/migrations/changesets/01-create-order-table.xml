@@ -17,11 +17,11 @@
                 <constraints nullable="false" unique="true" primaryKey="true"/>
             </column>
 
-            <column name="name" type="VARCHAR(100)" remarks="student id (uuid)">
+            <column name="name" type="VARCHAR(100)" remarks="student id">
                 <constraints nullable="false"/>
             </column>
 
-            <column name="student_id" type="${uuid_type}" remarks="student id (uuid)">
+            <column name="student_id" type="${uuid_type}" remarks="student id">
                 <constraints nullable="false"/>
             </column>
 
@@ -49,7 +49,7 @@
                 <constraints nullable="false"/>
             </column>
 
-            <column name="status" type="VARCHAR(30)" remarks="order status">
+            <column name="status" type="VARCHAR(50)" remarks="order status">
                 <constraints nullable="false"/>
             </column>
 

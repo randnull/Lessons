@@ -13,7 +13,6 @@ import (
 	"github.com/randnull/Lessons/internal/service"
 	"google.golang.org/grpc"
 
-	"log"
 	"net"
 )
 
@@ -67,12 +66,11 @@ func (a *App) Run(ctx context.Context) error {
 	}()
 
 	lg.Info("gRPC server listening: " + a.cfg.ServerPort)
-	log.Println("gRPC server listening: " + a.cfg.ServerPort)
 
 	<-ctx.Done()
 
 	s.GracefulStop()
-	log.Println("gRPC successfully shutdown")
+	lg.Info("gRPC successfully shutdown")
 
 	return nil
 }

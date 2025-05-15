@@ -8,6 +8,8 @@ from AnswerEngine.src.models.dao_table.dao import OrderStatus
 from AnswerEngine.src.models.dto_table.dto import NewOrderDto, ResponseDto, SuggestDto, SelectedDto, \
     ReviewDto, OrderDto, AddResponseDto
 
+from AnswerEngine.src.config.settings import settings
+
 
 async def proceed_order(order_create: NewOrderDto) -> None:
     messageWaiting = (
@@ -45,7 +47,9 @@ async def proceed_order_to_tutors(order_create: NewOrderDto, tutors_id: List[int
 async def proceed_response(response: ResponseDto) -> None:
     messageStudent = (
         f"<b>У вашего заказа \"{response.order_name}\" появился новый отклик!</b>\n\n"
-        "👀 <i>Вы можете рассмотреть отклик и связаться с исполнителем.</i>"
+        "👀 <i>Вы можете рассмотреть отклик и связаться с исполнителем.</i>\n\n"
+        f"⚠️ <i>В случае, если репетитор просит оплату вперед занятия, сообщите об этом в поддержку: {settings.SUPPORT_CHANNEL}!</i>"
+        f"⚠️ <i>Мы настоятельно не рекомендуем производить оплату вперед занятий!</i>"
     )
 
     messageTutor = (

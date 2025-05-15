@@ -16,16 +16,16 @@ xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         <column name="order_id" type="${uuid_type}">
             <constraints nullable="false" unique="true" primaryKey="true"/>
         </column>
-        <column name="order_name" type="VARCHAR(255)">
+        <column name="order_name" type="VARCHAR(100)">
             <constraints nullable="false"/>
         </column>
         <column name="student_id" type="BIGINT">
             <constraints nullable="false"/>
         </column>
-        <column name="status" type="VARCHAR(255)">
+        <column name="status" type="VARCHAR(50)">
             <constraints nullable="false"/>
         </column>
-        <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP" remarks="creation timestamp">
+        <column name="created_at" type="TIMESTAMPZ" defaultValueComputed="CURRENT_TIMESTAMP" remarks="creation timestamp">
             <constraints nullable="false"/>
         </column>
     </createTable>

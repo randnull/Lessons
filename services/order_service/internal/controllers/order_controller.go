@@ -98,13 +98,13 @@ func (c *OrderController) GetOrderByID(ctx *fiber.Ctx) error {
 
 	if err != nil {
 		if errors.Is(err, custom_errors.ErrorServiceError) {
-			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
+			return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "service error"})
 		}
 		if errors.Is(err, custom_errors.ErrNotAllowed) {
-			return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "Not allowed"})
+			return ctx.Status(fiber.StatusForbidden).JSON(fiber.Map{"error": "not allowed"})
 		}
 		if errors.Is(err, custom_errors.ErrorNotFound) {
-			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Order not found"})
+			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "order not found"})
 		}
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -125,7 +125,7 @@ func (c *OrderController) GetOrdersPagination(ctx *fiber.Ctx) error {
 	page, err := strconv.Atoi(ctx.Query("page"))
 
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Page param not correct"})
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "page param not correct"})
 	}
 
 	size, err := strconv.Atoi(ctx.Query("size"))
@@ -161,7 +161,7 @@ func (c *OrderController) GetStudentOrdersPagination(ctx *fiber.Ctx) error {
 	page, err := strconv.Atoi(ctx.Query("page"))
 
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Page param not correct"})
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "page param not correct"})
 	}
 
 	size, err := strconv.Atoi(ctx.Query("size"))
@@ -177,7 +177,7 @@ func (c *OrderController) GetStudentOrdersPagination(ctx *fiber.Ctx) error {
 	orders, err := c.OrderService.GetStudentOrdersWithPagination(page, size, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "Service error"})
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": "service error"})
 	}
 
 	custom_logger.Info("[OrderController] GetStudentOrdersPagination successful")
@@ -233,7 +233,7 @@ func (c *OrderController) UpdateOrderByID(ctx *fiber.Ctx) error {
 	err = c.OrderService.UpdateOrder(orderID, &order, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	custom_logger.Info("[OrderController] UpdateOrderByID successful")
@@ -254,7 +254,7 @@ func (c *OrderController) SelectTutorToOrder(ctx *fiber.Ctx) error {
 	err = c.OrderService.SelectTutor(responseID, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	custom_logger.Info("[OrderController] SelectTutorToOrder successful")
@@ -287,7 +287,7 @@ func (c *OrderController) SetActiveToOrder(ctx *fiber.Ctx) error {
 	err = c.OrderService.SetActiveOrderStatus(orderID, IsActive.IsActive, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	custom_logger.Info("[OrderController] SetActiveToOrder successful")
