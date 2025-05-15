@@ -15,7 +15,7 @@ func CreateJWTToken(userID string, telegramID int64, username string, role strin
 		TelegramID: telegramID,
 		Role:       role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(TokenAlive) * time.Hour)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(TokenAlive) * time.Minute)),
 		},
 	}
 

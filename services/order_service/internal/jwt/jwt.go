@@ -12,7 +12,9 @@ func ParseJWTToken(tokenStr string, jwtSecret string) (*models.Claims, error) {
 
 	claims := &models.Claims{}
 
-	token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+	parser := jwt.NewParser(jwt.WithValidMethods([]string{"HS256"}), jwt.WithExpirationRequired())
+
+	token, err := parser.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
 		return secretKey, nil
 	})
 

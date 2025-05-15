@@ -43,7 +43,7 @@ func (a *App) Run(ctx context.Context) error {
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
-		AllowMethods: "GET,POST,PUT,DELETE",
+		AllowMethods: "GET,POST",
 		AllowHeaders: "*",
 	}))
 

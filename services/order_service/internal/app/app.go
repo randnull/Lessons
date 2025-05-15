@@ -12,7 +12,6 @@ import (
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/rabbitmq"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/randnull/Lessons/internal/controllers"
@@ -69,15 +68,7 @@ func (a *App) Run(ctx context.Context) error {
 
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: "*",
-		AllowMethods: strings.Join([]string{
-			fiber.MethodGet,
-			fiber.MethodPost,
-			fiber.MethodHead,
-			fiber.MethodPut,
-			fiber.MethodDelete,
-			fiber.MethodPatch,
-			fiber.MethodOptions,
-		}, ","),
+		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders: "*",
 	}))
 
