@@ -20,5 +20,5 @@ async def cmd_help(message: Message):
 
 @student_router.message(F.text.startswith("/"))
 async def unknown_command(message: Message):
-    logger.info(f"[student] unknown_command run by user {message.from_user.id} with command: {message.text}")
+    logger.info(f"[student] unknown command run by user {message.from_user.id} with command: {message.text}")
     await message.answer("Извините, такой команды не существует.")
