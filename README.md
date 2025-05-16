@@ -13,15 +13,3 @@
 .env.example: файл с примером необходимых .env переменных
 
 docker-compose.prod.yml - основной файл для запуска 
-
-Схема баз данных:
-
-![Иллюстрация к проекту](https://github.com/randnull/Lessons/blob/main/docs/DB_er_diagram/Lessons_bd.png)
-
-Контекстная архитектура проекта:
-
-![Иллюстрация к проекту](https://github.com/randnull/Lessons/blob/main/docs/services_c4_diagram/c4_context_lessons.png)
-
-Общая архитектура проекта:
-
-![Иллюстрация к проекту](https://github.com/randnull/Lessons/blob/main/docs/services_c4_diagram/с4-containers.png)
