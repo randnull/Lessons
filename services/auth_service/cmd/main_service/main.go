@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/randnull/Lessons/internal/app"
 	"github.com/randnull/Lessons/internal/config"
-	lg "github.com/randnull/Lessons/internal/logger"
+	lg "github.com/randnull/Lessons/pkg/logger"
 	"log"
 	"os"
 	"os/signal"

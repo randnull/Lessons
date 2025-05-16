@@ -8,10 +8,9 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/gRPC_client"
-	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
-	"github.com/randnull/Lessons/internal/rabbitmq"
-	"log"
+	lg "github.com/randnull/Lessons/pkg/logger"
+	"github.com/randnull/Lessons/pkg/rabbitmq"
 	"time"
 
 	"github.com/randnull/Lessons/internal/controllers"
@@ -131,10 +130,12 @@ func (a *App) Run(ctx context.Context) error {
 
 	ListenPort := fmt.Sprintf(":%v", a.cfg.ServerPort)
 
+	lg.Error(fmt.Sprintf("server starting listening port: %v", ListenPort))
+
 	go func() {
 		err := router.Listen(ListenPort)
 		if err != nil {
-			log.Printf("server stopped with error: %v", err)
+			lg.Error(fmt.Sprintf("server stopped with error: %v", err))
 		}
 	}()
 
@@ -147,7 +148,7 @@ func (a *App) Run(ctx context.Context) error {
 
 	err := router.ShutdownWithContext(shutdownCtx)
 	if err != nil {
-		log.Printf("server shutdown error: %v", err)
+		lg.Info(fmt.Sprintf("server shutdown error: %v", err))
 		return err
 	}
 

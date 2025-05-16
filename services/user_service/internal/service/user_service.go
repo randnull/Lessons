@@ -2,11 +2,11 @@ package service
 
 import (
 	"fmt"
-	"github.com/randnull/Lessons/internal/custom_errors"
-	pb "github.com/randnull/Lessons/internal/gRPC"
-	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/repository"
+	"github.com/randnull/Lessons/pkg/custom_errors"
+	pb "github.com/randnull/Lessons/pkg/gRPC"
+	lg "github.com/randnull/Lessons/pkg/logger"
 )
 
 type UserServiceInt interface {

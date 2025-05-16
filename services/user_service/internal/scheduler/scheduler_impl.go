@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/go-co-op/gocron"
 	"github.com/randnull/Lessons/internal/config"
-	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
-	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
+	lg "github.com/randnull/Lessons/pkg/logger"
+	"github.com/randnull/Lessons/pkg/rabbitmq"
 	"time"
 )
 

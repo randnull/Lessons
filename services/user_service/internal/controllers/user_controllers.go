@@ -3,10 +3,10 @@ package controllers
 import (
 	"context"
 	"fmt"
-	pb "github.com/randnull/Lessons/internal/gRPC"
-	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
+	pb "github.com/randnull/Lessons/pkg/gRPC"
+	lg "github.com/randnull/Lessons/pkg/logger"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

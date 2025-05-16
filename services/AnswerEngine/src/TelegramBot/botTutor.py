@@ -26,7 +26,7 @@ async def start_tutor() -> None:
 
 async def stop_tutor() -> None:
     try:
-        await bot_tutor.send_message(settings.ADMIN_USER, f"BOT STOPPED. Time: {datetime.datetime.now()}")
+        await bot_tutor.send_message(settings.ADMIN_USER, f"BOT Stopped. Time: {datetime.datetime.now()}")
         logger.info(f"Stopping tutor bot at {datetime.datetime.now()}")
     except Exception as ex:
         logger.error(f"Tutor bot error stop: {ex}")

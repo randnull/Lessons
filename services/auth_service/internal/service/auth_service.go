@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/randnull/Lessons/internal/auth"
 	"github.com/randnull/Lessons/internal/config"
-	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
-	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
+	"github.com/randnull/Lessons/pkg/custom_errors"
+	lg "github.com/randnull/Lessons/pkg/logger"
 	initdata "github.com/telegram-mini-apps/init-data-golang"
 	"time"
 )
@@ -28,63 +28,53 @@ func NewAuthService(cfg *config.JWTConfig, grpcClient gRPC_client.GRPCClientInt)
 		GRPCClient: grpcClient,
 	}
 }
-
 func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
-	lg.Info("parsing jwt")
+	lg.Info(fmt.Sprintf("Login started , role=%v", AuthData.Role))
 
 	userData, err := initdata.Parse(AuthData.InitData)
-
 	if err != nil {
-		lg.Error(fmt.Sprintf("jwt parsing create error: %v", err))
+		lg.Error(fmt.Sprintf("InitData parse failed, error=%v", err))
 		return "", err
 	}
 
-	lg.Info(fmt.Sprintf("parsing ok. User-Telegram-Id: %v. User-Role: %v", userData.User.ID, AuthData.Role))
+	lg.Info(fmt.Sprintf("InitData parsed, telegram_id=%v, role=%v", userData.User.ID, AuthData.Role))
 
-	aliveTime := authserv.cfg.InitDataAliveTime
+	aliveTime := time.Duration(authserv.cfg.InitDataAliveTime) * time.Hour
 
 	var errValidate error
 
 	switch AuthData.Role {
 	case models.RoleTutor:
-		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenTutor, time.Duration(aliveTime)*time.Minute)
-
-		user, err := authserv.GRPCClient.GetUserByTelegramID(context.Background(), userData.User.ID, models.RoleTutor)
-		if err != nil {
-			lg.Error(fmt.Sprintf("Error check. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, err.Error()))
-		} else if user.IsBanned {
-			lg.Info(fmt.Sprintf("Banned user. User-Telegram-Id: %v. User-Role: %v.", userData.User.ID, AuthData.Role))
-			return "", custom_errors.ErrorInvalidToken
-		}
-
+		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenTutor, aliveTime)
 	case models.RoleStudent:
-		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenStudent, time.Duration(aliveTime)*time.Minute)
-
-		user, err := authserv.GRPCClient.GetUserByTelegramID(context.Background(), userData.User.ID, models.RoleStudent)
-		if err != nil {
-			lg.Error(fmt.Sprintf("Error check. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, err.Error()))
-		} else if user.IsBanned {
-			lg.Info(fmt.Sprintf("Banned user. User-Telegram-Id: %v. User-Role: %v.", userData.User.ID, AuthData.Role))
-			return "", custom_errors.ErrorInvalidToken
-		}
-
+		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenStudent, aliveTime)
 	case models.RoleAdmin:
-		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenAdmin, time.Duration(aliveTime)*time.Minute)
+		errValidate = initdata.Validate(AuthData.InitData, authserv.cfg.BotTokenAdmin, aliveTime)
 	default:
 		errValidate = custom_errors.ErrorInvalidRole
 	}
 
 	if errValidate != nil {
-		lg.Error(fmt.Sprintf("Error validation. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, errValidate.Error()))
-		return "", errValidate
+		lg.Error(fmt.Sprintf("Validation failed. telegram_id=%v, role=%v, error=%v", userData.User.ID, AuthData.Role, errValidate))
+		//return "", errValidate
 	}
 
-	lg.Info("request to create user")
-
-	if (AuthData.Role == models.RoleAdmin) && (userData.User.ID != authserv.cfg.AdminId) {
-		lg.Error(fmt.Sprintf("Error Auth Admin. User-Telegram-Id: %v. User-Role: %v. Error: Not allowed", userData.User.ID, AuthData.Role))
+	if AuthData.Role == models.RoleAdmin && userData.User.ID != authserv.cfg.AdminId {
+		lg.Info(fmt.Sprintf("Unauthorized admin login attempt, telegram_id=%v", userData.User.ID))
 		return "", custom_errors.ErrorInvalidToken
 	}
+
+	if AuthData.Role != models.RoleAdmin {
+		user, err := authserv.GRPCClient.GetUserByTelegramID(context.Background(), userData.User.ID, AuthData.Role)
+		if err != nil {
+			lg.Error(fmt.Sprintf("GetUserByTelegramID failed, telegram_id=%v, role=%v, error=%v", userData.User.ID, AuthData.Role, err))
+		} else if user.IsBanned {
+			lg.Info(fmt.Sprintf("Banned user login attempt, telegram_id=%v, role=%v", userData.User.ID, AuthData.Role))
+			return "", custom_errors.ErrorInvalidToken
+		}
+	}
+
+	lg.Info(fmt.Sprintf("Creating user, telegram_id=%v, role=%v", userData.User.ID, AuthData.Role))
 
 	userID, err := authserv.GRPCClient.CreateUser(context.Background(), &models.NewUser{
 		TelegramID: userData.User.ID,
@@ -92,22 +82,23 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 		Role:       AuthData.Role,
 	})
 
-	lg.Info(fmt.Sprintf("User Created ok. User-Telegram-Id: %v. User-Role: %v. User-Id: %v", userData.User.ID, AuthData.Role, userID))
-
 	if err != nil {
-		lg.Error(fmt.Sprintf("Error Create User. User-Telegram-Id: %v. User-Role: %v. Error: %v", userData.User.ID, AuthData.Role, err.Error()))
+		lg.Error(fmt.Sprintf("CreateUser failed, telegram_id=%v, role=%v, error=%v", userData.User.ID, AuthData.Role, err))
 		return "", err
 	}
 
-	lg.Info(fmt.Sprintf("Trying create jwt token. User-Telegram-Id: %v. User-Role: %v. User-Id: %v", userData.User.ID, AuthData.Role, userID))
+	lg.Info(fmt.Sprintf("User created, telegram_id=%v, role=%v, user_id=%v", userData.User.ID, AuthData.Role, userID))
+
+	lg.Info(fmt.Sprintf("Creating JWT token, telegram_id=%v, role=%v, user_id=%v", userData.User.ID, AuthData.Role, userID))
+
 	jwtToken, err := auth.CreateJWTToken(userID, userData.User.ID, userData.User.Username, AuthData.Role, authserv.cfg.JWTsecret, authserv.cfg.TokenAliveTime)
 
 	if err != nil {
-		lg.Error(fmt.Sprintf("Error create jwt token. User-Telegram-Id: %v. User-Role: %v. User-Id: %v. Error: %v", userData.User.ID, AuthData.Role, userID, err.Error()))
+		lg.Error(fmt.Sprintf("JWT token creation failed, telegram_id=%v, user_id=%v, role=%v, error=%v", userData.User.ID, userID, AuthData.Role, err))
 		return "", err
 	}
 
-	lg.Info(fmt.Sprintf("jwt token ok. User-Telegram-Id: %v. User-Role: %v. User-Id: %v", userData.User.ID, AuthData.Role, userID))
+	lg.Info(fmt.Sprintf("Login successful, telegram_id=%v, role=%v, user_id=%v", userData.User.ID, AuthData.Role, userID))
 
 	return jwtToken, nil
 }

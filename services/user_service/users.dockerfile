@@ -8,6 +8,7 @@ RUN go mod download
 
 COPY ./user_service/cmd ./cmd
 COPY ./user_service/internal ./internal
+COPY ./user_service/pkg ./pkg
 
 RUN go build -o /user-service ./cmd/user-app/main.go
 

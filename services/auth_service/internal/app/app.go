@@ -9,8 +9,8 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/controllers"
 	"github.com/randnull/Lessons/internal/gRPC_client"
-	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/service"
+	lg "github.com/randnull/Lessons/pkg/logger"
 	"log"
 	"time"
 )

@@ -1,8 +1,8 @@
 package repository
 
 import (
-	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
+	pb "github.com/randnull/Lessons/pkg/gRPC"
 )
 
 type UserRepository interface {

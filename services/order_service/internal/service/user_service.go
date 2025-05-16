@@ -4,13 +4,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
-	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
-	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
 	"github.com/randnull/Lessons/internal/utils"
+	"github.com/randnull/Lessons/pkg/custom_errors"
+	lg "github.com/randnull/Lessons/pkg/logger"
+	"github.com/randnull/Lessons/pkg/rabbitmq"
 	"strconv"
 )
 
@@ -186,15 +186,6 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 		lg.Error("[UserService] CreateReview error GetTutor: " + err.Error())
 		return "", custom_errors.ErrorGetUser
 	}
-
-	// отзыв можно оставить сразу, логика теперь в его подтверждении
-	//currentTimestamp := time.Now()
-	//TimeDiff := currentTimestamp.Sub(response.CreatedAt)
-	//
-	//if TimeDiff < 72*time.Hour {
-	//	lg.Info("[UserService] Review time bad. Diff: " + TimeDiff.String())
-	//	return "", custom_errors.ErrorLowTimeFromResponse
-	//}
 
 	reviewID, err := u.GRPCClient.CreateReview(context.Background(), order.ID, response.TutorID, ReviewRequest.Comment, ReviewRequest.Rating)
 

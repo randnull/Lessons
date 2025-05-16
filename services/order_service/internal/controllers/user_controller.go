@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"github.com/gofiber/fiber/v2"
-	"github.com/randnull/Lessons/internal/custom_errors"
-	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
+	"github.com/randnull/Lessons/pkg/custom_errors"
+	"github.com/randnull/Lessons/pkg/logger"
 	"strconv"
 )
 

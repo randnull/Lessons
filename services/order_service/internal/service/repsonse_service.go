@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
-	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
-	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
 	"github.com/randnull/Lessons/internal/utils"
+	"github.com/randnull/Lessons/pkg/custom_errors"
+	"github.com/randnull/Lessons/pkg/logger"
+	"github.com/randnull/Lessons/pkg/rabbitmq"
 )
 
 type ResponseServiceInt interface {

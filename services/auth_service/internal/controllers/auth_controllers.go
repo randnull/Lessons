@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/config"
-	lg "github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
+	lg "github.com/randnull/Lessons/pkg/logger"
 )
 
 type AuthHandlers struct {

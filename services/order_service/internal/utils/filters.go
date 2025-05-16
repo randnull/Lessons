@@ -3,7 +3,7 @@ package utils
 import (
 	"bufio"
 	"fmt"
-	lg "github.com/randnull/Lessons/internal/logger"
+	lg "github.com/randnull/Lessons/pkg/logger"
 	"os"
 	"strings"
 )

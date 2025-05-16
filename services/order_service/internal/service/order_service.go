@@ -3,13 +3,13 @@ package service
 import (
 	"context"
 	"errors"
-	"github.com/randnull/Lessons/internal/custom_errors"
 	"github.com/randnull/Lessons/internal/gRPC_client"
-	"github.com/randnull/Lessons/internal/logger"
 	"github.com/randnull/Lessons/internal/models"
-	"github.com/randnull/Lessons/internal/rabbitmq"
 	"github.com/randnull/Lessons/internal/repository"
 	"github.com/randnull/Lessons/internal/utils"
+	"github.com/randnull/Lessons/pkg/custom_errors"
+	"github.com/randnull/Lessons/pkg/logger"
+	"github.com/randnull/Lessons/pkg/rabbitmq"
 )
 
 type OrderServiceInt interface {
@@ -416,7 +416,7 @@ func (orderServ *OrderService) SetApprovedOrderStatus(orderID string, UserData m
 		logger.Error("[OrderService] SetApprovedOrderStatus Error GetStudent: " + err.Error())
 		return custom_errors.ErrorGetUser
 	}
-	
+
 	OrderToBroker := models.OrderToBroker{
 		ID:        orderID,
 		StudentID: student.TelegramID,

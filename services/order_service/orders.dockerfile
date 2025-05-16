@@ -10,6 +10,7 @@ COPY ./ban_words.txt ./
 
 COPY ./order_service/cmd ./cmd
 COPY ./order_service/internal ./internal
+COPY ./order_service/pkg ./pkg
 
 RUN go build -o /order-service ./cmd/order-app/main.go
 

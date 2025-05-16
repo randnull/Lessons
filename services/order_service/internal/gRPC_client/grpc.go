@@ -2,8 +2,8 @@ package gRPC_client
 
 import (
 	"context"
-	pb "github.com/randnull/Lessons/internal/gRPC"
 	"github.com/randnull/Lessons/internal/models"
+	pb "github.com/randnull/Lessons/pkg/gRPC"
 )
 
 type GRPCClientInt interface {

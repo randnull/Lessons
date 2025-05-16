@@ -8,6 +8,7 @@ RUN go mod download
 
 COPY ./auth_service/cmd ./cmd
 COPY ./auth_service/internal ./internal
+COPY ./auth_service/pkg ./pkg
 
 RUN go build -o /auth-service ./cmd/main_service/main.go
 
