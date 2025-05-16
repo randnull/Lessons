@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     MQHOST: str = os.getenv('RABBITMQ_HOST')
     MQPORT: int = int(os.getenv('RABBITMQ_PORT'))
     DELAY_SCHEDULE: int = os.getenv('DELAY_SCHEDULE', "3000")
-    SUPPORT_CHANNEL: str = os.getenv('SUPPORT_CHANNEL')
+    SUPPORT_CHANNEL: str = os.getenv('SUPPORT_CHANNEL', "@tmp")
 
     def get_webhook_url(self) -> str:
         return f"https://{self.FQND_HOST}/webhook"

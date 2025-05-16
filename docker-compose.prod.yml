@@ -59,7 +59,7 @@ services:
   migrations:
     image: liquibase/liquibase:latest
     volumes:
-      - ./Lessons/services/order_service/migrations:/app
+      - ./services/order_service/migrations:/app
     command: sh /app/entrypoint.sh
     depends_on:
       postgresql:
@@ -215,6 +215,8 @@ services:
       - GRPCUSERHOST=${GRPCUSERHOST}
       - GRPCUSERPORT=${GRPCUSERPORT}
       - ADMIN_USER=${ADMIN_USER}
+      - SUPPORT_CHANNEL=${SUPPORT_CHANNEL}
+      - SERVER_PORT=${ANSWER_SERVER_PORT}
     networks:
       - lessons-network
     depends_on:
