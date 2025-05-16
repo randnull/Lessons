@@ -56,7 +56,7 @@ func (authserv *AuthService) Login(AuthData *models.AuthData) (string, error) {
 
 	if errValidate != nil {
 		lg.Error(fmt.Sprintf("Validation failed. telegram_id=%v, role=%v, error=%v", userData.User.ID, AuthData.Role, errValidate))
-		//return "", errValidate
+		return "", errValidate
 	}
 
 	if AuthData.Role == models.RoleAdmin && userData.User.ID != authserv.cfg.AdminId {

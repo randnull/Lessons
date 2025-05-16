@@ -6,7 +6,7 @@ import (
 	"fmt"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/randnull/Lessons/internal/config"
-	"github.com/randnull/Lessons/internal/logger"
+	"github.com/randnull/Lessons/pkg/logger"
 	"log"
 	"time"
 )
