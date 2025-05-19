@@ -28,7 +28,6 @@ type App struct {
 
 func NewApp(cfg *config.Config) *App {
 	userRepo := repository.NewRepository(cfg.DBConfig)
-
 	BrokerProducer := rabbitmq.NewRabbitMQ(cfg.MQConfig)
 
 	userServic := service.NewUserService(userRepo)

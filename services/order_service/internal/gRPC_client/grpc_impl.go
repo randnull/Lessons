@@ -179,6 +179,7 @@ func (g *GRPCClient) GetReviewsByTutor(ctx context.Context, tutorID string) ([]m
 	defer cancel()
 
 	resp, err := g.client.GetReviews(ctx, &pb.GetReviewsRequest{TutorId: tutorID})
+
 	if err != nil {
 		return nil, err
 	}

@@ -1,11 +1,10 @@
 package controllers
 
 import (
-	"errors"
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
-	"github.com/randnull/Lessons/pkg/custom_errors"
+	"github.com/randnull/Lessons/internal/utils"
 	"github.com/randnull/Lessons/pkg/logger"
 )
 
@@ -23,14 +22,16 @@ func (r *ResponseController) GetTutorsResponses(ctx *fiber.Ctx) error {
 	logger.Info("[ResponseController] GetTutorsResponses called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	response, err := r.ResponseService.GetTutorsResponses(UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": err.Error()})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[ResponseController] GetTutorsResponses successful")
@@ -42,8 +43,9 @@ func (r *ResponseController) GetResponseById(ctx *fiber.Ctx) error {
 	logger.Info("[ResponseController] GetResponseById called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	ResponseID := ctx.Params("id")
@@ -51,10 +53,8 @@ func (r *ResponseController) GetResponseById(ctx *fiber.Ctx) error {
 	response, err := r.ResponseService.GetResponseById(ResponseID, UserData)
 
 	if err != nil {
-		if errors.Is(err, custom_errors.ErrorNotFound) {
-			return ctx.Status(fiber.StatusNotFound).JSON(fiber.Map{"error": "Response with id: " + ResponseID + " Not found"})
-		}
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[ResponseController] GetResponseById successful")
@@ -66,8 +66,9 @@ func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
 	logger.Info("[ResponseController] ResponseToOrder called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	orderID := ctx.Params("id")
@@ -82,7 +83,8 @@ func (r *ResponseController) ResponseToOrder(ctx *fiber.Ctx) error {
 	responseID, err := r.ResponseService.ResponseToOrder(orderID, &NewResponse, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[ResponseController] ResponseToOrder successful")

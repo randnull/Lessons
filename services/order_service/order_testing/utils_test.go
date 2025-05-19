@@ -1,7 +1,7 @@
 package order_testing
 
 import (
-	"github.com/randnull/Lessons/internal/logger"
+	"github.com/randnull/Lessons/pkg/logger"
 	"testing"
 )
 

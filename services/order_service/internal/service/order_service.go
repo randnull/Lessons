@@ -83,6 +83,7 @@ func (orderServ *OrderService) CreateOrder(order *models.NewOrder, UserData mode
 	}
 
 	err = orderServ.ProducerBroker.Publish(models.QueueNewOrder, OrderToBroker)
+
 	if err != nil {
 		logger.Error("[OrderService] CreateOrder Error publishing order: " + err.Error())
 	}
@@ -196,11 +197,12 @@ func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateO
 
 	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(orderID, UserData.UserID)
 
-	if !isExist || err != nil {
-		if err != nil {
-			logger.Error("[OrderService] UpdateOrder Error CheckOrderByStudentID: " + err.Error())
-			return custom_errors.ErrorServiceError
-		}
+	if err != nil {
+		logger.Error("[OrderService] UpdateOrder Error CheckOrderByStudentID: " + err.Error())
+		return custom_errors.ErrorServiceError
+	}
+
+	if !isExist {
 		logger.Error("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + orderID)
 		return custom_errors.ErrNotAllowed
 	}
@@ -211,11 +213,12 @@ func (orderServ *OrderService) UpdateOrder(orderID string, order *models.UpdateO
 func (orderServ *OrderService) DeleteOrder(orderID string, UserData models.UserData) error {
 	isExist, err := orderServ.orderRepository.CheckOrderByStudentID(orderID, UserData.UserID)
 
-	if !isExist || err != nil {
-		if err != nil {
-			logger.Error("[OrderService] UpdateOrder Error CheckOrderByStudentID: " + err.Error())
-			return custom_errors.ErrorServiceError
-		}
+	if err != nil {
+		logger.Error("[OrderService] UpdateOrder Error CheckOrderByStudentID: " + err.Error())
+		return custom_errors.ErrorServiceError
+	}
+
+	if !isExist {
 		logger.Error("[OrderService] UpdateOrder Not allowed. User: " + UserData.UserID + " Order: " + orderID)
 		return custom_errors.ErrNotAllowed
 	}
@@ -256,7 +259,7 @@ func (orderServ *OrderService) SelectTutor(responseID string, UserData models.Us
 
 	if err != nil {
 		logger.Error("[OrderService] SelectTutor GetTutor Error + " + err.Error() + "  Order: " + response.OrderID)
-
+		return custom_errors.ErrorNotFound
 	}
 
 	student, err := orderServ.GRPCClient.GetStudent(context.Background(), order.StudentID)
@@ -304,25 +307,26 @@ func (orderServ *OrderService) SetActiveOrderStatus(orderID string, IsActive boo
 	if IsActive {
 		if order.Status != models.StatusInactive {
 			logger.Info("[OrderService] SetActiveOrderStatus Not Inactive state. OrderID:" + orderID)
-			return errors.New("error not Inactive state")
+			return custom_errors.ErrorBadStatus
 		}
 
 		err = orderServ.orderRepository.SetOrderStatus(models.StatusNew, orderID)
 
 		if err != nil {
 			logger.Error("[OrderService] SetActiveOrderStatus Error SetOrderStatus: " + err.Error())
-			return custom_errors.ErrorSetStatus
+			return err
 		}
 	} else {
 		if order.Status != models.StatusNew {
 			logger.Info("[OrderService] SetActiveOrderStatus Not Active state. OrderID:" + orderID)
+			return custom_errors.ErrorBadStatus
 		}
 
 		err = orderServ.orderRepository.SetOrderStatus(models.StatusInactive, orderID)
 
 		if err != nil {
 			logger.Error("[OrderService] SetActiveOrderStatus Error SetOrderStatus: " + err.Error())
-			return custom_errors.ErrorSetStatus
+			return err
 		}
 	}
 
@@ -341,7 +345,7 @@ func (orderServ *OrderService) SetBanOrderStatus(orderID string, UserData models
 
 	if err != nil {
 		logger.Error("[OrderService] SetBanOrderStatus Error SetOrderStatus: " + err.Error())
-		return custom_errors.ErrorSetStatus
+		return err
 	}
 
 	return nil
@@ -407,14 +411,14 @@ func (orderServ *OrderService) SetApprovedOrderStatus(orderID string, UserData m
 
 	if err != nil {
 		logger.Error("[OrderService] SetApprovedOrderStatus Error SetOrderStatus: " + err.Error())
-		return custom_errors.ErrorSetStatus
+		return err
 	}
 
 	student, err := orderServ.GRPCClient.GetStudent(context.Background(), order.StudentID)
 
 	if err != nil {
 		logger.Error("[OrderService] SetApprovedOrderStatus Error GetStudent: " + err.Error())
-		return custom_errors.ErrorGetUser
+		return err
 	}
 
 	OrderToBroker := models.OrderToBroker{
@@ -426,6 +430,7 @@ func (orderServ *OrderService) SetApprovedOrderStatus(orderID string, UserData m
 	}
 
 	err = orderServ.ProducerBroker.Publish(models.QueueNewOrder, OrderToBroker)
+
 	if err != nil {
 		logger.Error("[OrderService] SetApprovedOrderStatus Error publishing order: " + err.Error())
 	}

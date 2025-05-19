@@ -1,12 +1,10 @@
 package service
 
 import (
-	"fmt"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/repository"
 	"github.com/randnull/Lessons/pkg/custom_errors"
 	pb "github.com/randnull/Lessons/pkg/gRPC"
-	lg "github.com/randnull/Lessons/pkg/logger"
 )
 
 type UserServiceInt interface {
@@ -106,11 +104,13 @@ func (s *UserService) GetReviewById(reviewID string) (*models.Review, error) {
 
 func (s *UserService) GetTutorInfoById(tutorID string) (*models.TutorDetails, error) {
 	tutor, err := s.userRepository.GetTutorByID(tutorID)
+
 	if err != nil {
 		return nil, err
 	}
 
 	reviews, err := s.userRepository.GetReviews(tutorID)
+
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,6 @@ func (s *UserService) SetReviewActive(reviewID string) error {
 	review, err := s.userRepository.GetReviewById(reviewID)
 
 	if err != nil {
-		lg.Error(fmt.Sprintf("error with get review for reviewID: %v. Error: %v", reviewID, err.Error()))
 		return err
 	}
 

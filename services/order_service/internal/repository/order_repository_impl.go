@@ -11,7 +11,7 @@ import (
 	"github.com/randnull/Lessons/internal/config"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/pkg/custom_errors"
-	"github.com/randnull/Lessons/pkg/logger"
+	custom_logger "github.com/randnull/Lessons/pkg/logger"
 	"log"
 	"strconv"
 	"time"
@@ -60,6 +60,17 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	}
 }
 
+func MapDBError(err error, funcName string) error {
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return custom_errors.ErrorNotFound
+	}
+
+	custom_logger.Info(fmt.Sprintf("[Postgres] %v failed: %v", funcName, err.Error()))
+
+	return custom_errors.ErrorServiceError
+}
+
 func (o *Repository) CreateOrder(NewOrder *models.CreateOrder) (string, error) {
 	const query = `
 		INSERT INTO orders
@@ -99,8 +110,7 @@ func (o *Repository) CreateOrder(NewOrder *models.CreateOrder) (string, error) {
 	).Scan(&orderID)
 
 	if err != nil {
-		logger.Error("[Postgres] CreateOrder error" + err.Error())
-		return "", custom_errors.ErrorServiceError
+		return "", MapDBError(err, "CreateOrder")
 	}
 
 	return orderID, nil
@@ -147,8 +157,7 @@ func (o *Repository) UpdateOrder(orderID string, order *models.UpdateOrder) erro
 	_, err := o.db.Exec(query, values...)
 
 	if err != nil {
-		logger.Error("[Postgres] UpdateOrder error: " + err.Error())
-		return err
+		return MapDBError(err, "UpdateOrder")
 	}
 
 	return nil
@@ -160,8 +169,7 @@ func (o *Repository) DeleteOrder(id string) error {
 	_, err := o.db.Exec(query, id)
 
 	if err != nil {
-		logger.Error("[Postgres] DeleteOrder error" + err.Error())
-		return custom_errors.ErrorServiceError
+		return MapDBError(err, "DeleteOrder")
 	}
 
 	return nil
@@ -173,9 +181,9 @@ func (o *Repository) SetOrderStatus(status string, orderID string) error {
 	_, err := o.db.Exec(querySetStatus, status, orderID)
 
 	if err != nil {
-		logger.Error("[Postgres] SetOrderStatus error" + err.Error())
-		return custom_errors.ErrorSetStatus
+		return MapDBError(err, "SetOrderStatus")
 	}
+
 	return nil
 }
 
@@ -194,9 +202,7 @@ func (o *Repository) SetTutorToOrder(response *models.ResponseDB, UserData model
 	defer tx.Rollback()
 
 	if err != nil {
-		logger.Error("[Postgres] SetTutorToOrder error" + err.Error())
-		tx.Rollback()
-		return err
+		return MapDBError(err, "SetTutorToOrder")
 	}
 
 	querySetStatus := `UPDATE orders SET status = $1 WHERE id = $2`
@@ -204,9 +210,7 @@ func (o *Repository) SetTutorToOrder(response *models.ResponseDB, UserData model
 	_, err = tx.Exec(querySetStatus, models.StatusSelected, response.OrderID)
 
 	if err != nil {
-		logger.Error("[Postgres] SetTutorToOrder error" + err.Error())
-		tx.Rollback()
-		return err
+		return MapDBError(err, "SetTutorToOrder")
 	}
 
 	queryUpdateResponses := `UPDATE responses SET is_final = $1 WHERE id = $2`
@@ -214,16 +218,13 @@ func (o *Repository) SetTutorToOrder(response *models.ResponseDB, UserData model
 	_, err = tx.Exec(queryUpdateResponses, true, response.ID)
 
 	if err != nil {
-		logger.Error("[Postgres] SetTutorToOrder error" + err.Error())
-		tx.Rollback()
-		return err
+		return MapDBError(err, "SetTutorToOrder")
 	}
 
 	err = tx.Commit()
 
 	if err != nil {
-		logger.Error("[Postgres] SetTutorToOrder error" + err.Error())
-		return err
+		return MapDBError(err, "SetTutorToOrder")
 	}
 
 	return nil
@@ -254,11 +255,7 @@ func (o *Repository) GetOrderByID(id string) (*models.Order, error) {
 	err := o.db.QueryRowx(query, id).StructScan(&order)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, custom_errors.ErrorNotFound
-		}
-		logger.Error("[Postgres] GetOrderByID error" + err.Error())
-		return nil, custom_errors.ErrorServiceError
+		return nil, MapDBError(err, "GetOrderByID")
 	}
 
 	return &order, nil
@@ -287,8 +284,7 @@ func (o *Repository) GetOrders() ([]*models.Order, error) {
 	err := o.db.Select(&orders, query)
 
 	if err != nil {
-		logger.Error("[Postgres] GetOrders error" + err.Error())
-		return nil, err
+		return nil, MapDBError(err, "GetOrders")
 	}
 
 	return orders, nil
@@ -317,8 +313,7 @@ func (o *Repository) GetOrdersPagination(limit int, offset int, tags string) ([]
 	err := o.db.Get(&total, countQuery, countArgs...)
 
 	if err != nil {
-		logger.Error("[Postgres] GetOrdersPagination count error: " + err.Error())
-		return nil, 0, custom_errors.ErrorServiceError
+		return nil, 0, MapDBError(err, "GetOrdersPagination")
 	}
 
 	query := `
@@ -354,8 +349,7 @@ func (o *Repository) GetOrdersPagination(limit int, offset int, tags string) ([]
 	err = o.db.Select(&orders, query, args...)
 
 	if err != nil {
-		logger.Error("[Postgres] GetOrdersPagination select error: " + err.Error())
-		return nil, 0, custom_errors.ErrorServiceError
+		return nil, 0, MapDBError(err, "GetOrdersPagination")
 	}
 
 	return orders, total, nil
@@ -373,7 +367,7 @@ func (o *Repository) GetStudentOrdersPagination(limit int, offset int, studentID
 	err := o.db.Get(&total, queryCountOrders, studentID)
 
 	if err != nil {
-		return nil, 0, err
+		return nil, 0, MapDBError(err, "GetStudentOrdersPagination")
 	}
 
 	var orders []*models.Order
@@ -401,8 +395,7 @@ func (o *Repository) GetStudentOrdersPagination(limit int, offset int, studentID
 	err = o.db.Select(&orders, querySelectOrders, studentID, limit, offset)
 
 	if err != nil {
-		logger.Error("[Postgres] GetStudentOrdersPagination select error: " + err.Error())
-		return nil, 0, custom_errors.ErrorServiceError
+		return nil, 0, MapDBError(err, "GetStudentOrdersPagination")
 	}
 
 	return orders, total, nil
@@ -431,8 +424,7 @@ func (o *Repository) GetStudentOrders(studentID string) ([]*models.Order, error)
 	err := o.db.Select(&orders, query, studentID)
 
 	if err != nil {
-		logger.Error("[Postgres] GetStudentOrders error" + err.Error())
-		return nil, custom_errors.ErrorServiceError
+		return nil, MapDBError(err, "GetStudentOrders")
 	}
 
 	return orders, nil
@@ -444,7 +436,7 @@ func (o *Repository) CreateResponse(orderID string,
 	username string) (string, error) {
 	var ResponseID string
 
-	queryCheck := `
+	const queryCheck = `
 		SELECT
     		id 
 		FROM responses 
@@ -454,10 +446,10 @@ func (o *Repository) CreateResponse(orderID string,
 
 	if err == nil || !errors.Is(err, sql.ErrNoRows) {
 		if err == nil {
-			logger.Info("[Postgres] CreateResponse: ErrResponseAlreadyExist")
+			custom_logger.Info("[Postgres] CreateResponse: ErrResponseAlreadyExist")
 			return ResponseID, custom_errors.ErrResponseAlredyExist
 		}
-		logger.Error("[Postgres] CreateResponse error" + err.Error())
+		custom_logger.Error("[Postgres] CreateResponse error" + err.Error())
 		return "", err
 	}
 
@@ -465,13 +457,12 @@ func (o *Repository) CreateResponse(orderID string,
 	defer tx.Rollback()
 
 	if err != nil {
-		logger.Error("[Postgres] CreateResponse error" + err.Error())
-		return "", err
+		return "", MapDBError(err, "CreateResponse")
 	}
 
 	timestamp := time.Now()
 
-	queryInsert := `
+	const queryInsert = `
 		INSERT INTO responses 
 		    (
 		     order_id, 
@@ -489,11 +480,10 @@ func (o *Repository) CreateResponse(orderID string,
 	err = tx.QueryRow(queryInsert, orderID, Tutor.Name, Tutor.Id, username, greetingsMessage, false, timestamp).Scan(&ResponseID)
 
 	if err != nil {
-		logger.Error("[Postgres] CreateResponse error" + err.Error())
-		return "", err
+		return "", MapDBError(err, "CreateResponse")
 	}
 
-	queryUpdate := `
+	const queryUpdate = `
 		UPDATE orders SET
 			response_count = response_count + 1
 		WHERE id = $1`
@@ -501,15 +491,13 @@ func (o *Repository) CreateResponse(orderID string,
 	_, err = tx.Exec(queryUpdate, orderID)
 
 	if err != nil {
-		logger.Error("[Postgres] CreateResponse error" + err.Error())
-		return "", err
+		return "", MapDBError(err, "CreateResponse")
 	}
 
 	err = tx.Commit()
 
 	if err != nil {
-		logger.Error("[Postgres] CreateResponse error" + err.Error())
-		return "", err
+		return "", MapDBError(err, "CreateResponse")
 	}
 
 	return ResponseID, nil
@@ -532,12 +520,7 @@ func (o *Repository) GetResponsesByOrderID(id string) ([]models.Response, error)
 	err := o.db.Select(&responses, query, id)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			logger.Info("[Postgres] GetResponsesByOrderID: No responses found for order ID: " + id)
-			return responses, nil
-		}
-		logger.Error("[Postgres] GetResponsesByOrderID error" + err.Error())
-		return nil, custom_errors.ErrGetOrder
+		return nil, MapDBError(err, "GetResponsesByOrderID")
 	}
 
 	return responses, nil
@@ -560,12 +543,7 @@ func (o *Repository) GetTutorsResponses(tutorID string) ([]models.Response, erro
 	err := o.db.Select(&responses, query, tutorID)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			logger.Info("[Postgres] GetTutorsResponses: No responses found for tutor: " + tutorID)
-			return responses, nil
-		}
-		logger.Error("[Postgres] GetResponsesByOrderID error" + err.Error())
-		return nil, custom_errors.ErrGetOrder
+		return nil, MapDBError(err, "GetTutorsResponses")
 	}
 
 	return responses, nil
@@ -589,12 +567,7 @@ func (o *Repository) GetResponseById(ResponseID string) (*models.ResponseDB, err
 	err := o.db.QueryRowx(query, ResponseID).StructScan(&response)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			logger.Info("[Postgres] GetResponseById not found: " + err.Error())
-			return nil, custom_errors.ErrorNotFound
-		}
-		logger.Error("[Postgres] GetResponseById error" + err.Error())
-		return nil, err
+		return nil, MapDBError(err, "GetResponseById")
 	}
 
 	return &response, nil
@@ -613,8 +586,7 @@ func (o *Repository) GetTutorIsRespond(orderID string, tutorID string) (bool, er
 	err := o.db.QueryRow(query, orderID, tutorID).Scan(&isExist)
 
 	if err != nil {
-		logger.Error("[Postgres] GetTutorIsRespond error" + err.Error())
-		return false, custom_errors.ErrorServiceError
+		return false, MapDBError(err, "GetTutorIsRespond")
 	}
 
 	return isExist, nil
@@ -628,8 +600,7 @@ func (o *Repository) GetUserByOrder(orderID string) (string, error) {
 	err := o.db.QueryRow(query, orderID).Scan(&UserID)
 
 	if err != nil {
-		logger.Error("[Postgres] GetUserByOrder error" + err.Error())
-		return "", err
+		return "", MapDBError(err, "GetUserByOrder")
 	}
 
 	return UserID, nil
@@ -646,7 +617,6 @@ func (o *Repository) CheckResponseExist(tutorID, orderID string) bool {
 	err := o.db.QueryRow(query, orderID, tutorID).Scan(&isExist)
 
 	if err != nil {
-		logger.Error("[Postgres] CheckResponseExist error: " + err.Error())
 		return false
 	}
 
@@ -664,8 +634,7 @@ func (o *Repository) CheckOrderByStudentID(orderID string, studentID string) (bo
 	err := o.db.QueryRow(query, orderID, studentID).Scan(&isExist)
 
 	if err != nil {
-		logger.Error("[Postgres] CheckOrderByStudentID error" + err.Error())
-		return false, err
+		return false, MapDBError(err, "CheckOrderByStudentID")
 	}
 
 	return isExist, nil

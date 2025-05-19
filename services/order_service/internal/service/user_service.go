@@ -2,14 +2,13 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/randnull/Lessons/internal/gRPC_client"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/repository"
 	"github.com/randnull/Lessons/internal/utils"
 	"github.com/randnull/Lessons/pkg/custom_errors"
-	lg "github.com/randnull/Lessons/pkg/logger"
+	custom_logger "github.com/randnull/Lessons/pkg/logger"
 	"github.com/randnull/Lessons/pkg/rabbitmq"
 	"strconv"
 )
@@ -57,7 +56,7 @@ func (u *UserService) GetAllUsers(UserData models.UserData) ([]*models.User, err
 	usersRPC, err := u.GRPCClient.GetAllUsers(context.Background())
 
 	if err != nil {
-		lg.Error("[UserService] GetAllUsers error GetAllUsers: " + err.Error())
+		custom_logger.Error("[UserService] GetAllUsers error GetAllUsers: " + err.Error())
 		return nil, err
 	}
 
@@ -94,7 +93,7 @@ func (u *UserService) GetAllTutorsPagination(page int, size int, tag string, Use
 	usersRPC, err := u.GRPCClient.GetTutorsPagination(context.Background(), page, size, tag)
 
 	if err != nil {
-		lg.Error("[UserService] GetAllTutorsPagination error GetTutorsPagination: " + err.Error())
+		custom_logger.Error("[UserService] GetAllTutorsPagination error GetTutorsPagination: " + err.Error())
 		return nil, err
 	}
 
@@ -131,7 +130,7 @@ func (u *UserService) UpdateTagsTutor(tags []string, UserData models.UserData) (
 	}
 
 	if err != nil {
-		lg.Error("[UserService] GetAllTutorsPagination error UpdateTagsTutor: " + err.Error())
+		custom_logger.Error("[UserService] GetAllTutorsPagination error UpdateTagsTutor: " + err.Error())
 		return false, err
 	}
 
@@ -144,7 +143,7 @@ func (u *UserService) UpdateTagsTutor(tags []string, UserData models.UserData) (
 		err := u.ProducerBroker.Publish(models.QueueTutorTags, ChangeTagsToBroker)
 
 		if err != nil {
-			lg.Error("[UserService] ResponseToOrder Error publishing order: " + err.Error())
+			custom_logger.Error("[UserService] ResponseToOrder Error publishing order: " + err.Error())
 		}
 	}
 
@@ -159,38 +158,38 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 	response, err := u.orderRepository.GetResponseById(ReviewRequest.ResponseID)
 
 	if err != nil {
-		lg.Error("[UserService] CreateReview error GetResponseById: " + err.Error())
+		custom_logger.Error("[UserService] CreateReview error GetResponseById: " + err.Error())
 		return "", custom_errors.ErrorGetResponse
 	}
 
 	order, err := u.orderRepository.GetOrderByID(response.OrderID)
 
 	if err != nil {
-		lg.Error("[UserService] CreateReview error GetOrderByID: " + err.Error())
+		custom_logger.Error("[UserService] CreateReview error GetOrderByID: " + err.Error())
 		return "", custom_errors.ErrorServiceError
 	}
 
 	if order.StudentID != UserData.UserID {
-		lg.Info("[UserService] CreateReview now allowed. UserID: " + UserData.UserID + ". Order-UserID: " + order.StudentID)
+		custom_logger.Info("[UserService] CreateReview now allowed. UserID: " + UserData.UserID + ". Order-UserID: " + order.StudentID)
 		return "", custom_errors.ErrNotAllowed
 	}
 
 	if !response.IsFinal || order.Status != models.StatusSelected {
-		lg.Info("[UserService] CreateReview bad status. Current order status: " + order.Status + " . Current response state: " + strconv.FormatBool(response.IsFinal))
+		custom_logger.Info("[UserService] CreateReview bad status. Current order status: " + order.Status + " . Current response state: " + strconv.FormatBool(response.IsFinal))
 		return "", custom_errors.ErrorBadStatus
 	}
 
 	tutor, err := u.GRPCClient.GetTutor(context.Background(), response.TutorID)
 
 	if err != nil {
-		lg.Error("[UserService] CreateReview error GetTutor: " + err.Error())
+		custom_logger.Error("[UserService] CreateReview error GetTutor: " + err.Error())
 		return "", custom_errors.ErrorGetUser
 	}
 
 	reviewID, err := u.GRPCClient.CreateReview(context.Background(), order.ID, response.TutorID, ReviewRequest.Comment, ReviewRequest.Rating)
 
 	if err != nil {
-		lg.Error("[UserService] CreateReview error CreateReview: " + err.Error())
+		custom_logger.Error("[UserService] CreateReview error CreateReview: " + err.Error())
 		return "", custom_errors.ErrorServiceError
 	}
 
@@ -205,13 +204,13 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 	err = u.ProducerBroker.Publish(models.QueueNewReview, reviewToBroker)
 
 	if err != nil {
-		lg.Error("[UserService] CreateReview Error publishing order: " + err.Error())
+		custom_logger.Error("[UserService] CreateReview Error publishing order: " + err.Error())
 	}
 
 	err = u.orderRepository.SetOrderStatus(models.StatusClosed, order.ID)
 
 	if err != nil {
-		lg.Error("[UserService] CreateReview error SetOrderStatus: " + err.Error())
+		custom_logger.Error("[UserService] CreateReview error SetOrderStatus: " + err.Error())
 	}
 
 	return reviewID, nil
@@ -219,8 +218,9 @@ func (u *UserService) CreateReview(ReviewRequest models.ReviewRequest, UserData 
 
 func (u *UserService) GetReviewsByTutor(tutorID string, UserData models.UserData) ([]models.Review, error) {
 	reviews, err := u.GRPCClient.GetReviewsByTutor(context.Background(), tutorID)
+
 	if err != nil {
-		lg.Error("[UserService] GetReviewsByTutor error GetReviewsByTutor: " + err.Error())
+		custom_logger.Error("[UserService] GetReviewsByTutor error GetReviewsByTutor: " + err.Error())
 		return nil, err
 	}
 
@@ -230,7 +230,7 @@ func (u *UserService) GetReviewsByTutor(tutorID string, UserData models.UserData
 func (u *UserService) GetReviewsByID(reviewID string, UserData models.UserData) (*models.Review, error) {
 	review, err := u.GRPCClient.GetReviewsByID(context.Background(), reviewID)
 	if err != nil {
-		lg.Error("[UserService] GetReviewsByID error GetReviewsByID: " + err.Error())
+		custom_logger.Error("[UserService] GetReviewsByID error GetReviewsByID: " + err.Error())
 
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func (u *UserService) GetTutorInfoById(tutorID string, UserData models.UserData)
 	TutorDetails, err := u.GRPCClient.GetTutorInfoById(context.Background(), tutorID, isOwn)
 
 	if err != nil {
-		lg.Error("[UserService] GetTutorInfoById error GetTutorInfoById: " + err.Error())
+		custom_logger.Error("[UserService] GetTutorInfoById error GetTutorInfoById: " + err.Error())
 		return nil, err
 	}
 
@@ -252,16 +252,16 @@ func (u *UserService) GetTutorInfoById(tutorID string, UserData models.UserData)
 }
 
 func (u *UserService) ChangeTutorActive(isActive bool, UserData models.UserData) (bool, error) {
-	lg.Info(fmt.Sprintf("[UserService] ChangeTutorActive. isActive: %v. UserID: %v. Role: %v", isActive, UserData.UserID, UserData.Role))
+	custom_logger.Info(fmt.Sprintf("[UserService] ChangeTutorActive. isActive: %v. UserID: %v. Role: %v", isActive, UserData.UserID, UserData.Role))
 
 	isOk, err := u.GRPCClient.ChangeTutorActive(context.Background(), UserData.UserID, isActive)
 
 	if err != nil {
-		lg.Error(fmt.Sprintf("[UserService] ChangeTutorActive failed. isActive: %v. UserID: %v. Role: %v. Error: %v", isActive, UserData.UserID, UserData.Role, err.Error()))
+		custom_logger.Error(fmt.Sprintf("[UserService] ChangeTutorActive failed. isActive: %v. UserID: %v. Role: %v. Error: %v", isActive, UserData.UserID, UserData.Role, err.Error()))
 		return false, err
 	}
 
-	lg.Info(fmt.Sprintf("[UserService] ChangeTutorActive success. isActive: %v. UserID: %v. Role: %v", isActive, UserData.UserID, UserData.Role))
+	custom_logger.Info(fmt.Sprintf("[UserService] ChangeTutorActive success. isActive: %v. UserID: %v. Role: %v", isActive, UserData.UserID, UserData.Role))
 	return isOk, nil
 }
 
@@ -273,7 +273,7 @@ func (u *UserService) UpdateTutorName(tutorID, name string, UserData models.User
 	isOk, err := u.GRPCClient.UpdateNameTutor(context.Background(), tutorID, name)
 
 	if err != nil || !isOk {
-		return errors.New("cannot update tutor name")
+		return err
 	}
 
 	return nil
@@ -283,7 +283,7 @@ func (u *UserService) SetReviewActive(reviewID string, UserData models.UserData)
 	isOk, err := u.GRPCClient.SetActiveToReview(context.Background(), reviewID)
 
 	if err != nil || !isOk {
-		return errors.New("cannot update tutor name")
+		return err
 	}
 
 	return nil

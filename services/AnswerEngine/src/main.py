@@ -47,6 +47,7 @@ async def lifespan(app: FastAPI):
         logger.info("tutors bot webhook ok: %s", webhook_url_tutor)
     except Exception as ex:
         logger.error("tutor bot webhook %s failed: %s", webhook_url_tutor, str(ex))
+
     await OrderConsumer.connect()
     await ResponseConsumer.connect()
     await SuggestConsumer.connect()
@@ -74,8 +75,10 @@ async def lifespan(app: FastAPI):
     await SelectedConsumer.disconnect()
     await ReviewConsumer.disconnect()
     await AddResponsesConsumer.disconnect()
+
     await stop_student()
     await stop_tutor()
+
     await bot_student.delete_webhook()
     await bot_tutor.delete_webhook()
 

@@ -4,7 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/internal/service"
-	"github.com/randnull/Lessons/pkg/custom_errors"
+	"github.com/randnull/Lessons/internal/utils"
 	"github.com/randnull/Lessons/pkg/logger"
 	"strconv"
 )
@@ -19,12 +19,36 @@ func NewUserController(UserServ service.UserServiceInt) *UserController {
 	}
 }
 
+func (u *UserController) GetUserById(ctx *fiber.Ctx) error {
+	logger.Info("[UserController] GetUserById called")
+
+	UserData, err := getUserData(ctx)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
+	}
+
+	userID := ctx.Params("id")
+
+	user, err := u.UserService.GetUserById(userID, UserData)
+
+	if err != nil {
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
+	}
+
+	logger.Info("[UserController] GetUserById successful")
+
+	return ctx.Status(fiber.StatusOK).JSON(user)
+}
+
 func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
 	logger.Info("[UserController] GetTutorsPagination called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	page, err := strconv.Atoi(ctx.Query("page"))
@@ -44,7 +68,8 @@ func (u *UserController) GetTutorsPagination(ctx *fiber.Ctx) error {
 	users, err := u.UserService.GetAllTutorsPagination(page, size, tag, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[UserController] GetTutorsPagination successful")
@@ -56,8 +81,9 @@ func (u *UserController) GetMyTutorProfile(ctx *fiber.Ctx) error {
 	logger.Info("[UserController] GetMyTutorProfile called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	tutorID := UserData.UserID
@@ -65,7 +91,8 @@ func (u *UserController) GetMyTutorProfile(ctx *fiber.Ctx) error {
 	info, err := u.UserService.GetTutorInfoById(tutorID, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[UserController] GetMyTutorProfile successful")
@@ -73,12 +100,34 @@ func (u *UserController) GetMyTutorProfile(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(info)
 }
 
+func (u *UserController) GetAllUsers(ctx *fiber.Ctx) error {
+	logger.Info("[UserController] GetAllUsers called")
+
+	UserData, err := getUserData(ctx)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
+	}
+
+	users, err := u.UserService.GetAllUsers(UserData)
+
+	if err != nil {
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
+	}
+
+	logger.Info("[UserController] GetAllUsers successful")
+
+	return ctx.Status(fiber.StatusOK).JSON(users)
+}
+
 func (u *UserController) GetTutorInfoById(ctx *fiber.Ctx) error {
 	logger.Info("[UserController] GetTutorInfoById called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	tutorID := ctx.Params("id")
@@ -88,7 +137,8 @@ func (u *UserController) GetTutorInfoById(ctx *fiber.Ctx) error {
 	info.Tutor.TelegramID = 0
 
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[UserController] GetTutorInfoById successful")
@@ -96,12 +146,41 @@ func (u *UserController) GetTutorInfoById(ctx *fiber.Ctx) error {
 	return ctx.Status(fiber.StatusOK).JSON(info)
 }
 
+func (u *UserController) BanUser(ctx *fiber.Ctx) error {
+	logger.Info("[UserController] BanUser called")
+
+	UserData, err := getUserData(ctx)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
+	}
+
+	var BanUser models.BanUser
+
+	if err := ctx.BodyParser(&BanUser); err != nil {
+		logger.Error("[UserController] BanUser failed: " + err.Error())
+		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
+	}
+
+	err = u.UserService.BanUser(BanUser, UserData)
+
+	if err != nil {
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
+	}
+
+	logger.Info("[UserController] BanUser successful")
+
+	return ctx.SendStatus(fiber.StatusOK)
+}
+
 func (u *UserController) UpdateTagsTutor(ctx *fiber.Ctx) error {
 	logger.Info("[UserController] UpdateTagsTutor called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	var UpdateTagsTutor models.UpdateTagsTutor
@@ -119,7 +198,8 @@ func (u *UserController) UpdateTagsTutor(ctx *fiber.Ctx) error {
 	_, err = u.UserService.UpdateTagsTutor(UpdateTagsTutor.Tags, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[UserController] UpdateTagsTutor successful")
@@ -131,8 +211,9 @@ func (u *UserController) UpdateBioTutor(ctx *fiber.Ctx) error {
 	logger.Info("[UserController] UpdateBioTutor called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	var UpdateBioModel models.UpdateBioTutor
@@ -150,7 +231,8 @@ func (u *UserController) UpdateBioTutor(ctx *fiber.Ctx) error {
 	err = u.UserService.UpdateBioTutor(UpdateBioModel, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[UserController] UpdateBioTutor successful")
@@ -158,83 +240,45 @@ func (u *UserController) UpdateBioTutor(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusCreated)
 }
 
-func (u *UserController) CreateReview(ctx *fiber.Ctx) error {
-	logger.Info("[UserController] CreateReview called")
+func (u *UserController) UpdateNameTutor(ctx *fiber.Ctx) error {
+	logger.Info("[UserController] UpdateNameTutor called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
-	var ReviewRequest models.ReviewRequest
+	var UpdateNameTutor models.UpdateNameTutor
 
-	if err := ctx.BodyParser(&ReviewRequest); err != nil {
-		logger.Error("CreateReview failed: " + err.Error())
+	if err := ctx.BodyParser(&UpdateNameTutor); err != nil {
+		logger.Error("[UserController] UpdateNameTutor failed: " + err.Error())
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	if err := models.Valid.Struct(ReviewRequest); err != nil {
-		logger.Error("CreateReview failed: " + err.Error())
+	if err := models.Valid.Struct(UpdateNameTutor); err != nil {
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	id, err := u.UserService.CreateReview(ReviewRequest, UserData)
+	err = u.UserService.UpdateTutorName(UserData.UserID, UpdateNameTutor.Name, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
-	logger.Info("[UserController] CreateReview successful")
+	logger.Info("[UserController] UpdateNameTutor successful")
 
-	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"id": id})
-}
-
-func (u *UserController) GetReviewsByTutor(ctx *fiber.Ctx) error {
-	logger.Info("[UserController] GetReviewsByTutor called")
-
-	UserData, err := getUserData(ctx)
-	if err != nil {
-		return err
-	}
-
-	tutorID := ctx.Params("tutor_id")
-
-	reviews, err := u.UserService.GetReviewsByTutor(tutorID, UserData)
-
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
-	}
-	logger.Info("[UserController] GetReviewsByTutor successful")
-
-	return ctx.Status(fiber.StatusOK).JSON(reviews)
-}
-
-func (u *UserController) GetReviewByID(ctx *fiber.Ctx) error {
-	logger.Info("[UserController] GetReviewByID called")
-
-	UserData, err := getUserData(ctx)
-	if err != nil {
-		return err
-	}
-
-	reviewID := ctx.Params("id")
-
-	review, err := u.UserService.GetReviewsByID(reviewID, UserData)
-
-	if err != nil {
-		return ctx.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
-	}
-	logger.Info("[UserController] GetReviewByID successful")
-
-	return ctx.Status(fiber.StatusOK).JSON(review)
+	return ctx.SendStatus(fiber.StatusCreated)
 }
 
 func (u *UserController) ChangeTutorActive(ctx *fiber.Ctx) error {
 	logger.Info("[UserController] ChangeTutorActive called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	var IsActive models.ChangeActive
@@ -252,7 +296,8 @@ func (u *UserController) ChangeTutorActive(ctx *fiber.Ctx) error {
 	_, err = u.UserService.ChangeTutorActive(IsActive.IsActive, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[UserController] ChangeTutorActive successful")
@@ -260,42 +305,92 @@ func (u *UserController) ChangeTutorActive(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusCreated)
 }
 
-func (u *UserController) UpdateNameTutor(ctx *fiber.Ctx) error {
-	logger.Info("[UserController] UpdateNameTutor called")
+func (u *UserController) GetReviewsByTutor(ctx *fiber.Ctx) error {
+	logger.Info("[UserController] GetReviewsByTutor called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
-	var UpdateNameTutor models.UpdateNameTutor
+	tutorID := ctx.Params("tutor_id")
 
-	if err := ctx.BodyParser(&UpdateNameTutor); err != nil {
-		logger.Error("[UserController] UpdateNameTutor failed: " + err.Error())
+	reviews, err := u.UserService.GetReviewsByTutor(tutorID, UserData)
+
+	if err != nil {
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
+	}
+
+	logger.Info("[UserController] GetReviewsByTutor successful")
+
+	return ctx.Status(fiber.StatusOK).JSON(reviews)
+}
+
+func (u *UserController) CreateReview(ctx *fiber.Ctx) error {
+	logger.Info("[UserController] CreateReview called")
+
+	UserData, err := getUserData(ctx)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
+	}
+
+	var ReviewRequest models.ReviewRequest
+
+	if err := ctx.BodyParser(&ReviewRequest); err != nil {
+		logger.Error("CreateReview failed: " + err.Error())
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
 	}
 
-	if err := models.Valid.Struct(UpdateNameTutor); err != nil {
+	if err := models.Valid.Struct(ReviewRequest); err != nil {
+		logger.Error("CreateReview failed: " + err.Error())
 		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	err = u.UserService.UpdateTutorName(UserData.UserID, UpdateNameTutor.Name, UserData)
+	id, err := u.UserService.CreateReview(ReviewRequest, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
-	logger.Info("[UserController] UpdateNameTutor successful")
+	logger.Info("[UserController] CreateReview successful")
 
-	return ctx.SendStatus(fiber.StatusCreated)
+	return ctx.Status(fiber.StatusCreated).JSON(fiber.Map{"id": id})
+}
+
+func (u *UserController) GetReviewByID(ctx *fiber.Ctx) error {
+	logger.Info("[UserController] GetReviewByID called")
+
+	UserData, err := getUserData(ctx)
+
+	if err != nil {
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
+	}
+
+	reviewID := ctx.Params("id")
+
+	review, err := u.UserService.GetReviewsByID(reviewID, UserData)
+
+	if err != nil {
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
+	}
+
+	logger.Info("[UserController] GetReviewByID successful")
+
+	return ctx.Status(fiber.StatusOK).JSON(review)
 }
 
 func (u *UserController) SetReviewActive(ctx *fiber.Ctx) error {
 	logger.Info("[UserController] SetReviewActive called")
 
 	UserData, err := getUserData(ctx)
+
 	if err != nil {
-		return err
+		return ctx.Status(fiber.StatusUnauthorized).JSON(fiber.Map{"error": err})
 	}
 
 	var ReviewActive models.ReviewActive
@@ -312,76 +407,11 @@ func (u *UserController) SetReviewActive(ctx *fiber.Ctx) error {
 	err = u.UserService.SetReviewActive(ReviewActive.ReviewID, UserData)
 
 	if err != nil {
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
+		code, currentError := utils.MapError(err)
+		return ctx.Status(code).JSON(fiber.Map{"error": currentError})
 	}
 
 	logger.Info("[UserController] SetReviewActive successful")
 
 	return ctx.SendStatus(fiber.StatusCreated)
-}
-
-func (u *UserController) BanUser(ctx *fiber.Ctx) error {
-	logger.Info("[UserController] BanUser called")
-
-	UserData, err := getUserData(ctx)
-	if err != nil {
-		return err
-	}
-
-	var BanUser models.BanUser
-
-	if err := ctx.BodyParser(&BanUser); err != nil {
-		logger.Error("[UserController] BanUser failed: " + err.Error())
-		return ctx.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid request"})
-	}
-
-	err = u.UserService.BanUser(BanUser, UserData)
-
-	if err != nil {
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
-	}
-
-	logger.Info("[UserController] BanUser successful")
-
-	return ctx.SendStatus(fiber.StatusOK)
-}
-
-func (u *UserController) GetAllUsers(ctx *fiber.Ctx) error {
-	logger.Info("[UserController] GetAllUsers called")
-
-	UserData, err := getUserData(ctx)
-	if err != nil {
-		return err
-	}
-
-	users, err := u.UserService.GetAllUsers(UserData)
-
-	if err != nil {
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
-	}
-
-	logger.Info("[UserController] GetAllUsers successful")
-
-	return ctx.Status(fiber.StatusOK).JSON(users)
-}
-
-func (u *UserController) GetUserById(ctx *fiber.Ctx) error {
-	logger.Info("[UserController] GetUserById called")
-
-	UserData, err := getUserData(ctx)
-	if err != nil {
-		return err
-	}
-
-	userID := ctx.Params("id")
-
-	user, err := u.UserService.GetUserById(userID, UserData)
-
-	if err != nil {
-		return ctx.Status(fiber.StatusServiceUnavailable).JSON(fiber.Map{"error": custom_errors.ErrorServiceError})
-	}
-
-	logger.Info("[UserController] GetUserById successful")
-
-	return ctx.Status(fiber.StatusOK).JSON(user)
 }

@@ -25,7 +25,6 @@ type UserRepository interface {
 	GetReviewById(reviewID string) (*models.Review, error)
 	SetReviewActive(reviewID string, tutorID string) error
 
-	GetTagsByTutorID(tutorID string) ([]string, error)
 	SetNewIsActiveTutor(tutorID string, IsActive bool) error
 
 	AddResponses(tutorTelegramID int64, responseCount int) (int, error)

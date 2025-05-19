@@ -65,10 +65,6 @@ func (s *ResponseService) GetResponseById(ResponseID string, UserData models.Use
 }
 
 func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.NewResponseModel, UserData models.UserData) (string, error) {
-	if UserData.Role != models.TutorType {
-		return "", custom_errors.ErrNotAllowed
-	}
-
 	if utils.ContainsBadWords(newResponse.Greetings) {
 		return "", custom_errors.ErrorBanWords
 	}
@@ -114,7 +110,7 @@ func (s *ResponseService) ResponseToOrder(orderID string, newResponse *models.Ne
 	}
 
 	if Order.Status != models.StatusNew {
-		logger.Info("[ResponseService] ResponseToOrder GetOrderByID InActive Order: ")
+		logger.Info("[ResponseService] ResponseToOrder GetOrderByID InActive Order")
 		return "", custom_errors.ErrorBadStatus
 	}
 

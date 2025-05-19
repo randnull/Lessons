@@ -12,9 +12,7 @@ import (
 	"github.com/randnull/Lessons/internal/models"
 	"github.com/randnull/Lessons/pkg/custom_errors"
 	pb "github.com/randnull/Lessons/pkg/gRPC"
-	lg "github.com/randnull/Lessons/pkg/logger"
-	"log"
-	"strconv"
+	custom_logger "github.com/randnull/Lessons/pkg/logger"
 	"strings"
 	"time"
 )
@@ -41,29 +39,42 @@ func NewRepository(cfg config.DBConfig) *Repository {
 	db, err := sqlx.Open("postgres", link)
 
 	if err != nil {
-		log.Fatal("[Postgres] failed to connect" + err.Error())
+		custom_logger.Error("[Postgres] failed to connect" + err.Error())
+		return nil
 	}
 
 	err = db.PingContext(context.Background())
 
 	if err != nil {
-		log.Fatal("[Postgres] failed to ping" + err.Error())
+		custom_logger.Error("[Postgres] failed to ping" + err.Error())
+		return nil
 	}
 
-	log.Print("[Postgres] Database is ready")
+	custom_logger.Info("[Postgres] Database is ready")
 
 	return &Repository{
 		db: db,
 	}
 }
 
+func MapDBError(err error, funcName string) error {
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return custom_errors.ErrorNotFound
+	}
+
+	custom_logger.Info(fmt.Sprintf("[Postgres] %v failed: %v", funcName, err.Error()))
+
+	return custom_errors.ErrorServiceError
+}
+
 func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
-	lg.Info(fmt.Sprintf("[Postgres] CreateUser called. UserID: %v. Role: %v", user.TelegramId, user.Role))
+	custom_logger.Info(fmt.Sprintf("[Postgres] CreateUser called. UserID: %v. Role: %v", user.TelegramId, user.Role))
 
 	ExistedUser, err := r.GetUserByTelegramId(user.TelegramId, user.Role)
 
 	if err == nil {
-		lg.Info(fmt.Sprintf("[Postgres] CreateUser User exist. Authorization Telegram-UserID: %v. UserID: %v", user.TelegramId, ExistedUser.Id))
+		custom_logger.Info(fmt.Sprintf("[Postgres] CreateUser User exist. Authorization Telegram-UserID: %v. UserID: %v", user.TelegramId, ExistedUser.Id))
 		return ExistedUser.Id, nil
 	}
 
@@ -71,7 +82,6 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 	defer tx.Rollback()
 
 	if err != nil {
-		lg.Info("[Postgres] CreateUser TX failed " + fmt.Sprint(user.TelegramId) + " Error: " + err.Error())
 		return "", err
 	}
 
@@ -95,8 +105,7 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 	).Scan(&UserId)
 
 	if err != nil {
-		lg.Info("[Postgres] CreateUser failed: " + err.Error())
-		return "", custom_errors.ErrorWithCreate
+		return "", MapDBError(err, "CreateUser")
 	}
 
 	if user.Role == models.RoleTutor {
@@ -111,23 +120,22 @@ func (r *Repository) CreateUser(user *models.CreateUser) (string, error) {
 		_, err = tx.Exec(queryInsertTutor, UserId, currentTime)
 
 		if err != nil {
-			lg.Info("[Postgres] CreateUser failed: " + err.Error())
-			tx.Rollback()
-			return "", custom_errors.ErrorWithCreate
+			custom_logger.Info("[Postgres] CreateUser failed: " + err.Error())
+			return "", MapDBError(err, "CreateUser")
 		}
 	}
 
 	err = tx.Commit()
+
 	if err != nil {
-		lg.Info("[Postgres] CreateUser failed: " + err.Error())
-		return "", err
+		return "", MapDBError(err, "CreateUser")
 	}
 
 	return UserId, nil
 }
 
 func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
-	lg.Info("[Postgres] GetUserById called. UserID: " + userID)
+	custom_logger.Info("[Postgres] GetUserById called. UserID: " + userID)
 
 	var user models.UserDB
 
@@ -145,14 +153,10 @@ func (r *Repository) GetUserById(userID string) (*models.UserDB, error) {
 	err := r.db.Get(&user, query, userID)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, custom_errors.UserNotFound
-		}
-		lg.Error("[Postgres] GetUserById error: " + err.Error())
-		return nil, err
+		return nil, MapDBError(err, "GetUserById")
 	}
 
-	lg.Info("[Postgres] GetUserById success. UserID: " + userID)
+	custom_logger.Info("[Postgres] GetUserById success. UserID: " + userID)
 
 	return &user, nil
 }
@@ -174,11 +178,7 @@ func (r *Repository) GetUserByTelegramId(telegramID int64, userRole string) (*mo
 	err := r.db.Get(&user, query, telegramID, userRole)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, custom_errors.UserNotFound
-		}
-		lg.Error("[Postgres] GetUserByTelegramId error: " + err.Error())
-		return nil, err
+		return nil, MapDBError(err, "GetUserByTelegramId")
 	}
 
 	return &user, nil
@@ -201,11 +201,7 @@ func (r *Repository) GetStudentById(userID string) (*models.UserDB, error) {
 	err := r.db.Get(&user, query, userID, models.RoleStudent)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, custom_errors.UserNotFound
-		}
-		lg.Error("[Postgres] GetStudentById error: " + err.Error())
-		return nil, err
+		return nil, MapDBError(err, "GetStudentById")
 	}
 
 	return &user, nil
@@ -253,11 +249,7 @@ func (r *Repository) GetTutorByID(userID string) (*models.TutorDB, error) {
 	)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, custom_errors.UserNotFound
-		}
-		lg.Error("[Postgres] GetTutorByID failed. UserID: " + userID + " Error: " + err.Error())
-		return nil, err
+		return nil, MapDBError(err, "GetTutorByID")
 	}
 
 	if bio.Valid {
@@ -300,9 +292,9 @@ func (r *Repository) GetAllUsers() ([]*pb.User, error) {
 		ORDER BY created_at DESC`
 
 	rows, err := r.db.Query(query)
+
 	if err != nil {
-		lg.Error("[Postgres] GetAllUsers failed: " + err.Error())
-		return nil, err
+		return nil, MapDBError(err, "GetAllUsers")
 	}
 	defer rows.Close()
 
@@ -316,8 +308,7 @@ func (r *Repository) GetAllUsers() ([]*pb.User, error) {
 		err := rows.Scan(&id, &name, &telegramID, &role)
 
 		if err != nil {
-			lg.Error("[Postgres] GetAllTutors failed: " + err.Error())
-			return nil, err
+			return nil, MapDBError(err, "GetAllUsers")
 		}
 
 		user := &pb.User{
@@ -331,8 +322,7 @@ func (r *Repository) GetAllUsers() ([]*pb.User, error) {
 	}
 
 	if rows.Err() != nil {
-		lg.Error("[Postgres] GetAllTutors error after rows scan")
-		return nil, custom_errors.ErrorAfterRowScan
+		return nil, MapDBError(err, "GetAllUsers")
 	}
 
 	return users, nil
@@ -347,16 +337,13 @@ func (r *Repository) UpdateTutorBio(userID string, bio string) error {
 	_, err := r.db.Exec(query, bio, userID)
 
 	if err != nil {
-		lg.Error("[Postgres] UpdateTutorBio failed. Error: " + err.Error())
-		return err
+		return MapDBError(err, "UpdateTutorBio")
 	}
 
 	return nil
 }
 
 func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
-	lg.Info("[Postgres] UpdateTutorTags called. TutorID: " + tutorID)
-
 	const query = `
 		UPDATE tutors SET 
 		    tags = $1
@@ -365,17 +352,13 @@ func (r *Repository) UpdateTutorTags(tutorID string, tags []string) error {
 	_, err := r.db.Exec(query, pq.Array(tags), tutorID)
 
 	if err != nil {
-		lg.Error("[Postgres] UpdateTutorTags failed. Error: " + err.Error())
-		return err
+		return MapDBError(err, "UpdateTutorTags")
 	}
 
-	lg.Info("[Postgres] UpdateTutorTags success")
 	return nil
 }
 
 func (r *Repository) SetNewIsActiveTutor(tutorID string, isActive bool) error {
-	lg.Info("[Postgres] SetNewIsActiveTutor called. TutorID: " + tutorID)
-
 	const query = `
 		UPDATE tutors SET
             is_active = $1
@@ -384,17 +367,13 @@ func (r *Repository) SetNewIsActiveTutor(tutorID string, isActive bool) error {
 	_, err := r.db.Exec(query, isActive, tutorID)
 
 	if err != nil {
-		lg.Error("[Postgres] SetNewIsActiveTutor failed. Error: " + err.Error())
-		return err
+		return MapDBError(err, "UpdateTutorTags")
 	}
 
-	lg.Info("[Postgres] SetNewIsActiveTutor success")
 	return nil
 }
 
 func (r *Repository) UpdateTutorName(tutorID string, name string) error {
-	lg.Info("[Postgres] UpdateTutorName called. TutorID: " + tutorID + " Name: " + name)
-
 	const query = `
 		UPDATE users SET
 		    name = $1
@@ -403,11 +382,9 @@ func (r *Repository) UpdateTutorName(tutorID string, name string) error {
 	_, err := r.db.Exec(query, name, tutorID, models.RoleTutor)
 
 	if err != nil {
-		lg.Error("[Postgres] UpdateTutorName failed. Error: " + err.Error())
-		return err
+		return MapDBError(err, "UpdateTutorTags")
 	}
 
-	lg.Info("[Postgres] UpdateTutorName success")
 	return nil
 }
 
@@ -426,14 +403,15 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 		queryCount += ` AND $2 = ANY(t.tags)`
 		argsCount = append(argsCount, tag)
 	}
+
 	var total int
+
 	err := r.db.QueryRow(queryCount, argsCount...).Scan(&total)
 
 	if err != nil {
-		return nil, 0, err
+		custError := MapDBError(err, "GetAllTutorsPagination")
+		return nil, 0, custError
 	}
-
-	lg.Info("[Postgres] GetAllTutorsPagination called.")
 
 	queryGetAllPagination := `
 		SELECT 
@@ -459,8 +437,8 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 	rows, err := r.db.Query(queryGetAllPagination, argsPagination...)
 
 	if err != nil {
-		lg.Info(fmt.Sprintf("[Postgres] GetAllTutorsPagination failed. Error: %v", err.Error()))
-		return nil, 0, err
+		custError := MapDBError(err, "GetAllTutorsPagination")
+		return nil, 0, custError
 	}
 	defer rows.Close()
 
@@ -475,7 +453,7 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 
 		err := rows.Scan(&id, &name, &telegramID, &rating, &tags)
 		if err != nil {
-			lg.Info(fmt.Sprintf("[Postgres] GetAllTutorsPagination failed. Error: %v", err.Error()))
+			custom_logger.Info(fmt.Sprintf("[Postgres] GetAllTutorsPagination failed. Error: %v", err.Error()))
 			return nil, 0, err
 		}
 
@@ -494,18 +472,14 @@ func (r *Repository) GetAllTutorsPagination(limit int, offset int, tag string) (
 	err = rows.Err()
 
 	if err != nil {
-		lg.Info(fmt.Sprintf("[Postgres] GetAllTutorsPagination failed. Error: %v", err.Error()))
-		return nil, 0, err
+		custError := MapDBError(err, "GetAllTutorsPagination")
+		return nil, 0, custError
 	}
-
-	lg.Info("[Postgres] GetAllTutorsPagination success.")
 
 	return tutors, total, nil
 }
 
 func (r *Repository) CreateReview(tutorID, orderID string, rating int, comment string) (string, error) {
-	lg.Info("[Postgres] CreateReview called. TutorID: " + tutorID + " orderID: " + orderID)
-
 	timestamp := time.Now()
 
 	queryInsertReview := `
@@ -524,18 +498,13 @@ func (r *Repository) CreateReview(tutorID, orderID string, rating int, comment s
 	err := r.db.QueryRow(queryInsertReview, tutorID, orderID, rating, comment, false, timestamp).Scan(&reviewID)
 
 	if err != nil {
-		lg.Info("[Postgres] CreateReview failed. TutorID: " + tutorID + " orderID: " + orderID + " Error: " + err.Error())
-		return "", err
+		return "", MapDBError(err, "CreateReview")
 	}
-
-	lg.Info("[Postgres] CreateReview success. TutorID: " + tutorID + " orderID: " + orderID)
 
 	return reviewID, nil
 }
 
 func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
-	lg.Info("[Postgres] GetReviews called. tutorID: " + tutorID)
-
 	const query = `
 		SELECT 
 			id, 
@@ -552,22 +521,13 @@ func (r *Repository) GetReviews(tutorID string) ([]models.Review, error) {
 	err := r.db.Select(&reviews, query, tutorID)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			lg.Info(fmt.Sprintf("[Postgres] GetReviews. tutorID: %v. Not found", tutorID))
-			return nil, custom_errors.UserNotFound
-		}
-		lg.Error(fmt.Sprintf("[Postgres] GetReviewById failed. tutorID: %v. Error: %v", tutorID, err.Error()))
-		return nil, custom_errors.ErrorServiceError
+		return nil, MapDBError(err, "CreateReview")
 	}
-
-	lg.Info("[Postgres] GetReviews success. tutorID: " + tutorID)
 
 	return reviews, nil
 }
 
 func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
-	lg.Info("[Postgres] GetReviewById called. reviewID: " + reviewID)
-
 	const query = `
 		SELECT 
 			id,
@@ -584,53 +544,13 @@ func (r *Repository) GetReviewById(reviewID string) (*models.Review, error) {
 	err := r.db.Get(&review, query, reviewID)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			lg.Info("[Postgres] GetReviewById. ReviewID: " + fmt.Sprint(reviewID) + " Not found.")
-			return nil, custom_errors.UserNotFound
-		}
-		lg.Error("[Postgres] GetReviewById failed. ReviewID: " + fmt.Sprint(reviewID) + " Not found.")
-		return nil, custom_errors.ErrorServiceError
+		return nil, MapDBError(err, "GetReviewById")
 	}
-
-	lg.Info("[Postgres] GetReviewById success. reviewID: " + reviewID)
 
 	return &review, nil
 }
 
-func (r *Repository) GetTagsByTutorID(tutorID string) ([]string, error) {
-	lg.Info("[Postgres] GetTagsByTutorID called. tutorID: " + tutorID)
-
-	const query = `
-		SELECT
-    		tags
-		FROM tutors WHERE id = $1`
-
-	rows, err := r.db.Query(query, tutorID)
-
-	if err != nil {
-		lg.Error("[Postgres] GetTagsByTutorID failed.  tutorID: " + tutorID + " Error: " + err.Error())
-		return nil, err
-	}
-	defer rows.Close()
-
-	var tags []string
-	for rows.Next() {
-		var tagArray []string
-		err := rows.Scan(pq.Array(&tagArray))
-		if err != nil {
-			lg.Error("[Postgres] GetTagsByTutorID failed. tutorID: " + tutorID + " Error: " + err.Error())
-			return nil, err
-		}
-		tags = append(tags, tagArray...)
-	}
-
-	lg.Info("[Postgres] GetTagsByTutorID success. tutorID: " + tutorID)
-	return tags, nil
-}
-
 func (r *Repository) RemoveOneResponse(tutorID string) error {
-	lg.Info("[Postgres] RemoveOneResponse called. tutorID: " + tutorID)
-
 	const query = `
 		UPDATE tutors SET
             response_count = response_count - 1
@@ -641,20 +561,13 @@ func (r *Repository) RemoveOneResponse(tutorID string) error {
 	err := r.db.QueryRow(query, tutorID).Scan(&newCount)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return custom_errors.ErrorNotFound
-		}
-		lg.Info("[Postgres] RemoveOneResponse failed. tutorID: " + tutorID + " Error: " + err.Error())
-		return err
+		return MapDBError(err, "RemoveOneResponse")
 	}
 
-	lg.Info("[Postgres] RemoveOneResponse success. tutorID: " + tutorID)
 	return nil
 }
 
 func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int, error) {
-	lg.Info("[Postgres] AddResponses called. tutorTelegramID: " + fmt.Sprint(tutorTelegramID) + " ResponseCount: " + strconv.Itoa(responseCount))
-
 	const query = `
         UPDATE tutors
 		SET response_count = response_count + $1
@@ -667,28 +580,18 @@ func (r *Repository) AddResponses(tutorTelegramID int64, responseCount int) (int
 	err := r.db.QueryRow(query, responseCount, tutorTelegramID, models.RoleTutor).Scan(&newCount)
 
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			lg.Error("[Postgres] AddResponses failed. tutorTelegramID: " + fmt.Sprint(tutorTelegramID) + " Not found.")
-			return 0, custom_errors.UserNotFound
-		}
-		lg.Error("[Postgres] AddResponses failed. tutorTelegramID: " + fmt.Sprint(tutorTelegramID) + " Error: " + err.Error())
-		return 0, err
+		return 0, MapDBError(err, "AddResponses")
 	}
 
-	lg.Info("[Postgres] AddResponses success. tutorTelegramID: " + fmt.Sprint(tutorTelegramID) + " NewCount: " + strconv.Itoa(int(newCount)))
 	return int(newCount), nil
 }
 
 func (r *Repository) SetReviewActive(reviewID, tutorID string) error {
-	lg.Info("[Postgres] SetReviewActive called. ReviewID: " + reviewID)
-
 	tx, err := r.db.Begin()
 
 	if err != nil {
-		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
-		return custom_errors.ErrorServiceError
+		return MapDBError(err, "SetReviewActive")
 	}
-
 	defer tx.Rollback()
 
 	const querySetActive = `
@@ -699,19 +602,17 @@ func (r *Repository) SetReviewActive(reviewID, tutorID string) error {
 	res, err := tx.Exec(querySetActive, reviewID)
 
 	if err != nil {
-		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
-		return custom_errors.ErrorServiceError
+		return MapDBError(err, "SetReviewActive")
 	}
 
 	rowsAffected, err := res.RowsAffected()
 
 	if err != nil {
-		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
-		return custom_errors.ErrorServiceError
+		return MapDBError(err, "SetReviewActive")
 	}
 
 	if rowsAffected == 0 {
-		lg.Info("[Postgres] SetReviewActive no review found with ID: " + reviewID)
+		custom_logger.Info("[Postgres] SetReviewActive no review found with ID: " + reviewID)
 		return custom_errors.ErrorNotFound
 	}
 
@@ -726,8 +627,7 @@ func (r *Repository) SetReviewActive(reviewID, tutorID string) error {
 	err = tx.QueryRow(queryGetAvgRating, tutorID).Scan(&rating)
 
 	if err != nil {
-		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
-		return custom_errors.ErrorServiceError
+		return MapDBError(err, "SetReviewActive")
 	}
 
 	const queryUpdateTutor = `
@@ -738,21 +638,20 @@ func (r *Repository) SetReviewActive(reviewID, tutorID string) error {
 	_, err = tx.Exec(queryUpdateTutor, rating, tutorID)
 
 	if err != nil {
-		lg.Error("[Postgres] SetReviewActive failed queryUpdateTutor: " + err.Error())
-		return custom_errors.ErrorServiceError
+		return MapDBError(err, "SetReviewActive")
 	}
 
-	if err = tx.Commit(); err != nil {
-		lg.Error("[Postgres] SetReviewActive failed: " + err.Error())
-		return custom_errors.ErrorServiceError
+	err = tx.Commit()
+
+	if err != nil {
+		return MapDBError(err, "SetReviewActive")
 	}
 
-	lg.Info("[Postgres] SetReviewActive success")
 	return nil
 }
 
 func (r *Repository) GetAllTutorsResponseCondition(minResponseCount int) ([]*models.TutorWithResponse, error) {
-	lg.Info("[Postgres] GetAllTutorsResponseCondition called")
+	custom_logger.Info("[Postgres] GetAllTutorsResponseCondition called")
 
 	const query = `
 		SELECT 
@@ -765,9 +664,9 @@ func (r *Repository) GetAllTutorsResponseCondition(minResponseCount int) ([]*mod
 		WHERE u.role = $1 AND t.response_count < $2`
 
 	rows, err := r.db.Query(query, models.RoleTutor, minResponseCount)
+
 	if err != nil {
-		lg.Error("[Postgres] GetAllTutorsResponseCondition failed. Query error: " + err.Error())
-		return nil, err
+		return nil, MapDBError(err, "GetAllTutorsResponseCondition")
 	}
 	defer rows.Close()
 
@@ -781,8 +680,7 @@ func (r *Repository) GetAllTutorsResponseCondition(minResponseCount int) ([]*mod
 		err := rows.Scan(&id, &name, &telegramID, &responseCount)
 
 		if err != nil {
-			lg.Error("[Postgres] GetAllTutorsResponseCondition error: " + err.Error())
-			return nil, err
+			return nil, MapDBError(err, "GetAllTutorsResponseCondition")
 		}
 
 		tutor := &models.TutorWithResponse{
@@ -794,12 +692,11 @@ func (r *Repository) GetAllTutorsResponseCondition(minResponseCount int) ([]*mod
 		tutors = append(tutors, tutor)
 	}
 
-	if rows.Err() != nil {
-		lg.Error("[Postgres] GetAllTutorsResponseCondition error after rows scan")
-		return nil, custom_errors.ErrorAfterRowScan
-	}
+	err = rows.Err()
 
-	lg.Info("[Postgres] GetAllTutorsResponseCondition success")
+	if err != nil {
+		return nil, MapDBError(err, "GetAllTutorsResponseCondition")
+	}
 
 	return tutors, nil
 }
@@ -813,8 +710,7 @@ func (r *Repository) BanUser(telegramID int64, isBanned bool) error {
 	_, err := r.db.Exec(query, isBanned, telegramID)
 
 	if err != nil {
-		lg.Error("[Postgres] BanUser failed. Error: " + err.Error())
-		return err
+		return MapDBError(err, "GetAllTutorsResponseCondition")
 	}
 
 	return nil
