@@ -41,8 +41,10 @@ func (a *App) Run(ctx context.Context) error {
 
 	router.Use(logger.New())
 
+	corsOriginService := a.cfg.CorsOrigin
+
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
+		AllowOrigins: corsOriginService,
 		AllowMethods: "GET,POST",
 		AllowHeaders: "*",
 	}))

@@ -130,6 +130,7 @@ services:
       - GRPCUSERPORT=${GRPCUSERPORT}
       - TOKEN_ALIVE_TIME=${TOKEN_ALIVE_TIME}
       - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     depends_on:
       postgresql:
         condition: service_healthy
@@ -159,6 +160,7 @@ services:
       - TOKEN_ALIVE_TIME=${TOKEN_ALIVE_TIME}
       - AUTH_SERVICE_PORT=${AUTH_SERVICE_PORT}
       - ADMIN_USER=${ADMIN_USER}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     networks:
       - lessons-network
     depends_on:
@@ -182,6 +184,7 @@ services:
       - MQ_PASS=${MQ_PASS}
       - MQ_HOST=${MQ_HOST}
       - MQ_PORT=${MQ_PORT}
+      - CORS_ORIGIN=${CORS_ORIGIN}
     networks:
       - lessons-network
     depends_on:

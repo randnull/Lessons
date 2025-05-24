@@ -26,6 +26,7 @@ type GRPCConfig struct {
 
 type ServerConfig struct {
 	ServerPort string `env:"AUTH_SERVICE_PORT"`
+	CorsOrigin string `env:"CORS_ORIGIN"`
 }
 
 func NewConfig() (*Config, error) {

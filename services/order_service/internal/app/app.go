@@ -65,8 +65,10 @@ func NewApp(cfg *config.Config) *App {
 func (a *App) Run(ctx context.Context) error {
 	router := fiber.New()
 
+	corsOriginService := a.cfg.CorsOrigin
+
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: "*",
+		AllowOrigins: corsOriginService,
 		AllowMethods: "GET,POST,PUT,DELETE,OPTIONS",
 		AllowHeaders: "*",
 	}))

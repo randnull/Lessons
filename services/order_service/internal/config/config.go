@@ -23,6 +23,7 @@ type DBConfig struct {
 
 type ServerConfig struct {
 	ServerPort string `env:"SERVER_PORT"`
+	CorsOrigin string `env:"CORS_ORIGIN"`
 }
 
 type BotConfig struct {
